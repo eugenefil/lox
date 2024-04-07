@@ -20,7 +20,7 @@ struct Token {
         Print, Return, Super, This, True, Var, While,
     };
 
-    using Literal = std::variant<std::monostate, double, std::string_view>;
+    using Literal = std::variant<std::monostate, double, std::string>;
 
     Type m_type;
     std::string_view m_lexeme;
@@ -30,7 +30,15 @@ struct Token {
         : m_type(type)
         , m_lexeme(lexeme)
     {}
+
+    friend std::ostream& operator<<(std::ostream& out, const Token& token);
 };
+
+std::ostream& operator<<(std::ostream& out, const Token& token)
+{
+    out << token.m_lexeme;
+    return out;
+}
 
 class Scanner {
 public:
@@ -41,43 +49,47 @@ private:
     std::string_view m_source;
 };
 
-Scanner(std::string_view source) : m_source(source)
+Scanner::Scanner(std::string_view source) : m_source(source)
 {}
 
 std::vector<Token> Scanner::scan()
 {
     std::vector<Token> tokens;
+    auto append_one_char_token = [&](Token::Type type) {
+        tokens.push_back(Token{type, m_source.substr(0, 1)});
+        m_source.remove_prefix(1);
+    };
     while (!m_source.empty()) {
         switch (m_source[0]) {
         case '(':
-            tokens.push_back(Token{Token::Type::LeftParen, m_source.substr(0, 1)});
+            append_one_char_token(Token::Type::LeftParen);
             break;
         case ')':
-            tokens.push_back(Token{Token::Type::RightParen, m_source.substr(0, 1)});
+            append_one_char_token(Token::Type::RightParen);
             break;
         case '{':
-            tokens.push_back(Token{Token::Type::LeftBrace, m_source.substr(0, 1)});
+            append_one_char_token(Token::Type::LeftBrace);
             break;
         case '}':
-            tokens.push_back(Token{Token::Type::RightBrace, m_source.substr(0, 1)});
+            append_one_char_token(Token::Type::RightBrace);
             break;
         case ',':
-            tokens.push_back(Token{Token::Type::Comma, m_source.substr(0, 1)});
+            append_one_char_token(Token::Type::Comma);
             break;
         case '.':
-            tokens.push_back(Token{Token::Type::Dot, m_source.substr(0, 1)});
+            append_one_char_token(Token::Type::Dot);
             break;
         case '-':
-            tokens.push_back(Token{Token::Type::Minus, m_source.substr(0, 1)});
+            append_one_char_token(Token::Type::Minus);
             break;
         case '+':
-            tokens.push_back(Token{Token::Type::Plus, m_source.substr(0, 1)});
+            append_one_char_token(Token::Type::Plus);
             break;
         case ';':
-            tokens.push_back(Token{Token::Type::Semicolon, m_source.substr(0, 1)});
+            append_one_char_token(Token::Type::Semicolon);
             break;
         case '*':
-            tokens.push_back(Token{Token::Type::Star, m_source.substr(0, 1)});
+            append_one_char_token(Token::Type::Star);
             break;
         default:
             m_source.remove_prefix(1);
@@ -88,5 +100,8 @@ std::vector<Token> Scanner::scan()
 
 int main()
 {
+    std::string source = "(+){-}";
+    for (const auto& tok : Scanner(source).scan())
+        std::cout << tok << '\n';
     return 0;
 }
