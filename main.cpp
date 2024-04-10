@@ -1,4 +1,4 @@
-#include "scanner.h"
+#include "Scanner.h"
 
 #include <iostream>
 

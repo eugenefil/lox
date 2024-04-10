@@ -14,4 +14,4 @@ set(CMAKE_COLOR_DIAGNOSTICS ON)
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-add_executable(lox scanner.cpp main.cpp)
+add_executable(lox Scanner.cpp main.cpp)

@@ -1,4 +1,4 @@
-#include "scanner.h"
+#include "Scanner.h"
 
 std::ostream& operator<<(std::ostream& out, const Token& token)
 {
