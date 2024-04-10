@@ -10,6 +10,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+set(CMAKE_COLOR_DIAGNOSTICS ON)
+
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-add_executable(lox main.cpp)
+add_executable(lox scanner.cpp main.cpp)
