@@ -5,7 +5,7 @@
 int main()
 {
     std::string source = "(+){-}";
-    for (const auto& tok : Scanner(source).scan())
+    for (const auto& tok : Lox::Scanner(source).scan())
         std::cout << tok << '\n';
     return 0;
 }

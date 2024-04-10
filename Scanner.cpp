@@ -1,5 +1,7 @@
 #include "Scanner.h"
 
+namespace Lox {
+
 std::ostream& operator<<(std::ostream& out, const Token& token)
 {
     out << token.m_lexeme;
@@ -50,4 +52,6 @@ std::vector<Token> Scanner::scan()
         }
     }
     return tokens;
+}
+
 }

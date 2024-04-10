@@ -1,6 +1,10 @@
+#pragma once
+
 #include <variant>
 #include <vector>
 #include <string>
+
+namespace Lox {
 
 struct Token {
     enum class Type {
@@ -42,3 +46,5 @@ public:
 private:
     std::string_view m_source;
 };
+
+}
