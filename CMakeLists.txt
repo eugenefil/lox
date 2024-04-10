@@ -14,4 +14,14 @@ set(CMAKE_COLOR_DIAGNOSTICS ON)
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-add_executable(lox Scanner.cpp main.cpp)
+add_library(lib Scanner.cpp)
+
+add_executable(lox main.cpp)
+target_link_libraries(lox lib)
+
+find_package(GTest REQUIRED)
+enable_testing()
+add_executable(TestScanner TestScanner.cpp)
+target_link_libraries(TestScanner lib GTest::gtest_main)
+include(GoogleTest)
+gtest_discover_tests(TestScanner)
