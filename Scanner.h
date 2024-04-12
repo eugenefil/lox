@@ -46,10 +46,11 @@ public:
     Scanner(std::string_view source) : m_source(source)
     {}
 
-    bool match(char next);
     std::vector<Token> scan();
 
 private:
+    bool match(char next);
+
     std::string_view m_source;
     std::size_t m_beg { 0 };
     std::size_t m_end { 0 };

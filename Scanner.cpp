@@ -1,5 +1,4 @@
 #include "Scanner.h"
-#include <array>
 #include <cassert>
 
 namespace Lox {
@@ -9,25 +8,6 @@ std::ostream& operator<<(std::ostream& out, const Token& token)
     out << token.m_lexeme;
     return out;
 }
-
-static consteval std::array<Token::Type, 256> make_one_char_token_array()
-{
-    std::array<Token::Type, 256> array = { Token::Type::Invalid };
-    array['('] = Token::Type::LeftParen;
-    array[')'] = Token::Type::RightParen;
-    array['{'] = Token::Type::LeftBrace;
-    array['}'] = Token::Type::RightBrace;
-    array[','] = Token::Type::Comma;
-    array['.'] = Token::Type::Dot;
-    array['-'] = Token::Type::Minus;
-    array['+'] = Token::Type::Plus;
-    array[';'] = Token::Type::Semicolon;
-    array['/'] = Token::Type::Slash;
-    array['*'] = Token::Type::Star;
-    return array;
-}
-
-static constexpr auto s_one_char_tokens = make_one_char_token_array();
 
 bool Scanner::match(char next)
 {
@@ -58,6 +38,39 @@ std::vector<Token> Scanner::scan()
         case '\n':
             m_beg = m_end;
             break;
+        case '(':
+            add_token(Token::Type::LeftParen);
+            break;
+        case ')':
+            add_token(Token::Type::RightParen);
+            break;
+        case '{':
+            add_token(Token::Type::LeftBrace);
+            break;
+        case '}':
+            add_token(Token::Type::RightBrace);
+            break;
+        case ',':
+            add_token(Token::Type::Comma);
+            break;
+        case '.':
+            add_token(Token::Type::Dot);
+            break;
+        case '-':
+            add_token(Token::Type::Minus);
+            break;
+        case '+':
+            add_token(Token::Type::Plus);
+            break;
+        case ';':
+            add_token(Token::Type::Semicolon);
+            break;
+        case '/':
+            add_token(Token::Type::Slash);
+            break;
+        case '*':
+            add_token(Token::Type::Star);
+            break;
         case '!':
             add_token(match('=') ? Token::Type::BangEqual : Token::Type::Bang);
             break;
@@ -71,10 +84,7 @@ std::vector<Token> Scanner::scan()
             add_token(match('=') ? Token::Type::LessEqual : Token::Type::Less);
             break;
         default:
-            if (auto type = s_one_char_tokens[ch]; type != Token::Type::Invalid)
-                add_token(type);
-            else
-                add_token(Token::Type::Invalid);
+            add_token(Token::Type::Invalid);
         }
     }
     return tokens;
