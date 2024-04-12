@@ -24,16 +24,19 @@ struct Token {
 
     using Literal = std::variant<std::monostate, double, std::string>;
 
-    Type m_type;
-    std::string_view m_lexeme;
-    Literal m_literal;
-
     Token(Type type, std::string_view lexeme)
         : m_type(type)
         , m_lexeme(lexeme)
     {}
 
+    Type type() const { return m_type; }
+
     friend std::ostream& operator<<(std::ostream& out, const Token& token);
+
+private:
+    Type m_type;
+    std::string_view m_lexeme;
+    Literal m_literal;
 };
 
 class Scanner {

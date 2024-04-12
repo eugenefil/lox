@@ -44,6 +44,9 @@ std::vector<Token> Scanner::scan()
         case ';':
             append_one_char_token(Token::Type::Semicolon);
             break;
+        case '/':
+            append_one_char_token(Token::Type::Slash);
+            break;
         case '*':
             append_one_char_token(Token::Type::Star);
             break;
