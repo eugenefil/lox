@@ -46,6 +46,7 @@ public:
     Scanner(std::string_view source) : m_source(source)
     {}
 
+    char peek() const;
     std::vector<Token> scan();
 
 private:
