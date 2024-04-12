@@ -1,5 +1,6 @@
 #include "Scanner.h"
 #include <array>
+#include <cassert>
 
 namespace Lox {
 
@@ -28,55 +29,53 @@ static consteval std::array<Token::Type, 256> make_one_char_token_array()
 
 static constexpr auto s_one_char_tokens = make_one_char_token_array();
 
-char Scanner::peek() const
+bool Scanner::match(char next)
 {
-    if (m_source.size() < 2)
-        return 0;
-    return m_source[1];
+    if (m_end < m_source.size() && m_source[m_end] == next) {
+        ++m_end;
+        return true;
+    }
+    return false;
 }
 
 std::vector<Token> Scanner::scan()
 {
     std::vector<Token> tokens;
 
-    auto add_token = [&](Token::Type type, size_t len) {
-            tokens.push_back(Token { type, m_source.substr(0, len) });
-            m_source.remove_prefix(len);
+    auto add_token = [&](Token::Type type) {
+            assert(m_end > m_beg);
+            tokens.push_back(Token { type, m_source.substr(m_beg, m_end - m_beg) });
+            m_beg = m_end;
     };
 
-    while (!m_source.empty()) {
-        auto ch = m_source[0];
-        if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n')
-            m_source.remove_prefix(1);
-        else if (ch == '!') {
-            if (peek() == '=')
-                add_token(Token::Type::BangEqual, 2);
+    while (m_beg < m_source.size()) {
+        auto ch = m_source[m_beg];
+        m_end = m_beg + 1;
+        switch (ch) {
+        case ' ':
+        case '\t':
+        case '\r':
+        case '\n':
+            m_beg = m_end;
+            break;
+        case '!':
+            add_token(match('=') ? Token::Type::BangEqual : Token::Type::Bang);
+            break;
+        case '=':
+            add_token(match('=') ? Token::Type::EqualEqual : Token::Type::Equal);
+            break;
+        case '>':
+            add_token(match('=') ? Token::Type::GreaterEqual : Token::Type::Greater);
+            break;
+        case '<':
+            add_token(match('=') ? Token::Type::LessEqual : Token::Type::Less);
+            break;
+        default:
+            if (auto type = s_one_char_tokens[ch]; type != Token::Type::Invalid)
+                add_token(type);
             else
-                add_token(Token::Type::Bang, 1);
+                add_token(Token::Type::Invalid);
         }
-        else if (ch == '=') {
-            if (peek() == '=')
-                add_token(Token::Type::EqualEqual, 2);
-            else
-                add_token(Token::Type::Equal, 1);
-        }
-        else if (ch == '>') {
-            if (peek() == '=')
-                add_token(Token::Type::GreaterEqual, 2);
-            else
-                add_token(Token::Type::Greater, 1);
-        }
-        else if (ch == '<') {
-            if (peek() == '=')
-                add_token(Token::Type::LessEqual, 2);
-            else
-                add_token(Token::Type::Less, 1);
-        }
-        else if (auto type = s_one_char_tokens[ch];
-            type != Token::Type::Invalid)
-            add_token(type, 1);
-        else
-            add_token(Token::Type::Invalid, 1);
     }
     return tokens;
 }
