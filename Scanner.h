@@ -8,6 +8,8 @@ namespace Lox {
 
 struct Token {
     enum class Type {
+        Invalid,
+
         LeftParen, RightParen, LeftBrace, RightBrace,
         Comma, Dot, Minus, Plus, Semicolon, Slash, Star,
 
@@ -34,7 +36,7 @@ struct Token {
     friend std::ostream& operator<<(std::ostream& out, const Token& token);
 
 private:
-    Type m_type;
+    Type m_type { Type::Invalid };
     std::string_view m_lexeme;
     Literal m_literal;
 };
