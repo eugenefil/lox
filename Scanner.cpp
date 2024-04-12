@@ -32,12 +32,14 @@ std::vector<Token> Scanner::scan()
 {
     std::vector<Token> tokens;
     while (!m_source.empty()) {
-        if (auto type = s_one_char_tokens[m_source[0]];
+        auto ch = m_source[0];
+        if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n')
+            m_source.remove_prefix(1);
+        else if (auto type = s_one_char_tokens[ch];
             type != Token::Type::Invalid) {
             tokens.push_back(Token{type, m_source.substr(0, 1)});
             m_source.remove_prefix(1);
-        } else
-            m_source.remove_prefix(1);
+        }
     }
     return tokens;
 }

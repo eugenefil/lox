@@ -21,3 +21,16 @@ TEST(Scanner, OneCharTokens)
     for (std::size_t i = 0; i < tokens.size(); ++i)
         ASSERT_EQ(tokens[i].type(), tok_types[i]);
 }
+
+TEST(Scanner, SkipWhitespace)
+{
+    auto tokens = Lox::Scanner("\t(\n)\r\n{  }\t\t").scan();
+    using Type = Lox::Token::Type;
+    std::vector<Type> tok_types = {
+        Type::LeftParen, Type::RightParen, Type::LeftBrace, Type::RightBrace,
+    };
+    ASSERT_EQ(tokens.size(), 4);
+
+    for (std::size_t i = 0; i < tokens.size(); ++i)
+        ASSERT_EQ(tokens[i].type(), tok_types[i]);
+}
