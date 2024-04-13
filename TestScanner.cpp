@@ -41,3 +41,18 @@ TEST(Scanner, OneTwoCharTokens)
         Type::LessEqual, Type::Less,
     });
 }
+
+TEST(Scanner, Identifiers)
+{
+    auto tokens = Lox::Scanner("_ x0 foo_bar FOOBAR __foo3__BAR4__").scan();
+    ASSERT_EQ(tokens.size(), 5);
+
+    for (const auto& tok : tokens)
+        ASSERT_EQ(tok.type(), Type::Identifier);
+
+    ASSERT_EQ(tokens[0].text(), "_");
+    ASSERT_EQ(tokens[1].text(), "x0");
+    ASSERT_EQ(tokens[2].text(), "foo_bar");
+    ASSERT_EQ(tokens[3].text(), "FOOBAR");
+    ASSERT_EQ(tokens[4].text(), "__foo3__BAR4__");
+}
