@@ -66,6 +66,7 @@ void Scanner::unescape(std::string& s)
             sub = ch;
             break;
         default:
+            error("unknown escape sequence");
             sub = ch;
         }
         s[last] = sub;
@@ -155,6 +156,7 @@ std::vector<Token> Scanner::scan()
                 }
             }
             if (!more()) {
+                error("unterminated double quote string");
                 add_token(Token::Type::Invalid);
                 break;
             }

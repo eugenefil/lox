@@ -62,6 +62,7 @@ private:
     void advance() { ++m_end; }
 
     void unescape(std::string&);
+    void error(std::string_view) {};
 
     std::string_view m_input;
     std::size_t m_beg { 0 };
