@@ -43,6 +43,36 @@ constexpr bool is_identifier_char(char ch)
     return is_identifier_first_char(ch) || is_ascii_digit(ch);
 }
 
+void Scanner::unescape(std::string& s)
+{
+    std::size_t last = 0;
+    for (std::size_t i = 0; i < s.size(); ++i, ++last) {
+        if (s[i] != '\\')
+            continue;
+        char sub = 0;
+        assert(i + 1 < s.size()); // backslash can't be last
+        switch (auto ch = s[i++ + 1]) {
+        case 't':
+            sub = '\t';
+            break;
+        case 'r':
+            sub = '\r';
+            break;
+        case 'n':
+            sub = '\n';
+            break;
+        case '"':
+        case '\\':
+            sub = ch;
+            break;
+        default:
+            sub = ch;
+        }
+        s[last] = sub;
+    }
+    s.resize(last);
+}
+
 std::vector<Token> Scanner::scan()
 {
     std::vector<Token> tokens;
@@ -114,16 +144,27 @@ std::vector<Token> Scanner::scan()
             add_token(match('=') ? Token::Type::LessEqual : Token::Type::Less);
             break;
         case '"': {
-            while (more() && next() != '"')
+            int num_escapes = 0;
+            while (more() && next() != '"') {
+                auto ch = next();
                 advance();
+                if (ch == '\\') {
+                    ++num_escapes;
+                    if (more())
+                        advance();
+                }
+            }
             if (!more()) {
                 add_token(Token::Type::Invalid);
                 break;
             }
             advance();
             assert(m_end >= m_beg + 2);
-            auto value = m_input.substr(m_beg + 1, m_end - m_beg - 2);
-            add_token(Token::Type::String, std::string(value));
+            auto substr = m_input.substr(m_beg + 1, m_end - m_beg - 2);
+            auto value = std::string(substr);
+            if (num_escapes > 0)
+                unescape(value);
+            add_token(Token::Type::String, std::move(value));
             break;
         }
         default:

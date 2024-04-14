@@ -59,8 +59,9 @@ TEST(Scanner, Identifiers)
 
 TEST(Scanner, Strings)
 {
-    assert_tokens(R"("" "hello world!")", {
+    assert_tokens(R"("" "hello world!" "\t\r\n\"\\")", {
         { Type::String, R"("")", "" },
         { Type::String, R"("hello world!")", "hello world!" },
+        { Type::String, R"("\t\r\n\"\\")", "\t\r\n\"\\" },
     });
 }
