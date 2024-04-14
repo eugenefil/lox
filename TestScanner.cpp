@@ -8,8 +8,13 @@ void assert_tokens(std::string_view input,
 {
     auto scanned = Lox::Scanner(input).scan();
     ASSERT_EQ(scanned.size(), tokens.size());
-    for (std::size_t i = 0; i < tokens.size(); ++i)
-        EXPECT_EQ(scanned[i], tokens[i]);
+    for (std::size_t i = 0; i < tokens.size(); ++i) {
+        const auto& lhs = scanned[i];
+        const auto& rhs = tokens[i];
+        EXPECT_EQ(lhs.type(), rhs.type());
+        EXPECT_EQ(lhs.text(), rhs.text());
+        EXPECT_EQ(lhs.value(), rhs.value());
+    }
 }
 
 TEST(Scanner, EmptyInputReturnsNoTokens)
@@ -59,9 +64,19 @@ TEST(Scanner, Identifiers)
 
 TEST(Scanner, Strings)
 {
-    assert_tokens(R"("" "hello world!" "\t\r\n\Z\"\\")", {
+    assert_tokens(R"("" "hello world!" "\t\r\n\Z\"\\" "multi
+        line
+        string" "newline \
+escape")", {
         { Type::String, R"("")", "" },
         { Type::String, R"("hello world!")", "hello world!" },
         { Type::String, R"("\t\r\n\Z\"\\")", "\t\r\nZ\"\\" },
+        { Type::String, R"("multi
+        line
+        string")", "multi\n\
+        line\n\
+        string" },
+        { Type::String, R"("newline \
+escape")", "newline escape" },
     });
 }

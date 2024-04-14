@@ -45,10 +45,12 @@ constexpr bool is_identifier_char(char ch)
 
 void Scanner::unescape(std::string& s)
 {
-    std::size_t last = 0;
-    for (std::size_t i = 0; i < s.size(); ++i, ++last) {
-        if (s[i] != '\\')
+    std::size_t next = 0;
+    for (std::size_t i = 0; i < s.size(); ++i) {
+        if (s[i] != '\\') {
+            s[next++] = s[i];
             continue;
+        }
         char sub = 0;
         assert(i + 1 < s.size()); // backslash can't be last
         switch (auto ch = s[i++ + 1]) {
@@ -65,13 +67,15 @@ void Scanner::unescape(std::string& s)
         case '\\':
             sub = ch;
             break;
+        case '\n':
+            continue;
         default:
             error("unknown escape sequence");
             sub = ch;
         }
-        s[last] = sub;
+        s[next++] = sub;
     }
-    s.resize(last);
+    s.resize(next);
 }
 
 std::vector<Token> Scanner::scan()

@@ -37,7 +37,7 @@ struct Token {
 
     Type type() const { return m_type; }
     std::string_view text() const { return m_text; }
-    ValueType value() const { return m_value; }
+    const ValueType& value() const { return m_value; }
 
     friend std::ostream& operator<<(std::ostream& out, const Token& token);
 
