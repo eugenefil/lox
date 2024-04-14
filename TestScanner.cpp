@@ -3,69 +3,64 @@
 
 using Type = Lox::Token::Type;
 
-void assert_token_types(std::string_view input, const std::vector<Type>& types)
+void assert_tokens(std::string_view input,
+                   const std::vector<Lox::Token>& tokens)
 {
-    auto tokens = Lox::Scanner(input).scan();
-    ASSERT_EQ(tokens.size(), types.size());
+    auto scanned = Lox::Scanner(input).scan();
+    ASSERT_EQ(scanned.size(), tokens.size());
     for (std::size_t i = 0; i < tokens.size(); ++i)
-        EXPECT_EQ(tokens[i].type(), types[i]);
+        EXPECT_EQ(scanned[i], tokens[i]);
 }
 
 TEST(Scanner, EmptyInputReturnsNoTokens)
 {
-    assert_token_types("", {});
+    assert_tokens("", {});
 }
 
 TEST(Scanner, OneCharTokens)
 {
-    assert_token_types("(){},.-+;/*", {
-        Type::LeftParen, Type::RightParen, Type::LeftBrace, Type::RightBrace,
-        Type::Comma, Type::Dot, Type::Minus, Type::Plus,
-        Type::Semicolon, Type::Slash, Type::Star,
+    assert_tokens("(){},.-+;/*", {
+        { Type::LeftParen, "(" }, { Type::RightParen, ")" },
+        { Type::LeftBrace, "{" }, { Type::RightBrace, "}" },
+        { Type::Comma, "," }, { Type::Dot, "." },
+        { Type::Minus, "-" }, { Type::Plus, "+" },
+        { Type::Semicolon, ";" }, { Type::Slash, "/" }, { Type::Star, "*" },
     });
 }
 
 TEST(Scanner, SkipWhitespace)
 {
-    assert_token_types("\t(\n)\r\n{  }\t\t", {
-        Type::LeftParen, Type::RightParen, Type::LeftBrace, Type::RightBrace,
+    assert_tokens("\t(\n)\r\n{  }\t\t", {
+        { Type::LeftParen, "(" }, { Type::RightParen, ")" },
+        { Type::LeftBrace, "{" }, { Type::RightBrace, "}" },
     });
 }
 
 TEST(Scanner, OneTwoCharTokens)
 {
-    assert_token_types("!= ! == = >= > <= <", {
-        Type::BangEqual, Type::Bang,
-        Type::EqualEqual, Type::Equal,
-        Type::GreaterEqual, Type::Greater,
-        Type::LessEqual, Type::Less,
+    assert_tokens("!= ! == = >= > <= <", {
+        { Type::BangEqual, "!=" }, { Type::Bang, "!" },
+        { Type::EqualEqual, "==" }, { Type::Equal, "=" },
+        { Type::GreaterEqual, ">=" }, { Type::Greater, ">" },
+        { Type::LessEqual, "<=" }, { Type::Less, "<" },
     });
 }
 
 TEST(Scanner, Identifiers)
 {
-    auto tokens = Lox::Scanner("_ x0 foo_bar FOOBAR __foo3__BAR4__").scan();
-    ASSERT_EQ(tokens.size(), 5);
-
-    for (const auto& tok : tokens)
-        EXPECT_EQ(tok.type(), Type::Identifier);
-
-    EXPECT_EQ(tokens[0].text(), "_");
-    EXPECT_EQ(tokens[1].text(), "x0");
-    EXPECT_EQ(tokens[2].text(), "foo_bar");
-    EXPECT_EQ(tokens[3].text(), "FOOBAR");
-    EXPECT_EQ(tokens[4].text(), "__foo3__BAR4__");
+    assert_tokens("_ x0 foo_bar FOOBAR __foo3__BAR4__", {
+        { Type::Identifier, "_" },
+        { Type::Identifier, "x0" },
+        { Type::Identifier, "foo_bar" },
+        { Type::Identifier, "FOOBAR" },
+        { Type::Identifier, "__foo3__BAR4__" },
+    });
 }
 
 TEST(Scanner, Strings)
 {
-    auto scanned = Lox::Scanner(R"("" "hello world!")").scan();
-    std::vector<Lox::Token> tokens = {
+    assert_tokens(R"("" "hello world!")", {
         { Type::String, R"("")", "" },
         { Type::String, R"("hello world!")", "hello world!" },
-    };
-    ASSERT_EQ(scanned.size(), tokens.size());
-    for (std::size_t i = 0; i < tokens.size(); ++i) {
-        EXPECT_EQ(scanned[i], tokens[i]);
-    }
+    });
 }

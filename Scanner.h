@@ -27,7 +27,7 @@ struct Token {
     using DefaultValueType = std::monostate;
     using ValueType = std::variant<DefaultValueType, double, std::string>;
 
-    Token(Type type, std::string_view text, ValueType&& value)
+    Token(Type type, std::string_view text, ValueType&& value = DefaultValueType())
         : m_type(type)
         , m_text(text)
         , m_value(std::move(value))
