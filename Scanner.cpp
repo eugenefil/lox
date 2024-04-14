@@ -11,13 +11,13 @@ std::ostream& operator<<(std::ostream& out, const Token& token)
 
 char Scanner::peek() const
 {
-    return m_end < m_input.size() ? m_input[m_end] : 0;
+    return more() ? next() : 0;
 }
 
 bool Scanner::match(char next)
 {
-    if (m_end < m_input.size() && m_input[m_end] == next) {
-        ++m_end;
+    if (peek() == next) {
+        advance();
         return true;
     }
     return false;
@@ -47,9 +47,14 @@ std::vector<Token> Scanner::scan()
 {
     std::vector<Token> tokens;
 
-    auto add_token = [&](Token::Type type) {
+    auto add_token = [&](Token::Type type,
+                         Token::ValueType&& value = Token::DefaultValueType()) {
             assert(m_end > m_beg);
-            tokens.push_back(Token { type, m_input.substr(m_beg, m_end - m_beg) });
+            tokens.push_back(Token {
+                type,
+                m_input.substr(m_beg, m_end - m_beg),
+                std::move(value),
+            });
             m_beg = m_end;
     };
 
@@ -108,10 +113,23 @@ std::vector<Token> Scanner::scan()
         case '<':
             add_token(match('=') ? Token::Type::LessEqual : Token::Type::Less);
             break;
+        case '"': {
+            while (more() && next() != '"')
+                advance();
+            if (!more()) {
+                add_token(Token::Type::Invalid);
+                break;
+            }
+            advance();
+            assert(m_end >= m_beg + 2);
+            auto value = m_input.substr(m_beg + 1, m_end - m_beg - 2);
+            add_token(Token::Type::String, std::string(value));
+            break;
+        }
         default:
             if (is_identifier_first_char(ch)) {
                 while (is_identifier_char(peek()))
-                    ++m_end;
+                    advance();
                 add_token(Token::Type::Identifier);
             } else
                 add_token(Token::Type::Invalid);

@@ -24,22 +24,27 @@ struct Token {
         Print, Return, Super, This, True, Var, While,
     };
 
-    using Literal = std::variant<std::monostate, double, std::string>;
+    using DefaultValueType = std::monostate;
+    using ValueType = std::variant<DefaultValueType, double, std::string>;
 
-    Token(Type type, std::string_view text)
+    Token(Type type, std::string_view text, ValueType&& value)
         : m_type(type)
         , m_text(text)
+        , m_value(std::move(value))
     {}
+
+    bool operator==(const Token&) const = default;
 
     Type type() const { return m_type; }
     std::string_view text() const { return m_text; }
+    ValueType value() const { return m_value; }
 
     friend std::ostream& operator<<(std::ostream& out, const Token& token);
 
 private:
     Type m_type { Type::Invalid };
     std::string_view m_text;
-    Literal m_literal;
+    ValueType m_value;
 };
 
 class Scanner {
@@ -52,6 +57,9 @@ public:
 private:
     char peek() const;
     bool match(char next);
+    bool more() const { return m_end < m_input.size(); }
+    char next() const { return m_input[m_end]; } // unsafe, guard with more()
+    void advance() { ++m_end; }
 
     std::string_view m_input;
     std::size_t m_beg { 0 };

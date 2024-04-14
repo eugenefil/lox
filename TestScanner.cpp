@@ -8,7 +8,7 @@ void assert_token_types(std::string_view input, const std::vector<Type>& types)
     auto tokens = Lox::Scanner(input).scan();
     ASSERT_EQ(tokens.size(), types.size());
     for (std::size_t i = 0; i < tokens.size(); ++i)
-        ASSERT_EQ(tokens[i].type(), types[i]);
+        EXPECT_EQ(tokens[i].type(), types[i]);
 }
 
 TEST(Scanner, EmptyInputReturnsNoTokens)
@@ -48,11 +48,24 @@ TEST(Scanner, Identifiers)
     ASSERT_EQ(tokens.size(), 5);
 
     for (const auto& tok : tokens)
-        ASSERT_EQ(tok.type(), Type::Identifier);
+        EXPECT_EQ(tok.type(), Type::Identifier);
 
-    ASSERT_EQ(tokens[0].text(), "_");
-    ASSERT_EQ(tokens[1].text(), "x0");
-    ASSERT_EQ(tokens[2].text(), "foo_bar");
-    ASSERT_EQ(tokens[3].text(), "FOOBAR");
-    ASSERT_EQ(tokens[4].text(), "__foo3__BAR4__");
+    EXPECT_EQ(tokens[0].text(), "_");
+    EXPECT_EQ(tokens[1].text(), "x0");
+    EXPECT_EQ(tokens[2].text(), "foo_bar");
+    EXPECT_EQ(tokens[3].text(), "FOOBAR");
+    EXPECT_EQ(tokens[4].text(), "__foo3__BAR4__");
+}
+
+TEST(Scanner, Strings)
+{
+    auto scanned = Lox::Scanner(R"("" "hello world!")").scan();
+    std::vector<Lox::Token> tokens = {
+        { Type::String, R"("")", "" },
+        { Type::String, R"("hello world!")", "hello world!" },
+    };
+    ASSERT_EQ(scanned.size(), tokens.size());
+    for (std::size_t i = 0; i < tokens.size(); ++i) {
+        EXPECT_EQ(scanned[i], tokens[i]);
+    }
 }
