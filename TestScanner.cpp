@@ -64,13 +64,14 @@ TEST(Scanner, Identifiers)
 
 TEST(Scanner, Strings)
 {
-    assert_tokens(R"("" "hello world!" "\t\r\n\Z\"\\" "multi
+    assert_tokens(R"("" "hello world!" "\t\r\n\"\\" "foo\z" "multi
         line
         string" "newline \
 escape")", {
         { Type::String, R"("")", "" },
         { Type::String, R"("hello world!")", "hello world!" },
-        { Type::String, R"("\t\r\n\Z\"\\")", "\t\r\nZ\"\\" },
+        { Type::String, R"("\t\r\n\"\\")", "\t\r\n\"\\" },
+        { Type::Invalid, R"("foo\z")" },
         { Type::String, R"("multi
         line
         string")", "multi\n\

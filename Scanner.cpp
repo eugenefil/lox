@@ -44,7 +44,7 @@ constexpr bool is_identifier_char(char ch)
     return is_identifier_first_char(ch) || is_ascii_digit(ch);
 }
 
-void Scanner::unescape(std::string& s)
+bool Scanner::unescape(std::string& s)
 {
     std::size_t next = 0;
     for (std::size_t i = 0; i < s.size(); ++i) {
@@ -72,11 +72,12 @@ void Scanner::unescape(std::string& s)
             continue;
         default:
             error("unknown escape sequence");
-            sub = ch;
+            return false;
         }
         s[next++] = sub;
     }
     s.resize(next);
+    return true;
 }
 
 std::vector<Token> Scanner::scan()
@@ -169,8 +170,10 @@ std::vector<Token> Scanner::scan()
             assert(m_end >= m_beg + 2);
             auto substr = m_input.substr(m_beg + 1, m_end - m_beg - 2);
             auto value = std::string(substr);
-            if (num_escapes > 0)
-                unescape(value);
+            if (num_escapes > 0 && !unescape(value)) {
+                add_token(Token::Type::Invalid);
+                break;
+            }
             add_token(Token::Type::String, std::move(value));
             break;
         }

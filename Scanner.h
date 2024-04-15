@@ -61,7 +61,7 @@ private:
     char next() const { return m_input[m_end]; } // unsafe, guard with more()
     void advance() { ++m_end; }
 
-    void unescape(std::string&);
+    bool unescape(std::string&);
     void error(std::string_view) {};
 
     std::string_view m_input;
