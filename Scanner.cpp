@@ -193,7 +193,7 @@ std::vector<Token> Scanner::scan()
                 if (ec == std::errc())
                     add_token(Token::Type::Number, num);
                 else if (ec == std::errc::result_out_of_range) {
-                    error("literal exceeds range of 'double'");
+                    error("literal exceeds range of double-precision floating point");
                     add_token(Token::Type::Invalid);
                 } else
                     assert(0); // unknown error, shouldn't happen
