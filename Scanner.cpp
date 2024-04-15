@@ -221,8 +221,10 @@ std::vector<Token> Scanner::scan()
                     add_token(Token::Type::Invalid);
                 } else
                     assert(0); // unknown error, shouldn't happen
-            } else
+            } else {
+                error("invalid token");
                 add_token(Token::Type::Invalid);
+            }
         }
     }
     return tokens;

@@ -24,12 +24,13 @@ TEST(Scanner, EmptyInputReturnsNoTokens)
 
 TEST(Scanner, OneCharTokens)
 {
-    assert_tokens("(){},.-+;/*", {
+    assert_tokens("(){},.-+;/*@", {
         { Type::LeftParen, "(" }, { Type::RightParen, ")" },
         { Type::LeftBrace, "{" }, { Type::RightBrace, "}" },
         { Type::Comma, "," }, { Type::Dot, "." },
         { Type::Minus, "-" }, { Type::Plus, "+" },
         { Type::Semicolon, ";" }, { Type::Slash, "/" }, { Type::Star, "*" },
+        { Type::Invalid, "@" },
     });
 }
 
