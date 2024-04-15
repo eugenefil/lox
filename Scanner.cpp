@@ -162,7 +162,7 @@ std::vector<Token> Scanner::scan()
                 }
             }
             if (!more()) {
-                error("unterminated double quote string");
+                error("unterminated string");
                 add_token(Token::Type::Invalid);
                 break;
             }

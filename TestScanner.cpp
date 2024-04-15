@@ -67,7 +67,8 @@ TEST(Scanner, Strings)
     assert_tokens(R"("" "hello world!" "\t\r\n\"\\" "foo\z" "multi
         line
         string" "newline \
-escape")", {
+escape"
+        "unterminated string)", {
         { Type::String, R"("")", "" },
         { Type::String, R"("hello world!")", "hello world!" },
         { Type::String, R"("\t\r\n\"\\")", "\t\r\n\"\\" },
@@ -79,6 +80,7 @@ escape")", {
         string" },
         { Type::String, R"("newline \
 escape")", "newline escape" },
+        { Type::Invalid, R"("unterminated string)" },
     });
 }
 
