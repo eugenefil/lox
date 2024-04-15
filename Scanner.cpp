@@ -1,5 +1,6 @@
 #include "Scanner.h"
 #include <cassert>
+#include <charconv>
 
 namespace Lox {
 
@@ -178,6 +179,21 @@ std::vector<Token> Scanner::scan()
                 while (is_identifier_char(peek()))
                     advance();
                 add_token(Token::Type::Identifier);
+            } else if (is_ascii_digit(ch)) {
+                double num = 0;
+                auto start = m_input.data() + m_beg;
+                auto [ptr, ec] = std::from_chars(start, m_input.end(), num);
+                assert(ec != std::errc::invalid_argument); // we have at least one digit
+                assert(ptr > start);
+                m_end = m_beg + (ptr - start);
+                assert(m_end <= m_input.size());
+                if (ec == std::errc())
+                    add_token(Token::Type::Number, num);
+                else if (ec == std::errc::result_out_of_range) {
+                    error("literal exceeds range of 'double'");
+                    add_token(Token::Type::Invalid);
+                } else
+                    assert(0); // unknown error, shouldn't happen
             } else
                 add_token(Token::Type::Invalid);
         }

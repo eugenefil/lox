@@ -80,3 +80,14 @@ escape")", {
 escape")", "newline escape" },
     });
 }
+
+TEST(Scanner, Numbers)
+{
+    assert_tokens("9007199254740991 3.14159265 4e9 7.843e-9 1e999999", {
+        { Type::Number, "9007199254740991", 9007199254740991.0 },
+        { Type::Number, "3.14159265", 3.14159265 },
+        { Type::Number, "4e9", 4e9},
+        { Type::Number, "7.843e-9", 7.843e-9 },
+        { Type::Invalid, "1e999999"},
+    });
+}
