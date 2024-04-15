@@ -55,12 +55,13 @@ public:
     std::vector<Token> scan();
 
 private:
-    char peek() const;
-    bool match(char next);
+    void advance() { ++m_end; }
     bool more() const { return m_end < m_input.size(); }
     char next() const { return m_input[m_end]; } // unsafe, guard with more()
-    void advance() { ++m_end; }
+    char peek() const { return more() ? next() : 0; }
+    bool match(char next);
 
+    std::string_view token_text() const;
     bool unescape(std::string&);
     void error(std::string_view) {};
 

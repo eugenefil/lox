@@ -94,3 +94,26 @@ TEST(Scanner, Numbers)
         { Type::Invalid, "1e999999"},
     });
 }
+
+TEST(Scanner, ReservedKeywords)
+{
+    assert_tokens("And Class Else False Fun For If Nil Or "
+        "Print Return Super This True Var While", {
+        { Type::And, "And" },
+        { Type::Class, "Class" },
+        { Type::Else, "Else" },
+        { Type::False, "False" },
+        { Type::Fun, "Fun" },
+        { Type::For, "For" },
+        { Type::If, "If" },
+        { Type::Nil, "Nil" },
+        { Type::Or, "Or" },
+        { Type::Print, "Print" },
+        { Type::Return, "Return" },
+        { Type::Super, "Super" },
+        { Type::This, "This" },
+        { Type::True, "True" },
+        { Type::Var, "Var" },
+        { Type::While, "While" },
+    });
+}

@@ -1,6 +1,7 @@
 #include "Scanner.h"
 #include <cassert>
 #include <charconv>
+#include <unordered_map>
 
 namespace Lox {
 
@@ -10,11 +11,6 @@ std::ostream& operator<<(std::ostream& out, const Token& token)
     return out;
 }
 
-char Scanner::peek() const
-{
-    return more() ? next() : 0;
-}
-
 bool Scanner::match(char next)
 {
     if (peek() == next) {
@@ -22,6 +18,12 @@ bool Scanner::match(char next)
         return true;
     }
     return false;
+}
+
+std::string_view Scanner::token_text() const
+{
+    assert(m_end > m_beg);
+    return m_input.substr(m_beg, m_end - m_beg);
 }
 
 constexpr bool is_ascii_alpha(char ch)
@@ -80,16 +82,34 @@ bool Scanner::unescape(std::string& s)
     return true;
 }
 
+static const std::unordered_map<std::string_view, Token::Type> keywords = {
+    { "And", Token::Type::And },
+    { "Class", Token::Type::Class },
+    { "Else", Token::Type::Else },
+    { "False", Token::Type::False },
+    { "Fun", Token::Type::Fun },
+    { "For", Token::Type::For },
+    { "If", Token::Type::If },
+    { "Nil", Token::Type::Nil },
+    { "Or", Token::Type::Or },
+    { "Print", Token::Type::Print },
+    { "Return", Token::Type::Return },
+    { "Super", Token::Type::Super },
+    { "This", Token::Type::This },
+    { "True", Token::Type::True },
+    { "Var", Token::Type::Var },
+    { "While", Token::Type::While },
+};
+
 std::vector<Token> Scanner::scan()
 {
     std::vector<Token> tokens;
 
     auto add_token = [&](Token::Type type,
                          Token::ValueType&& value = Token::DefaultValueType()) {
-            assert(m_end > m_beg);
             tokens.push_back(Token {
                 type,
-                m_input.substr(m_beg, m_end - m_beg),
+                token_text(),
                 std::move(value),
             });
             m_beg = m_end;
@@ -181,7 +201,11 @@ std::vector<Token> Scanner::scan()
             if (is_identifier_first_char(ch)) {
                 while (is_identifier_char(peek()))
                     advance();
-                add_token(Token::Type::Identifier);
+                if (auto keyword = keywords.find(token_text());
+                    keyword != keywords.end())
+                    add_token(keyword->second);
+                else
+                    add_token(Token::Type::Identifier);
             } else if (is_ascii_digit(ch)) {
                 double num = 0;
                 auto start = m_input.data() + m_beg;
