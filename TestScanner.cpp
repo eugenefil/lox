@@ -25,11 +25,17 @@ TEST(Scanner, EmptyInputReturnsNoTokens)
 TEST(Scanner, OneCharTokens)
 {
     assert_tokens("(){},.-+;/*@", {
-        { Type::LeftParen, "(" }, { Type::RightParen, ")" },
-        { Type::LeftBrace, "{" }, { Type::RightBrace, "}" },
-        { Type::Comma, "," }, { Type::Dot, "." },
-        { Type::Minus, "-" }, { Type::Plus, "+" },
-        { Type::Semicolon, ";" }, { Type::Slash, "/" }, { Type::Star, "*" },
+        { Type::LeftParen, "(" },
+        { Type::RightParen, ")" },
+        { Type::LeftBrace, "{" },
+        { Type::RightBrace, "}" },
+        { Type::Comma, "," },
+        { Type::Dot, "." },
+        { Type::Minus, "-" },
+        { Type::Plus, "+" },
+        { Type::Semicolon, ";" },
+        { Type::Slash, "/" },
+        { Type::Star, "*" },
         { Type::Invalid, "@" },
     });
 }
@@ -37,18 +43,24 @@ TEST(Scanner, OneCharTokens)
 TEST(Scanner, SkipWhitespace)
 {
     assert_tokens("\t(\n)\r\n{  }\t\t", {
-        { Type::LeftParen, "(" }, { Type::RightParen, ")" },
-        { Type::LeftBrace, "{" }, { Type::RightBrace, "}" },
+        { Type::LeftParen, "(" },
+        { Type::RightParen, ")" },
+        { Type::LeftBrace, "{" },
+        { Type::RightBrace, "}" },
     });
 }
 
 TEST(Scanner, OneTwoCharTokens)
 {
     assert_tokens("!= ! == = >= > <= <", {
-        { Type::BangEqual, "!=" }, { Type::Bang, "!" },
-        { Type::EqualEqual, "==" }, { Type::Equal, "=" },
-        { Type::GreaterEqual, ">=" }, { Type::Greater, ">" },
-        { Type::LessEqual, "<=" }, { Type::Less, "<" },
+        { Type::BangEqual, "!=" },
+        { Type::Bang, "!" },
+        { Type::EqualEqual, "==" },
+        { Type::Equal, "=" },
+        { Type::GreaterEqual, ">=" },
+        { Type::Greater, ">" },
+        { Type::LessEqual, "<=" },
+        { Type::Less, "<" },
     });
 }
 
