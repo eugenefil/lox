@@ -130,3 +130,16 @@ TEST(Scanner, Keywords)
         { Type::While, "while" },
     });
 }
+
+TEST(Scanner, Comments)
+{
+    assert_tokens(R"(// commented line
+        f(); // comment after code)", {
+        { Type::Comment, "// commented line" },
+        { Type::Identifier, "f" },
+        { Type::LeftParen, "(" },
+        { Type::RightParen, ")" },
+        { Type::Semicolon, ";" },
+        { Type::Comment, "// comment after code" },
+    });
+}

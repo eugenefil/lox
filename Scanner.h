@@ -10,16 +10,21 @@ struct Token {
     enum class Type {
         Invalid,
 
+        // one-char tokens
         LeftParen, RightParen, LeftBrace, RightBrace,
-        Comma, Dot, Minus, Plus, Semicolon, Slash, Star,
+        Comma, Dot, Minus, Plus, Semicolon, Star,
 
+        // one- or two-char tokens
         Bang, BangEqual,
         Equal, EqualEqual,
         Greater, GreaterEqual,
         Less, LessEqual,
+        Slash, Comment,
 
+        // literals
         Identifier, String, Number,
 
+        // keywords
         And, Class, Else, False, Fun, For, If, Nil, Or,
         Print, Return, Super, This, True, Var, While,
     };

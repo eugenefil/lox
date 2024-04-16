@@ -153,7 +153,12 @@ std::vector<Token> Scanner::scan()
             add_token(Token::Type::Semicolon);
             break;
         case '/':
-            add_token(Token::Type::Slash);
+            if (match('/')) {
+                while (more() && next() != '\n')
+                    advance();
+                add_token(Token::Type::Comment);
+            } else
+                add_token(Token::Type::Slash);
             break;
         case '*':
             add_token(Token::Type::Star);
