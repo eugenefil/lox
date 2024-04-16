@@ -83,22 +83,22 @@ bool Scanner::unescape(std::string& s)
 }
 
 static const std::unordered_map<std::string_view, Token::Type> keywords = {
-    { "And", Token::Type::And },
-    { "Class", Token::Type::Class },
-    { "Else", Token::Type::Else },
-    { "False", Token::Type::False },
-    { "Fun", Token::Type::Fun },
-    { "For", Token::Type::For },
-    { "If", Token::Type::If },
-    { "Nil", Token::Type::Nil },
-    { "Or", Token::Type::Or },
-    { "Print", Token::Type::Print },
-    { "Return", Token::Type::Return },
-    { "Super", Token::Type::Super },
-    { "This", Token::Type::This },
-    { "True", Token::Type::True },
-    { "Var", Token::Type::Var },
-    { "While", Token::Type::While },
+    { "and", Token::Type::And },
+    { "class", Token::Type::Class },
+    { "else", Token::Type::Else },
+    { "false", Token::Type::False },
+    { "fun", Token::Type::Fun },
+    { "for", Token::Type::For },
+    { "if", Token::Type::If },
+    { "nil", Token::Type::Nil },
+    { "or", Token::Type::Or },
+    { "print", Token::Type::Print },
+    { "return", Token::Type::Return },
+    { "super", Token::Type::Super },
+    { "this", Token::Type::This },
+    { "true", Token::Type::True },
+    { "var", Token::Type::Var },
+    { "while", Token::Type::While },
 };
 
 std::vector<Token> Scanner::scan()

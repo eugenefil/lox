@@ -108,25 +108,25 @@ TEST(Scanner, Numbers)
     });
 }
 
-TEST(Scanner, ReservedKeywords)
+TEST(Scanner, Keywords)
 {
-    assert_tokens("And Class Else False Fun For If Nil Or "
-        "Print Return Super This True Var While", {
-        { Type::And, "And" },
-        { Type::Class, "Class" },
-        { Type::Else, "Else" },
-        { Type::False, "False" },
-        { Type::Fun, "Fun" },
-        { Type::For, "For" },
-        { Type::If, "If" },
-        { Type::Nil, "Nil" },
-        { Type::Or, "Or" },
-        { Type::Print, "Print" },
-        { Type::Return, "Return" },
-        { Type::Super, "Super" },
-        { Type::This, "This" },
-        { Type::True, "True" },
-        { Type::Var, "Var" },
-        { Type::While, "While" },
+    assert_tokens("and class else false fun for if nil or "
+        "print return super this true var while", {
+        { Type::And, "and" },
+        { Type::Class, "class" },
+        { Type::Else, "else" },
+        { Type::False, "false" },
+        { Type::Fun, "fun" },
+        { Type::For, "for" },
+        { Type::If, "if" },
+        { Type::Nil, "nil" },
+        { Type::Or, "or" },
+        { Type::Print, "print" },
+        { Type::Return, "return" },
+        { Type::Super, "super" },
+        { Type::This, "this" },
+        { Type::True, "true" },
+        { Type::Var, "var" },
+        { Type::While, "while" },
     });
 }
