@@ -10,9 +10,13 @@ void assert_expr(std::vector<Lox::Token>&& tokens, std::string_view ast_repr)
     ASSERT_EQ(ast->dump(), ast_repr);
 }
 
-TEST(Parser, StringLiteral)
+TEST(Parser, LiteralExpressions)
 {
     assert_expr({ { Type::String, "", "" } }, R"("")");
-    assert_expr({ { Type::String, "", "foo bar" } }, R"("foo bar")");
+    assert_expr({ { Type::String, "", "Hello world!" } }, R"("Hello world!")");
     assert_expr({ { Type::String, "", "\t\r\n\"\\" } }, R"("\t\r\n\"\\")");
+
+    assert_expr({ { Type::Number, "", 123.0 } }, "123");
+    assert_expr({ { Type::Number, "", -123.0 } }, "-123");
+    assert_expr({ { Type::Number, "", 3.14159265 } }, "3.14159265");
 }

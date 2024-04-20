@@ -1,4 +1,6 @@
 #include "Parser.h"
+#include <cassert>
+#include <charconv>
 
 namespace Lox {
 
@@ -36,6 +38,14 @@ std::string StringLiteral::dump() const
     return escape(m_value);
 }
 
+std::string NumberLiteral::dump() const
+{
+    char buf[32];
+    auto [ptr, ec] = std::to_chars(buf, buf + sizeof(buf), m_value);
+    assert(ec == std::errc()); // longest double is 24 chars long
+    return std::string(buf, ptr - buf);
+}
+
 static const Token EOF_TOKEN { Token::Type::Eof, "" };
 
 const Token& Parser::peek() const
@@ -51,6 +61,9 @@ std::shared_ptr<Expr> Parser::parse_primary()
     if (token.type() == Token::Type::String) {
         advance();
         return std::make_shared<StringLiteral>(std::get<std::string>(token.value()));
+    } else if (token.type() == Token::Type::Number) {
+        advance();
+        return std::make_shared<NumberLiteral>(std::get<double>(token.value()));
     }
     return {};
 }

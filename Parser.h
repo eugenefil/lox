@@ -21,6 +21,17 @@ private:
     std::string m_value;
 };
 
+class NumberLiteral : public Expr {
+public:
+    explicit NumberLiteral(double value) : m_value(value)
+    {}
+
+    std::string dump() const override;
+
+private:
+    double m_value;
+};
+
 class Parser {
 public:
     explicit Parser(std::vector<Token>&& tokens)
