@@ -21,7 +21,13 @@ target_link_libraries(lox lib)
 
 find_package(GTest REQUIRED)
 enable_testing()
-add_executable(TestScanner TestScanner.cpp)
-target_link_libraries(TestScanner lib GTest::gtest_main)
 include(GoogleTest)
-gtest_discover_tests(TestScanner)
+
+function(lox_test source)
+    get_filename_component(test_name ${source} NAME_WE)
+    add_executable(${test_name} ${source})
+    target_link_libraries(${test_name} lib GTest::gtest_main)
+    gtest_discover_tests(${test_name})
+endfunction()
+
+lox_test(TestScanner.cpp)
