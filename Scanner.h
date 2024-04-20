@@ -6,7 +6,8 @@
 
 namespace Lox {
 
-struct Token {
+class Token {
+public:
     enum class Type {
         Invalid,
 
@@ -27,6 +28,8 @@ struct Token {
         // keywords
         And, Class, Else, False, Fun, For, If, Nil, Or,
         Print, Return, Super, This, True, Var, While,
+
+        Eof,
     };
 
     using DefaultValueType = std::monostate;

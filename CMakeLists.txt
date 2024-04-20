@@ -14,7 +14,7 @@ set(CMAKE_COLOR_DIAGNOSTICS ON)
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-add_library(lib Scanner.cpp)
+add_library(lib Scanner.cpp Parser.cpp)
 
 add_executable(lox main.cpp)
 target_link_libraries(lox lib)
@@ -31,3 +31,4 @@ function(lox_test source)
 endfunction()
 
 lox_test(TestScanner.cpp)
+lox_test(TestParser.cpp)
