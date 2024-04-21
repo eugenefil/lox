@@ -37,10 +37,15 @@ public:
     explicit BoolLiteral(bool value) : m_value(value)
     {}
 
-    std::string dump() const override;
+    std::string dump() const override { return m_value ? "true" : "false"; }
 
 private:
     bool m_value { false };
+};
+
+class NilLiteral : public Expr {
+public:
+    std::string dump() const override { return "nil"; }
 };
 
 class Parser {

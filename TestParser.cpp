@@ -22,4 +22,6 @@ TEST(Parser, LiteralExpressions)
 
     assert_expr({ { Type::True, "", true } }, "true");
     assert_expr({ { Type::False, "", false } }, "false");
+
+    assert_expr({ { Type::Nil, "" } }, "nil");
 }
