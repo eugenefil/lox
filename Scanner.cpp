@@ -207,9 +207,18 @@ std::vector<Token> Scanner::scan()
                 while (is_identifier_char(peek()))
                     advance();
                 if (auto keyword = keywords.find(token_text());
-                    keyword != keywords.end())
-                    add_token(keyword->second);
-                else
+                    keyword != keywords.end()) {
+                    switch (auto type = keyword->second) {
+                    case Token::Type::False:
+                        add_token(type, false);
+                        break;
+                    case Token::Type::True:
+                        add_token(type, true);
+                        break;
+                    default:
+                        add_token(type);
+                    }
+                } else
                     add_token(Token::Type::Identifier);
             } else if (is_ascii_digit(ch)) {
                 double num = 0;

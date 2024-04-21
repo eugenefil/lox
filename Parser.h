@@ -29,7 +29,18 @@ public:
     std::string dump() const override;
 
 private:
-    double m_value;
+    double m_value { 0.0 };
+};
+
+class BoolLiteral : public Expr {
+public:
+    explicit BoolLiteral(bool value) : m_value(value)
+    {}
+
+    std::string dump() const override;
+
+private:
+    bool m_value { false };
 };
 
 class Parser {

@@ -33,7 +33,7 @@ public:
     };
 
     using DefaultValueType = std::monostate;
-    using ValueType = std::variant<DefaultValueType, double, std::string>;
+    using ValueType = std::variant<DefaultValueType, bool, double, std::string>;
 
     Token(Type type, std::string_view text, ValueType&& value = DefaultValueType())
         : m_type(type)

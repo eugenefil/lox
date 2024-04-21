@@ -115,7 +115,7 @@ TEST(Scanner, Keywords)
         { Type::And, "and" },
         { Type::Class, "class" },
         { Type::Else, "else" },
-        { Type::False, "false" },
+        { Type::False, "false", false },
         { Type::Fun, "fun" },
         { Type::For, "for" },
         { Type::If, "if" },
@@ -125,7 +125,7 @@ TEST(Scanner, Keywords)
         { Type::Return, "return" },
         { Type::Super, "super" },
         { Type::This, "this" },
-        { Type::True, "true" },
+        { Type::True, "true", true },
         { Type::Var, "var" },
         { Type::While, "while" },
     });

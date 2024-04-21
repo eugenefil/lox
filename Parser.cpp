@@ -46,6 +46,11 @@ std::string NumberLiteral::dump() const
     return std::string(buf, ptr - buf);
 }
 
+std::string BoolLiteral::dump() const
+{
+    return m_value ? "true" : "false";
+}
+
 static const Token EOF_TOKEN { Token::Type::Eof, "" };
 
 const Token& Parser::peek() const
@@ -64,6 +69,10 @@ std::shared_ptr<Expr> Parser::parse_primary()
     } else if (token.type() == Token::Type::Number) {
         advance();
         return std::make_shared<NumberLiteral>(std::get<double>(token.value()));
+    } else if (token.type() == Token::Type::True ||
+               token.type() == Token::Type::False) {
+        advance();
+        return std::make_shared<BoolLiteral>(std::get<bool>(token.value()));
     }
     return {};
 }

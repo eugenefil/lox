@@ -19,4 +19,7 @@ TEST(Parser, LiteralExpressions)
     assert_expr({ { Type::Number, "", 123.0 } }, "123");
     assert_expr({ { Type::Number, "", -123.0 } }, "-123");
     assert_expr({ { Type::Number, "", 3.14159265 } }, "3.14159265");
+
+    assert_expr({ { Type::True, "", true } }, "true");
+    assert_expr({ { Type::False, "", false } }, "false");
 }
