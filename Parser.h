@@ -1,6 +1,9 @@
+#pragma once
+
 #include "Scanner.h"
 #include <vector>
 #include <memory>
+#include <cassert>
 
 namespace Lox {
 
@@ -48,6 +51,27 @@ public:
     std::string dump() const override { return "nil"; }
 };
 
+enum class UnaryOp {
+    Minus,
+    Plus,
+};
+
+class UnaryExpr : public Expr {
+public:
+    UnaryExpr(UnaryOp op, std::shared_ptr<Expr> expr)
+        : m_op(op)
+        , m_expr(expr)
+    {
+        assert(expr);
+    }
+
+    std::string dump() const override;
+
+private:
+    const UnaryOp m_op;
+    std::shared_ptr<Expr> m_expr;
+};
+
 class Parser {
 public:
     explicit Parser(std::vector<Token>&& tokens)
@@ -61,6 +85,7 @@ private:
     void advance() { ++m_cur; }
 
     std::shared_ptr<Expr> parse_primary();
+    std::shared_ptr<Expr> parse_unary();
 
     std::vector<Token> m_tokens;
     std::size_t m_cur { 0 };

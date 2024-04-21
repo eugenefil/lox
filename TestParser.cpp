@@ -25,3 +25,8 @@ TEST(Parser, LiteralExpressions)
 
     assert_expr({ { Type::Nil, "" } }, "nil");
 }
+
+TEST(Parser, UnaryExpressions)
+{
+    assert_expr({ { Type::Minus, "" }, { Type::Number, "", 1.0 } }, "(- 1)");
+}

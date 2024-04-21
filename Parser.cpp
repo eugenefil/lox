@@ -46,6 +46,23 @@ std::string NumberLiteral::dump() const
     return std::string(buf, ptr - buf);
 }
 
+std::string UnaryExpr::dump() const
+{
+    std::string s = "(";
+    switch (m_op) {
+    case UnaryOp::Minus:
+        s += '-';
+        break;
+    case UnaryOp::Plus:
+        s += '+';
+        break;
+    }
+    s += ' ';
+    s += m_expr->dump();
+    s += ')';
+    return s;
+}
+
 static const Token EOF_TOKEN { Token::Type::Eof, "" };
 
 const Token& Parser::peek() const
@@ -75,9 +92,32 @@ std::shared_ptr<Expr> Parser::parse_primary()
     return {};
 }
 
+std::shared_ptr<Expr> Parser::parse_unary()
+{
+    if (auto& token = peek(); token.type() == Token::Type::Minus ||
+        token.type() == Token::Type::Plus) {
+        advance();
+        if (auto expr = parse_unary()) {
+            UnaryOp op = [&token]() {
+                switch (token.type()) {
+                case Token::Type::Minus:
+                    return UnaryOp::Minus;
+                case Token::Type::Plus:
+                    return UnaryOp::Plus;
+                default:
+                    assert(0);
+                }
+            }();
+            return std::make_shared<UnaryExpr>(op, expr);
+        }
+        return {};
+    }
+    return parse_primary();
+}
+
 std::shared_ptr<Expr> Parser::parse()
 {
-    return parse_primary();
+    return parse_unary();
 }
 
 }
