@@ -1,4 +1,4 @@
-#include "Scanner.h"
+#include "Lexer.h"
 #include <cassert>
 #include <charconv>
 #include <unordered_map>
@@ -11,7 +11,7 @@ std::ostream& operator<<(std::ostream& out, const Token& token)
     return out;
 }
 
-bool Scanner::match(char next)
+bool Lexer::match(char next)
 {
     if (peek() == next) {
         advance();
@@ -20,7 +20,7 @@ bool Scanner::match(char next)
     return false;
 }
 
-std::string_view Scanner::token_text() const
+std::string_view Lexer::token_text() const
 {
     assert(m_end > m_beg);
     return m_input.substr(m_beg, m_end - m_beg);
@@ -46,7 +46,7 @@ constexpr bool is_identifier_char(char ch)
     return is_identifier_first_char(ch) || is_ascii_digit(ch);
 }
 
-bool Scanner::unescape(std::string& s)
+bool Lexer::unescape(std::string& s)
 {
     std::size_t next = 0;
     for (std::size_t i = 0; i < s.size(); ++i) {
@@ -101,7 +101,7 @@ static const std::unordered_map<std::string_view, Token::Type> keywords = {
     { "while", Token::Type::While },
 };
 
-std::vector<Token> Scanner::scan()
+std::vector<Token> Lexer::lex()
 {
     std::vector<Token> tokens;
 

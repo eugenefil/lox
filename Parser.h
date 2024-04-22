@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scanner.h"
+#include "Lexer.h"
 #include <vector>
 #include <memory>
 #include <cassert>

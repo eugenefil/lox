@@ -55,12 +55,12 @@ private:
     ValueType m_value;
 };
 
-class Scanner {
+class Lexer {
 public:
-    Scanner(std::string_view source) : m_input(source)
+    Lexer(std::string_view source) : m_input(source)
     {}
 
-    std::vector<Token> scan();
+    std::vector<Token> lex();
 
 private:
     void advance() { ++m_end; }

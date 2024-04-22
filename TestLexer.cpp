@@ -1,4 +1,4 @@
-#include "Scanner.h"
+#include "Lexer.h"
 #include <gtest/gtest.h>
 
 using Type = Lox::Token::Type;
@@ -6,10 +6,10 @@ using Type = Lox::Token::Type;
 void assert_tokens(std::string_view input,
                    const std::vector<Lox::Token>& tokens)
 {
-    auto scanned = Lox::Scanner(input).scan();
-    ASSERT_EQ(scanned.size(), tokens.size());
+    auto output = Lox::Lexer(input).lex();
+    ASSERT_EQ(output.size(), tokens.size());
     for (std::size_t i = 0; i < tokens.size(); ++i) {
-        const auto& lhs = scanned[i];
+        const auto& lhs = output[i];
         const auto& rhs = tokens[i];
         EXPECT_EQ(lhs.type(), rhs.type());
         EXPECT_EQ(lhs.text(), rhs.text());
@@ -17,12 +17,12 @@ void assert_tokens(std::string_view input,
     }
 }
 
-TEST(Scanner, EmptyInputReturnsNoTokens)
+TEST(Lexer, EmptyInputReturnsNoTokens)
 {
     assert_tokens("", {});
 }
 
-TEST(Scanner, OneCharTokens)
+TEST(Lexer, OneCharTokens)
 {
     assert_tokens("(){},.-+;/*@", {
         { Type::LeftParen, "(" },
@@ -40,7 +40,7 @@ TEST(Scanner, OneCharTokens)
     });
 }
 
-TEST(Scanner, SkipWhitespace)
+TEST(Lexer, SkipWhitespace)
 {
     assert_tokens("\t(\n)\r\n{  }\t\t", {
         { Type::LeftParen, "(" },
@@ -50,7 +50,7 @@ TEST(Scanner, SkipWhitespace)
     });
 }
 
-TEST(Scanner, OneTwoCharTokens)
+TEST(Lexer, OneTwoCharTokens)
 {
     assert_tokens("!= ! == = >= > <= <", {
         { Type::BangEqual, "!=" },
@@ -64,7 +64,7 @@ TEST(Scanner, OneTwoCharTokens)
     });
 }
 
-TEST(Scanner, Identifiers)
+TEST(Lexer, Identifiers)
 {
     assert_tokens("_ x0 foo_bar FOOBAR __foo3__BAR4__", {
         { Type::Identifier, "_" },
@@ -75,7 +75,7 @@ TEST(Scanner, Identifiers)
     });
 }
 
-TEST(Scanner, Strings)
+TEST(Lexer, Strings)
 {
     assert_tokens(R"("" "hello world!" "\t\r\n\"\\" "foo\z" "multi
         line
@@ -97,7 +97,7 @@ escape")", "newline escape" },
     });
 }
 
-TEST(Scanner, Numbers)
+TEST(Lexer, Numbers)
 {
     assert_tokens("9007199254740991 3.14159265 4e9 7.843e-9 1e999999", {
         { Type::Number, "9007199254740991", 9007199254740991.0 },
@@ -108,7 +108,7 @@ TEST(Scanner, Numbers)
     });
 }
 
-TEST(Scanner, Keywords)
+TEST(Lexer, Keywords)
 {
     assert_tokens("and class else false fun for if nil or "
         "print return super this true var while", {
@@ -131,7 +131,7 @@ TEST(Scanner, Keywords)
     });
 }
 
-TEST(Scanner, Comments)
+TEST(Lexer, Comments)
 {
     assert_tokens(R"(// commented line
         f(); // comment after code)", {
