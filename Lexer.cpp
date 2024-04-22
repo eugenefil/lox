@@ -82,30 +82,30 @@ bool Lexer::unescape(std::string& s)
     return true;
 }
 
-static const std::unordered_map<std::string_view, Token::Type> keywords = {
-    { "and", Token::Type::And },
-    { "class", Token::Type::Class },
-    { "else", Token::Type::Else },
-    { "false", Token::Type::False },
-    { "fun", Token::Type::Fun },
-    { "for", Token::Type::For },
-    { "if", Token::Type::If },
-    { "nil", Token::Type::Nil },
-    { "or", Token::Type::Or },
-    { "print", Token::Type::Print },
-    { "return", Token::Type::Return },
-    { "super", Token::Type::Super },
-    { "this", Token::Type::This },
-    { "true", Token::Type::True },
-    { "var", Token::Type::Var },
-    { "while", Token::Type::While },
+static const std::unordered_map<std::string_view, TokenType> keywords = {
+    { "and", TokenType::And },
+    { "class", TokenType::Class },
+    { "else", TokenType::Else },
+    { "false", TokenType::False },
+    { "fun", TokenType::Fun },
+    { "for", TokenType::For },
+    { "if", TokenType::If },
+    { "nil", TokenType::Nil },
+    { "or", TokenType::Or },
+    { "print", TokenType::Print },
+    { "return", TokenType::Return },
+    { "super", TokenType::Super },
+    { "this", TokenType::This },
+    { "true", TokenType::True },
+    { "var", TokenType::Var },
+    { "while", TokenType::While },
 };
 
 std::vector<Token> Lexer::lex()
 {
     std::vector<Token> tokens;
 
-    auto add_token = [&](Token::Type type,
+    auto add_token = [&](TokenType type,
                          Token::ValueType&& value = Token::DefaultValueType()) {
             tokens.push_back(Token {
                 type,
@@ -126,54 +126,54 @@ std::vector<Token> Lexer::lex()
             m_beg = m_end;
             break;
         case '(':
-            add_token(Token::Type::LeftParen);
+            add_token(TokenType::LeftParen);
             break;
         case ')':
-            add_token(Token::Type::RightParen);
+            add_token(TokenType::RightParen);
             break;
         case '{':
-            add_token(Token::Type::LeftBrace);
+            add_token(TokenType::LeftBrace);
             break;
         case '}':
-            add_token(Token::Type::RightBrace);
+            add_token(TokenType::RightBrace);
             break;
         case ',':
-            add_token(Token::Type::Comma);
+            add_token(TokenType::Comma);
             break;
         case '.':
-            add_token(Token::Type::Dot);
+            add_token(TokenType::Dot);
             break;
         case '-':
-            add_token(Token::Type::Minus);
+            add_token(TokenType::Minus);
             break;
         case '+':
-            add_token(Token::Type::Plus);
+            add_token(TokenType::Plus);
             break;
         case ';':
-            add_token(Token::Type::Semicolon);
+            add_token(TokenType::Semicolon);
             break;
         case '/':
             if (match('/')) {
                 while (more() && next() != '\n')
                     advance();
-                add_token(Token::Type::Comment);
+                add_token(TokenType::Comment);
             } else
-                add_token(Token::Type::Slash);
+                add_token(TokenType::Slash);
             break;
         case '*':
-            add_token(Token::Type::Star);
+            add_token(TokenType::Star);
             break;
         case '!':
-            add_token(match('=') ? Token::Type::BangEqual : Token::Type::Bang);
+            add_token(match('=') ? TokenType::BangEqual : TokenType::Bang);
             break;
         case '=':
-            add_token(match('=') ? Token::Type::EqualEqual : Token::Type::Equal);
+            add_token(match('=') ? TokenType::EqualEqual : TokenType::Equal);
             break;
         case '>':
-            add_token(match('=') ? Token::Type::GreaterEqual : Token::Type::Greater);
+            add_token(match('=') ? TokenType::GreaterEqual : TokenType::Greater);
             break;
         case '<':
-            add_token(match('=') ? Token::Type::LessEqual : Token::Type::Less);
+            add_token(match('=') ? TokenType::LessEqual : TokenType::Less);
             break;
         case '"': {
             int num_escapes = 0;
@@ -188,7 +188,7 @@ std::vector<Token> Lexer::lex()
             }
             if (!more()) {
                 error("unterminated string");
-                add_token(Token::Type::Invalid);
+                add_token(TokenType::Invalid);
                 break;
             }
             advance();
@@ -196,10 +196,10 @@ std::vector<Token> Lexer::lex()
             auto substr = m_input.substr(m_beg + 1, m_end - m_beg - 2);
             auto value = std::string(substr);
             if (num_escapes > 0 && !unescape(value)) {
-                add_token(Token::Type::Invalid);
+                add_token(TokenType::Invalid);
                 break;
             }
-            add_token(Token::Type::String, std::move(value));
+            add_token(TokenType::String, std::move(value));
             break;
         }
         default:
@@ -209,17 +209,17 @@ std::vector<Token> Lexer::lex()
                 if (auto keyword = keywords.find(token_text());
                     keyword != keywords.end()) {
                     switch (auto type = keyword->second) {
-                    case Token::Type::False:
+                    case TokenType::False:
                         add_token(type, false);
                         break;
-                    case Token::Type::True:
+                    case TokenType::True:
                         add_token(type, true);
                         break;
                     default:
                         add_token(type);
                     }
                 } else
-                    add_token(Token::Type::Identifier);
+                    add_token(TokenType::Identifier);
             } else if (is_ascii_digit(ch)) {
                 double num = 0;
                 auto start = m_input.data() + m_beg;
@@ -229,15 +229,15 @@ std::vector<Token> Lexer::lex()
                 m_end = m_beg + (ptr - start);
                 assert(m_end <= m_input.size());
                 if (ec == std::errc())
-                    add_token(Token::Type::Number, num);
+                    add_token(TokenType::Number, num);
                 else if (ec == std::errc::result_out_of_range) {
                     error("literal exceeds range of double-precision floating point");
-                    add_token(Token::Type::Invalid);
+                    add_token(TokenType::Invalid);
                 } else
                     assert(0); // unknown error, shouldn't happen
             } else {
                 error("invalid token");
-                add_token(Token::Type::Invalid);
+                add_token(TokenType::Invalid);
             }
         }
     }

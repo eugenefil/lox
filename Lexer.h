@@ -6,36 +6,36 @@
 
 namespace Lox {
 
+enum class TokenType {
+    Invalid,
+
+    // one-char tokens
+    LeftParen, RightParen, LeftBrace, RightBrace,
+    Comma, Dot, Minus, Plus, Semicolon, Star,
+
+    // one- or two-char tokens
+    Bang, BangEqual,
+    Equal, EqualEqual,
+    Greater, GreaterEqual,
+    Less, LessEqual,
+    Slash, Comment,
+
+    // literals
+    Identifier, String, Number,
+
+    // keywords
+    And, Class, Else, False, Fun, For, If, Nil, Or,
+    Print, Return, Super, This, True, Var, While,
+
+    Eof,
+};
+
 class Token {
 public:
-    enum class Type {
-        Invalid,
-
-        // one-char tokens
-        LeftParen, RightParen, LeftBrace, RightBrace,
-        Comma, Dot, Minus, Plus, Semicolon, Star,
-
-        // one- or two-char tokens
-        Bang, BangEqual,
-        Equal, EqualEqual,
-        Greater, GreaterEqual,
-        Less, LessEqual,
-        Slash, Comment,
-
-        // literals
-        Identifier, String, Number,
-
-        // keywords
-        And, Class, Else, False, Fun, For, If, Nil, Or,
-        Print, Return, Super, This, True, Var, While,
-
-        Eof,
-    };
-
     using DefaultValueType = std::monostate;
     using ValueType = std::variant<DefaultValueType, bool, double, std::string>;
 
-    Token(Type type, std::string_view text, ValueType&& value = DefaultValueType())
+    Token(TokenType type, std::string_view text, ValueType&& value = DefaultValueType())
         : m_type(type)
         , m_text(text)
         , m_value(std::move(value))
@@ -43,14 +43,14 @@ public:
 
     bool operator==(const Token&) const = default;
 
-    Type type() const { return m_type; }
+    TokenType type() const { return m_type; }
     std::string_view text() const { return m_text; }
     const ValueType& value() const { return m_value; }
 
     friend std::ostream& operator<<(std::ostream& out, const Token& token);
 
 private:
-    Type m_type { Type::Invalid };
+    TokenType m_type { TokenType::Invalid };
     std::string_view m_text;
     ValueType m_value;
 };

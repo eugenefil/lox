@@ -1,7 +1,7 @@
 #include "Parser.h"
 #include <gtest/gtest.h>
 
-using Type = Lox::Token::Type;
+using Lox::TokenType;
 
 void assert_expr(std::vector<Lox::Token>&& tokens, std::string_view ast_repr)
 {
@@ -12,21 +12,21 @@ void assert_expr(std::vector<Lox::Token>&& tokens, std::string_view ast_repr)
 
 TEST(Parser, LiteralExpressions)
 {
-    assert_expr({ { Type::String, "", "" } }, R"("")");
-    assert_expr({ { Type::String, "", "Hello world!" } }, R"("Hello world!")");
-    assert_expr({ { Type::String, "", "\t\r\n\"\\" } }, R"("\t\r\n\"\\")");
+    assert_expr({ { TokenType::String, "", "" } }, R"("")");
+    assert_expr({ { TokenType::String, "", "Hello world!" } }, R"("Hello world!")");
+    assert_expr({ { TokenType::String, "", "\t\r\n\"\\" } }, R"("\t\r\n\"\\")");
 
-    assert_expr({ { Type::Number, "", 123.0 } }, "123");
-    assert_expr({ { Type::Number, "", -123.0 } }, "-123");
-    assert_expr({ { Type::Number, "", 3.14159265 } }, "3.14159265");
+    assert_expr({ { TokenType::Number, "", 123.0 } }, "123");
+    assert_expr({ { TokenType::Number, "", -123.0 } }, "-123");
+    assert_expr({ { TokenType::Number, "", 3.14159265 } }, "3.14159265");
 
-    assert_expr({ { Type::True, "", true } }, "true");
-    assert_expr({ { Type::False, "", false } }, "false");
+    assert_expr({ { TokenType::True, "", true } }, "true");
+    assert_expr({ { TokenType::False, "", false } }, "false");
 
-    assert_expr({ { Type::Nil, "" } }, "nil");
+    assert_expr({ { TokenType::Nil, "" } }, "nil");
 }
 
 TEST(Parser, UnaryExpressions)
 {
-    assert_expr({ { Type::Minus, "" }, { Type::Number, "", 1.0 } }, "(- 1)");
+    assert_expr({ { TokenType::Minus, "" }, { TokenType::Number, "", 1.0 } }, "(- 1)");
 }

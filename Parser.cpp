@@ -63,7 +63,7 @@ std::string UnaryExpr::dump() const
     return s;
 }
 
-static const Token EOF_TOKEN { Token::Type::Eof, "" };
+static const Token EOF_TOKEN { TokenType::Eof, "" };
 
 const Token& Parser::peek() const
 {
@@ -75,17 +75,17 @@ const Token& Parser::peek() const
 std::shared_ptr<Expr> Parser::parse_primary()
 {
     auto& token = peek();
-    if (token.type() == Token::Type::String) {
+    if (token.type() == TokenType::String) {
         advance();
         return std::make_shared<StringLiteral>(std::get<std::string>(token.value()));
-    } else if (token.type() == Token::Type::Number) {
+    } else if (token.type() == TokenType::Number) {
         advance();
         return std::make_shared<NumberLiteral>(std::get<double>(token.value()));
-    } else if (token.type() == Token::Type::True ||
-               token.type() == Token::Type::False) {
+    } else if (token.type() == TokenType::True ||
+               token.type() == TokenType::False) {
         advance();
         return std::make_shared<BoolLiteral>(std::get<bool>(token.value()));
-    } else if (token.type() == Token::Type::Nil) {
+    } else if (token.type() == TokenType::Nil) {
         advance();
         return std::make_shared<NilLiteral>();
     }
@@ -94,15 +94,15 @@ std::shared_ptr<Expr> Parser::parse_primary()
 
 std::shared_ptr<Expr> Parser::parse_unary()
 {
-    if (auto& token = peek(); token.type() == Token::Type::Minus ||
-        token.type() == Token::Type::Plus) {
+    if (auto& token = peek(); token.type() == TokenType::Minus ||
+        token.type() == TokenType::Plus) {
         advance();
         if (auto expr = parse_unary()) {
             UnaryOp op = [&token]() {
                 switch (token.type()) {
-                case Token::Type::Minus:
+                case TokenType::Minus:
                     return UnaryOp::Minus;
-                case Token::Type::Plus:
+                case TokenType::Plus:
                     return UnaryOp::Plus;
                 default:
                     assert(0);
