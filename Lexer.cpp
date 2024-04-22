@@ -22,8 +22,8 @@ bool Lexer::match(char next)
 
 std::string_view Lexer::token_text() const
 {
-    assert(m_end > m_beg);
-    return m_input.substr(m_beg, m_end - m_beg);
+    assert(m_end > m_start);
+    return m_input.substr(m_start, m_end - m_start);
 }
 
 constexpr bool is_ascii_alpha(char ch)
@@ -112,18 +112,18 @@ std::vector<Token> Lexer::lex()
                 token_text(),
                 std::move(value),
             });
-            m_beg = m_end;
+            m_start = m_end;
     };
 
-    while (m_beg < m_input.size()) {
-        auto ch = m_input[m_beg];
-        m_end = m_beg + 1;
+    while (m_start < m_input.size()) {
+        auto ch = m_input[m_start];
+        m_end = m_start + 1;
         switch (ch) {
         case ' ':
         case '\t':
         case '\r':
         case '\n':
-            m_beg = m_end;
+            m_start = m_end;
             break;
         case '(':
             add_token(TokenType::LeftParen);
@@ -192,8 +192,8 @@ std::vector<Token> Lexer::lex()
                 break;
             }
             advance();
-            assert(m_end >= m_beg + 2);
-            auto substr = m_input.substr(m_beg + 1, m_end - m_beg - 2);
+            assert(m_end >= m_start + 2);
+            auto substr = m_input.substr(m_start + 1, m_end - m_start - 2);
             auto value = std::string(substr);
             if (num_escapes > 0 && !unescape(value)) {
                 add_token(TokenType::Invalid);
@@ -222,11 +222,11 @@ std::vector<Token> Lexer::lex()
                     add_token(TokenType::Identifier);
             } else if (is_ascii_digit(ch)) {
                 double num = 0;
-                auto start = m_input.data() + m_beg;
-                auto [ptr, ec] = std::from_chars(start, m_input.end(), num);
+                auto ptr_start = m_input.data() + m_start;
+                auto [ptr_end, ec] = std::from_chars(ptr_start, m_input.end(), num);
                 assert(ec != std::errc::invalid_argument); // we have at least one digit
-                assert(ptr > start);
-                m_end = m_beg + (ptr - start);
+                assert(ptr_end > ptr_start);
+                m_end = m_start + (ptr_end - ptr_start);
                 assert(m_end <= m_input.size());
                 if (ec == std::errc())
                     add_token(TokenType::Number, num);

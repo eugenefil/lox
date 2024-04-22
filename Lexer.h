@@ -57,7 +57,7 @@ private:
 
 class Lexer {
 public:
-    Lexer(std::string_view source) : m_input(source)
+    Lexer(std::string_view input) : m_input(input)
     {}
 
     std::vector<Token> lex();
@@ -74,7 +74,7 @@ private:
     void error(std::string_view) {};
 
     std::string_view m_input;
-    std::size_t m_beg { 0 };
+    std::size_t m_start { 0 };
     std::size_t m_end { 0 };
 };
 
