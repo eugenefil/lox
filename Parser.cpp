@@ -63,7 +63,7 @@ std::string UnaryExpr::dump() const
     return s;
 }
 
-static const Token EOF_TOKEN { TokenType::Eof, "" };
+static const Token EOF_TOKEN { TokenType::Eof, {} };
 
 const Token& Parser::peek() const
 {

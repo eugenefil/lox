@@ -20,7 +20,27 @@ static std::string argv0;
 [[noreturn]] void errusage() { usage(true); }
 
 void repl()
-{}
+{
+    for (;;) {
+        std::cout << ">>> ";
+        std::string line;
+        if (!std::getline(std::cin, line)) {
+            std::cout << std::endl;
+            break;
+        }
+        Lox::Lexer lexer(line);
+        auto tokens = lexer.lex();
+        if (lexer.has_errors()) {
+            continue;
+        }
+        Lox::Parser parser(std::move(tokens));
+        auto expr = parser.parse();
+        if (parser.has_errors()) {
+            continue;
+        }
+        std::cout << expr->dump() << std::endl;
+    }
+}
 
 int run(std::string_view)
 {

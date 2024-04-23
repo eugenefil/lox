@@ -5,12 +5,6 @@
 
 namespace Lox {
 
-std::ostream& operator<<(std::ostream& out, const Token& token)
-{
-    out << token.text();
-    return out;
-}
-
 bool Lexer::match(char next)
 {
     if (peek() == next) {
@@ -24,6 +18,12 @@ std::string_view Lexer::token_text() const
 {
     assert(m_end > m_start);
     return m_input.substr(m_start, m_end - m_start);
+}
+
+Span Lexer::token_span() const
+{
+    assert(m_end > m_start);
+    return Span { m_start, m_end - m_start };
 }
 
 constexpr bool is_ascii_alpha(char ch)
@@ -46,6 +46,15 @@ constexpr bool is_identifier_char(char ch)
     return is_identifier_first_char(ch) || is_ascii_digit(ch);
 }
 
+void Lexer::error(std::string_view msg, Span span)
+{
+    if (span == Span {})
+        span = token_span();
+    assert(span.len > 0);
+    assert(span.pos + span.len <= m_input.size());
+    m_errors.push_back({ span, msg });
+}
+
 bool Lexer::unescape(std::string& s)
 {
     std::size_t last = 0;
@@ -56,7 +65,7 @@ bool Lexer::unescape(std::string& s)
         }
         char sub = 0;
         assert(i + 1 < s.size()); // backslash can't be last
-        switch (auto ch = s[i++ + 1]) {
+        switch (auto ch = s[++i]) {
         case 't':
             sub = '\t';
             break;
@@ -73,7 +82,9 @@ bool Lexer::unescape(std::string& s)
         case '\n':
             continue;
         default:
-            error("unknown escape sequence");
+            // m_start + 1 -- start of string value after opening quote
+            // i - 1 -- index of backslash inside string value
+            error("unknown escape sequence", { (m_start + 1) + (i - 1), 2 });
             return false;
         }
         s[last++] = sub;
@@ -109,7 +120,7 @@ std::vector<Token> Lexer::lex()
                          Token::ValueType&& value = Token::DefaultValueType()) {
             tokens.push_back(Token {
                 type,
-                token_text(),
+                token_span(),
                 std::move(value),
             });
             consume();
@@ -237,7 +248,7 @@ std::vector<Token> Lexer::lex()
                 } else
                     assert(0); // unknown error, shouldn't happen
             } else {
-                error("invalid token");
+                error("unknown token");
                 add_token(TokenType::Invalid);
             }
         }

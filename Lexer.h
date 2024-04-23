@@ -30,29 +30,39 @@ enum class TokenType {
     Eof,
 };
 
+struct Span {
+    std::size_t pos { 0 };
+    std::size_t len { 0 };
+
+    bool operator==(const Span&) const = default;
+};
+
 class Token {
 public:
     using DefaultValueType = std::monostate;
     using ValueType = std::variant<DefaultValueType, bool, double, std::string>;
 
-    Token(TokenType type, std::string_view text, ValueType&& value = DefaultValueType())
+    Token(TokenType type, Span span, ValueType&& value = DefaultValueType())
         : m_type(type)
-        , m_text(text)
+        , m_span(span)
         , m_value(std::move(value))
     {}
 
     bool operator==(const Token&) const = default;
 
     TokenType type() const { return m_type; }
-    std::string_view text() const { return m_text; }
+    Span span() const { return m_span; }
     const ValueType& value() const { return m_value; }
-
-    friend std::ostream& operator<<(std::ostream& out, const Token& token);
 
 private:
     TokenType m_type { TokenType::Invalid };
-    std::string_view m_text;
+    Span m_span;
     ValueType m_value;
+};
+
+struct Error {
+    Span span;
+    std::string_view msg;
 };
 
 class Lexer {
@@ -61,6 +71,8 @@ public:
     {}
 
     std::vector<Token> lex();
+    bool has_errors() const { return m_errors.size() > 0; }
+    const std::vector<Error>& errors() const { return m_errors; }
 
 private:
     void advance() { ++m_end; }
@@ -71,12 +83,14 @@ private:
     bool match(char next);
 
     std::string_view token_text() const;
+    Span token_span() const;
     bool unescape(std::string&);
-    void error(std::string_view) {};
+    void error(std::string_view msg, Span span = {});
 
     std::string_view m_input;
     std::size_t m_start { 0 };
     std::size_t m_end { 0 };
+    std::vector<Error> m_errors;
 };
 
 }

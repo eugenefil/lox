@@ -79,6 +79,8 @@ public:
     {}
 
     std::shared_ptr<Expr> parse();
+    bool has_errors() const { return m_errors.size() > 0; }
+    const std::vector<Error>& errors() const { return m_errors; }
 
 private:
     const Token& peek() const;
@@ -89,6 +91,7 @@ private:
 
     std::vector<Token> m_tokens;
     std::size_t m_cur { 0 };
+    std::vector<Error> m_errors;
 };
 
 }
