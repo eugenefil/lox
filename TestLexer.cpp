@@ -150,3 +150,36 @@ TEST(Lexer, Comments)
         { TokenType::Comment, { 31, 21 } },
     });
 }
+
+TEST(Lexer, MultipleTokens)
+{
+    assert_tokens(R"(
+        var foo = bar * 3.14;
+        print(foo, "\tbaz");)", {
+        { TokenType::Var, { 9, 3 } },
+        { TokenType::Identifier, { 13, 3 } },
+        { TokenType::Equal, { 17, 1 } },
+        { TokenType::Identifier, { 19, 3 } },
+        { TokenType::Star, { 23, 1 } },
+        { TokenType::Number, { 25, 4 }, 3.14 },
+        { TokenType::Semicolon, { 29, 1 } },
+        { TokenType::Print, { 39, 5 } },
+        { TokenType::LeftParen, { 44, 1 } },
+        { TokenType::Identifier, { 45, 3 } },
+        { TokenType::Comma, { 48, 1 } },
+        { TokenType::String, { 50, 7 }, "\tbaz" },
+        { TokenType::RightParen, { 57, 1 } },
+        { TokenType::Semicolon, { 58, 1 } },
+    });
+}
+
+TEST(Lexer, MultipleErrors)
+{
+    assert_tokens(R"(@ + "unterminated)", {
+        { TokenType::Invalid, { 0, 1 } },
+        { TokenType::Plus, { 2, 1 } },
+        { TokenType::Invalid, { 4, 13 } }
+    }, {
+        { 0, 1 }, { 4, 13 },
+    });
+}
