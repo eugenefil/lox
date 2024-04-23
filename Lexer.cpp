@@ -48,10 +48,10 @@ constexpr bool is_identifier_char(char ch)
 
 bool Lexer::unescape(std::string& s)
 {
-    std::size_t next = 0;
+    std::size_t last = 0;
     for (std::size_t i = 0; i < s.size(); ++i) {
         if (s[i] != '\\') {
-            s[next++] = s[i];
+            s[last++] = s[i];
             continue;
         }
         char sub = 0;
@@ -76,9 +76,9 @@ bool Lexer::unescape(std::string& s)
             error("unknown escape sequence");
             return false;
         }
-        s[next++] = sub;
+        s[last++] = sub;
     }
-    s.resize(next);
+    s.resize(last);
     return true;
 }
 
@@ -112,18 +112,19 @@ std::vector<Token> Lexer::lex()
                 token_text(),
                 std::move(value),
             });
-            m_start = m_end;
+            consume();
     };
 
     while (m_start < m_input.size()) {
-        auto ch = m_input[m_start];
-        m_end = m_start + 1;
+        assert(m_start == m_end);
+        auto ch = next();
+        advance();
         switch (ch) {
         case ' ':
         case '\t':
         case '\r':
         case '\n':
-            m_start = m_end;
+            consume();
             break;
         case '(':
             add_token(TokenType::LeftParen);

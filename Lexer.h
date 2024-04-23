@@ -64,6 +64,7 @@ public:
 
 private:
     void advance() { ++m_end; }
+    void consume() { m_start = m_end; }
     bool more() const { return m_end < m_input.size(); }
     char next() const { return m_input[m_end]; } // unsafe, guard with more()
     char peek() const { return more() ? next() : 0; }
