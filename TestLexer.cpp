@@ -3,9 +3,9 @@
 
 using Lox::TokenType;
 
-void assert_tokens(std::string_view input,
-                   std::vector<Lox::Token> tokens,
-                   std::vector<Lox::Span> error_spans = {})
+static void assert_tokens(std::string_view input,
+                          std::vector<Lox::Token> tokens,
+                          std::vector<Lox::Span> error_spans = {})
 {
     Lox::Lexer lexer(input);
     auto output = lexer.lex();
@@ -24,13 +24,13 @@ void assert_tokens(std::string_view input,
         EXPECT_EQ(errors[i].span, error_spans[i]);
 }
 
-void assert_token(std::string_view input, TokenType type,
-                  Lox::Token::ValueType value = Lox::Token::DefaultValueType())
+static void assert_token(std::string_view input, TokenType type,
+                         Lox::Token::ValueType value = Lox::Token::DefaultValueType())
 {
     assert_tokens(input, { { type, { 0, input.size() }, std::move(value) } });
 }
 
-void assert_invalid_token(std::string_view input, Lox::Span error_span = {})
+static void assert_invalid_token(std::string_view input, Lox::Span error_span = {})
 {
     if (error_span == Lox::Span {})
         error_span = { 0, input.size() };
@@ -182,4 +182,54 @@ TEST(Lexer, MultipleErrors)
     }, {
         { 0, 1 }, { 4, 13 },
     });
+}
+
+static void assert_lines(std::string_view source,
+                         std::vector<std::size_t> line_limits)
+{
+    Lox::SourceMap smap(source);
+    auto& limits = smap.line_limits();
+    ASSERT_EQ(limits.size(), line_limits.size());
+    for (std::size_t i = 0; i < limits.size(); ++i)
+        EXPECT_EQ(limits[i], line_limits[i]);
+}
+
+TEST(SourceMap, LineLimits)
+{
+    assert_lines("", {});
+    assert_lines("foo", { 3 });
+    assert_lines("foo\n", { 4 });
+    assert_lines(R"(
+        var s = "multi
+        line
+        string";)", { 1, 24, 37, 53 });
+}
+
+TEST(SourceMap, Lines)
+{
+    Lox::SourceMap smap(R"(
+        fn();
+        var foo = "bar";)");
+    EXPECT_EQ(smap.line(1), "");
+    EXPECT_EQ(smap.line(2), "        fn();");
+    EXPECT_EQ(smap.line(3), "        var foo = \"bar\";");
+    EXPECT_EQ(smap.line(4).data(), nullptr);
+}
+
+TEST(SourceMap, Ranges)
+{
+    Lox::SourceMap smap(R"(
+{
+        var s = "multi
+        line
+        string
+)");
+    #define RANGE(...) (Lox::Range { __VA_ARGS__ })
+    EXPECT_EQ(smap.span_to_range({ 0, 54 }), RANGE({ 1, 1 }, { 5, 16 })); // all
+    EXPECT_EQ(smap.span_to_range({ 1, 1 }), RANGE({ 2, 1 }, { 2, 2 })); // {
+    EXPECT_EQ(smap.span_to_range({ 11, 3 }), RANGE({ 3, 9 }, { 3, 12 })); // var
+    EXPECT_EQ(smap.span_to_range({ 19, 35 }), RANGE({ 3, 17 }, { 5, 16 })); // literal
+    EXPECT_EQ(smap.span_to_range({ 54, 1 }), RANGE()); // starts at eof
+    EXPECT_EQ(smap.span_to_range({ 0, 55 }), RANGE()); // extends past eof
+    #undef RANGE
 }

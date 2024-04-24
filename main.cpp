@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <filesystem>
+#include <cmath>
 namespace fs = std::filesystem;
 
 static std::string argv0;
@@ -19,6 +20,33 @@ static std::string argv0;
 
 [[noreturn]] void errusage() { usage(true); }
 
+void print_errors(const std::vector<Lox::Error>& errors,
+                  std::string_view source, std::string_view filename)
+{
+    Lox::SourceMap smap(source);
+    for (auto& error : errors) {
+        auto range = smap.span_to_range(error.span);
+        assert(range.valid());
+        auto [start, end] = range;
+        assert(start.line_num == end.line_num);
+        auto line = smap.line(start.line_num);
+        assert(line.data());
+        auto num_len = static_cast<std::size_t>(std::log10(end.line_num)) + 1;
+        auto spacer = std::string(num_len, ' ');
+        auto marker = std::string(start.col_num - 1, ' ') +
+            std::string(end.col_num - start.col_num, '^');
+        std::cerr <<
+            "error: " << error.msg << '\n' <<
+            spacer << "--> " << filename << ':' << start.line_num <<
+                ':' << start.col_num << '\n' <<
+            spacer << " |" << '\n' <<
+            start.line_num << " | " << line << '\n' <<
+            spacer << " | " << marker << '\n' <<
+            spacer << " |" << '\n' <<
+            '\n';
+    }
+}
+
 void repl()
 {
     for (;;) {
@@ -31,6 +59,7 @@ void repl()
         Lox::Lexer lexer(line);
         auto tokens = lexer.lex();
         if (lexer.has_errors()) {
+            print_errors(lexer.errors(), line, "stdin");
             continue;
         }
         Lox::Parser parser(std::move(tokens));
@@ -38,7 +67,8 @@ void repl()
         if (parser.has_errors()) {
             continue;
         }
-        std::cout << expr->dump() << std::endl;
+        if (expr)
+            std::cout << expr->dump() << std::endl;
     }
 }
 
