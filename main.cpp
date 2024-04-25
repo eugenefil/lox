@@ -3,6 +3,7 @@
 #include <string>
 #include <filesystem>
 #include <cmath>
+#include <unistd.h>
 namespace fs = std::filesystem;
 
 static std::string argv0;
@@ -21,7 +22,8 @@ static std::string argv0;
 [[noreturn]] void errusage() { usage(true); }
 
 void print_errors(const std::vector<Lox::Error>& errors,
-                  std::string_view source, std::string_view filename)
+                  std::string_view source, std::string_view filename,
+                  bool color = false)
 {
     Lox::SourceMap smap(source);
     for (auto& error : errors) {
@@ -35,15 +37,49 @@ void print_errors(const std::vector<Lox::Error>& errors,
         auto spacer = std::string(num_len, ' ');
         auto marker = std::string(start.col_num - 1, ' ') +
             std::string(end.col_num - start.col_num, '^');
-        std::cerr <<
-            "error: " << error.msg << '\n' <<
-            spacer << "--> " << filename << ':' << start.line_num <<
-                ':' << start.col_num << '\n' <<
-            spacer << " |" << '\n' <<
-            start.line_num << " | " << line << '\n' <<
-            spacer << " | " << marker << '\n' <<
-            spacer << " |" << '\n' <<
-            '\n';
+
+        constexpr auto red_bold = "\033[31;1m";
+        constexpr auto blue_bold = "\033[34;1m";
+        constexpr auto bold = "\033[39;1m";
+        constexpr auto reset = "\033[0m";
+        std::cerr << std::string()
+            .append(color ? red_bold : "")
+            .append("error")
+            .append(color ? bold : "")
+            .append(": ")
+            .append(error.msg)
+            .append(1, '\n')
+
+            .append(color ? blue_bold : "")
+            .append(spacer)
+            .append("--> ")
+            .append(color ? reset : "")
+            .append(filename)
+            .append(1, ':')
+            .append(std::to_string(start.line_num))
+            .append(1, ':')
+            .append(std::to_string(start.col_num))
+            .append(1, '\n')
+
+            .append(color ? blue_bold : "")
+            .append(spacer)
+            .append(" |")
+            .append(1, '\n')
+
+            .append(color ? blue_bold : "")
+            .append(std::to_string(start.line_num))
+            .append(" | ")
+            .append(color ? reset : "")
+            .append(line)
+            .append(1, '\n')
+
+            .append(color ? blue_bold : "")
+            .append(spacer)
+            .append(" | ")
+            .append(color ? red_bold : "")
+            .append(marker)
+            .append(color ? reset : "")
+            .append("\n\n");
     }
 }
 
@@ -59,7 +95,7 @@ void repl()
         Lox::Lexer lexer(line);
         auto tokens = lexer.lex();
         if (lexer.has_errors()) {
-            print_errors(lexer.errors(), line, "stdin");
+            print_errors(lexer.errors(), line, "stdin", isatty(STDERR_FILENO));
             continue;
         }
         Lox::Parser parser(std::move(tokens));
