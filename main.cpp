@@ -119,8 +119,11 @@ int main(int argc, char* argv[])
     argv0 = fs::path(argv[0]).filename();
 
     if (argc == 1) {
-        repl();
-        return 0;
+        if (isatty(STDIN_FILENO)) {
+            repl();
+            return 0;
+        } else
+            return run("-");
     } else if (argc != 2)
         errusage();
     else if (argv[1] == "-h"sv || argv[1] == "--help"sv)
