@@ -10,7 +10,7 @@ void assert_expr(std::vector<Lox::Token>&& tokens, std::string_view ast_repr)
     ASSERT_EQ(ast->dump(), ast_repr);
 }
 
-TEST(Parser, LiteralExpressions)
+TEST(Parser, PrimaryExpressions)
 {
     assert_expr({ { TokenType::String, "", "" } }, R"("")");
     assert_expr({ { TokenType::String, "", "Hello world!" } }, R"("Hello world!")");
@@ -19,6 +19,8 @@ TEST(Parser, LiteralExpressions)
     assert_expr({ { TokenType::Number, "", 123.0 } }, "123");
     assert_expr({ { TokenType::Number, "", -123.0 } }, "-123");
     assert_expr({ { TokenType::Number, "", 3.14159265 } }, "3.14159265");
+
+    assert_expr({ { TokenType::Identifier, "foo" } }, "foo");
 
     assert_expr({ { TokenType::True, "", true } }, "true");
     assert_expr({ { TokenType::False, "", false } }, "false");

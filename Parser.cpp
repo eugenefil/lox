@@ -81,6 +81,9 @@ std::shared_ptr<Expr> Parser::parse_primary()
     } else if (token.type() == TokenType::Number) {
         advance();
         return std::make_shared<NumberLiteral>(std::get<double>(token.value()));
+    } else if (token.type() == TokenType::Identifier) {
+        advance();
+        return std::make_shared<Identifier>(token.text());
     } else if (token.type() == TokenType::True ||
                token.type() == TokenType::False) {
         advance();

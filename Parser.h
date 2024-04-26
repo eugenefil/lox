@@ -35,6 +35,17 @@ private:
     double m_value { 0.0 };
 };
 
+class Identifier : public Expr {
+public:
+    explicit Identifier(std::string_view name) : m_name(name)
+    {}
+
+    std::string dump() const override { return std::string(m_name); }
+
+private:
+    std::string_view m_name;
+};
+
 class BoolLiteral : public Expr {
 public:
     explicit BoolLiteral(bool value) : m_value(value)
