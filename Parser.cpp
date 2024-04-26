@@ -72,6 +72,11 @@ const Token& Parser::peek() const
     return EOF_TOKEN;
 }
 
+void Parser::error(std::string_view msg)
+{
+    m_errors.push_back({ peek().text(), msg });
+}
+
 std::shared_ptr<Expr> Parser::parse_primary()
 {
     auto& token = peek();
@@ -92,6 +97,7 @@ std::shared_ptr<Expr> Parser::parse_primary()
         advance();
         return std::make_shared<NilLiteral>();
     }
+    error("expected expression");
     return {};
 }
 

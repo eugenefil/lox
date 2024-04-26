@@ -97,6 +97,8 @@ private:
     const Token& peek() const;
     void advance() { ++m_cur; }
 
+    void error(std::string_view msg);
+
     std::shared_ptr<Expr> parse_primary();
     std::shared_ptr<Expr> parse_unary();
 
