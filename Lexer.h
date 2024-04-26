@@ -30,14 +30,6 @@ enum class TokenType {
     Eof,
 };
 
-// 0-based, byte-oriented
-struct Span {
-    std::size_t pos { 0 };
-    std::size_t len { 0 };
-
-    bool operator==(const Span&) const = default;
-};
-
 // 1-based, char-oriented
 struct Position {
     std::size_t line_num { 0 };
@@ -67,7 +59,7 @@ class SourceMap {
 public:
     SourceMap(std::string_view source);
 
-    Range span_to_range(Span span);
+    Range span_to_range(std::string_view span);
     std::string_view line(std::size_t line_num);
     const std::vector<std::size_t>& line_limits() const { return m_line_limits; }
 
@@ -81,26 +73,26 @@ public:
     using DefaultValueType = std::monostate;
     using ValueType = std::variant<DefaultValueType, bool, double, std::string>;
 
-    Token(TokenType type, Span span, ValueType&& value = DefaultValueType())
+    Token(TokenType type, std::string_view text, ValueType&& value = DefaultValueType())
         : m_type(type)
-        , m_span(span)
+        , m_text(text)
         , m_value(std::move(value))
     {}
 
     bool operator==(const Token&) const = default;
 
     TokenType type() const { return m_type; }
-    Span span() const { return m_span; }
+    std::string_view text() const { return m_text; }
     const ValueType& value() const { return m_value; }
 
 private:
     TokenType m_type { TokenType::Invalid };
-    Span m_span;
+    std::string_view m_text;
     ValueType m_value;
 };
 
 struct Error {
-    Span span;
+    std::string_view span;
     std::string_view msg;
 };
 
@@ -122,9 +114,8 @@ private:
     bool match(char next);
 
     std::string_view token_text() const;
-    Span token_span() const;
     bool unescape(std::string&);
-    void error(std::string_view msg, Span span = {});
+    void error(std::string_view msg, std::string_view span = {});
 
     std::string_view m_input;
     std::size_t m_start { 0 };

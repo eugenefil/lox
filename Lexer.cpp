@@ -19,15 +19,16 @@ SourceMap::SourceMap(std::string_view source) : m_source(source)
         m_line_limits.push_back(end);
 }
 
-Range SourceMap::span_to_range(Span span)
+Range SourceMap::span_to_range(std::string_view span)
 {
-    assert(span.len > 0);
-    auto start = span.pos;
-    if (start >= m_source.size())
-        return {};
-    auto end = start + span.len - 1;
-    if (end >= m_source.size())
-        return {};
+    assert(span.data());
+    assert(span.size() > 0);
+    assert(span.data() >= m_source.data());
+    assert(span.data() + span.size() <= m_source.data() + m_source.size());
+    std::size_t start = span.data() - m_source.data();
+    assert(start < m_source.size());
+    std::size_t end = start + span.size() - 1;
+    assert(end < m_source.size());
 
     auto find_line_num = [this](std::size_t pos) -> std::size_t {
         for (std::size_t i = 0; i < m_line_limits.size(); ++i) {
@@ -51,15 +52,17 @@ Range SourceMap::span_to_range(Span span)
     assert(end_line_num > 0);
     auto end_col_num = find_col_num(end, end_line_num);
     assert(end_col_num > 0);
-    return { { start_line_num, start_col_num },
-             { end_line_num, end_col_num + 1 } }; // exclusive
+
+    Range range = { { start_line_num, start_col_num },
+                    { end_line_num, end_col_num + 1 } }; // exclusive
+    assert(range.valid());
+    return range;
 }
 
 std::string_view SourceMap::line(std::size_t line_num)
 {
     assert(line_num > 0);
-    if (line_num > m_line_limits.size())
-        return {};
+    assert(line_num <= m_line_limits.size());
     --line_num;
     auto start = line_num > 0 ? m_line_limits[line_num - 1] : 0;
     auto end = m_line_limits[line_num];
@@ -85,12 +88,6 @@ std::string_view Lexer::token_text() const
     return m_input.substr(m_start, m_end - m_start);
 }
 
-Span Lexer::token_span() const
-{
-    assert(m_end > m_start);
-    return Span { m_start, m_end - m_start };
-}
-
 constexpr bool is_ascii_alpha(char ch)
 {
     return ('A' <= ch && ch <= 'Z') || ('a' <= ch && ch <= 'z');
@@ -111,12 +108,10 @@ constexpr bool is_identifier_char(char ch)
     return is_identifier_first_char(ch) || is_ascii_digit(ch);
 }
 
-void Lexer::error(std::string_view msg, Span span)
+void Lexer::error(std::string_view msg, std::string_view span)
 {
-    if (span == Span {})
-        span = token_span();
-    assert(span.len > 0);
-    assert(span.pos + span.len <= m_input.size());
+    if (span.empty())
+        span = token_text();
     m_errors.push_back({ span, msg });
 }
 
@@ -149,7 +144,9 @@ bool Lexer::unescape(std::string& s)
         default:
             // m_start + 1 -- start of string value after opening quote
             // i - 1 -- index of backslash inside string value
-            error("unknown escape sequence", { (m_start + 1) + (i - 1), 2 });
+            auto backslash_pos = (m_start + 1) + (i - 1);
+            assert(backslash_pos < m_input.size());
+            error("unknown escape sequence", m_input.substr(backslash_pos, 2));
             return false;
         }
         s[last++] = sub;
@@ -185,7 +182,7 @@ std::vector<Token> Lexer::lex()
                          Token::ValueType&& value = Token::DefaultValueType()) {
             tokens.push_back(Token {
                 type,
-                token_span(),
+                token_text(),
                 std::move(value),
             });
             consume();

@@ -27,12 +27,9 @@ void print_errors(const std::vector<Lox::Error>& errors,
 {
     Lox::SourceMap smap(source);
     for (auto& error : errors) {
-        auto range = smap.span_to_range(error.span);
-        assert(range.valid());
-        auto [start, end] = range;
+        auto [start, end] = smap.span_to_range(error.span);
         assert(start.line_num == end.line_num);
         auto line = smap.line(start.line_num);
-        assert(line.data());
         auto num_len = static_cast<std::size_t>(std::log10(end.line_num)) + 1;
         auto spacer = std::string(num_len, ' ');
         auto marker = std::string(start.col_num - 1, ' ') +

@@ -5,7 +5,7 @@ using Lox::TokenType;
 
 static void assert_tokens(std::string_view input,
                           std::vector<Lox::Token> tokens,
-                          std::vector<Lox::Span> error_spans = {})
+                          std::vector<Lox::Error> errors = {})
 {
     Lox::Lexer lexer(input);
     auto output = lexer.lex();
@@ -14,28 +14,28 @@ static void assert_tokens(std::string_view input,
         const auto& lhs = output[i];
         const auto& rhs = tokens[i];
         EXPECT_EQ(lhs.type(), rhs.type());
-        EXPECT_EQ(lhs.span(), rhs.span());
+        EXPECT_EQ(lhs.text(), rhs.text());
         EXPECT_EQ(lhs.value(), rhs.value());
     }
 
-    auto& errors = lexer.errors();
-    ASSERT_EQ(errors.size(), error_spans.size());
-    for (std::size_t i = 0; i < errors.size(); ++i)
-        EXPECT_EQ(errors[i].span, error_spans[i]);
+    auto& errs = lexer.errors();
+    ASSERT_EQ(errs.size(), errors.size());
+    for (std::size_t i = 0; i < errs.size(); ++i)
+        EXPECT_EQ(errs[i].span, errors[i].span);
 }
 
 static void assert_token(std::string_view input, TokenType type,
                          Lox::Token::ValueType value = Lox::Token::DefaultValueType())
 {
-    assert_tokens(input, { { type, { 0, input.size() }, std::move(value) } });
+    assert_tokens(input, { { type, input, std::move(value) } });
 }
 
-static void assert_invalid_token(std::string_view input, Lox::Span error_span = {})
+static void assert_invalid_token(std::string_view input,
+                                 std::string_view error_span = {})
 {
-    if (error_span == Lox::Span {})
-        error_span = { 0, input.size() };
-    assert_tokens(input, { { TokenType::Invalid, { 0, input.size() } } },
-                  { error_span });
+    if (error_span.empty())
+        error_span = input;
+    assert_tokens(input, { { TokenType::Invalid, input } }, { { error_span, "" } });
 }
 
 TEST(Lexer, EmptyInputReturnsNoTokens)
@@ -63,10 +63,10 @@ TEST(Lexer, OneCharTokens)
 TEST(Lexer, SkipWhitespace)
 {
     assert_tokens("\t(\n)\r\n{  }\t\t", {
-        { TokenType::LeftParen, { 1, 1 } },
-        { TokenType::RightParen, { 3, 1 } },
-        { TokenType::LeftBrace, { 6, 1 } },
-        { TokenType::RightBrace, { 9, 1 } },
+        { TokenType::LeftParen, "(" },
+        { TokenType::RightParen, ")" },
+        { TokenType::LeftBrace, "{" },
+        { TokenType::RightBrace, "}" },
     });
 }
 
@@ -104,7 +104,7 @@ TEST(Lexer, Strings)
     assert_token(R"("newline \
 escape")", TokenType::String, "newline escape");
 
-    assert_invalid_token(R"("foo\z")", { 4, 2 });
+    assert_invalid_token(R"("foo\z")", "\\z");
     assert_invalid_token(R"("unterminated string)");
 }
 
@@ -142,12 +142,12 @@ TEST(Lexer, Comments)
 {
     assert_tokens(R"(// commented line
         f(); // comment after code)", {
-        { TokenType::Comment, { 0, 17 } },
-        { TokenType::Identifier, { 26, 1 } },
-        { TokenType::LeftParen, { 27, 1 } },
-        { TokenType::RightParen, { 28, 1 } },
-        { TokenType::Semicolon, { 29, 1 } },
-        { TokenType::Comment, { 31, 21 } },
+        { TokenType::Comment, "// commented line" },
+        { TokenType::Identifier, "f" },
+        { TokenType::LeftParen, "(" },
+        { TokenType::RightParen, ")" },
+        { TokenType::Semicolon, ";" },
+        { TokenType::Comment, "// comment after code" },
     });
 }
 
@@ -156,31 +156,31 @@ TEST(Lexer, MultipleTokens)
     assert_tokens(R"(
         var foo = bar * 3.14;
         print(foo, "\tbaz");)", {
-        { TokenType::Var, { 9, 3 } },
-        { TokenType::Identifier, { 13, 3 } },
-        { TokenType::Equal, { 17, 1 } },
-        { TokenType::Identifier, { 19, 3 } },
-        { TokenType::Star, { 23, 1 } },
-        { TokenType::Number, { 25, 4 }, 3.14 },
-        { TokenType::Semicolon, { 29, 1 } },
-        { TokenType::Print, { 39, 5 } },
-        { TokenType::LeftParen, { 44, 1 } },
-        { TokenType::Identifier, { 45, 3 } },
-        { TokenType::Comma, { 48, 1 } },
-        { TokenType::String, { 50, 7 }, "\tbaz" },
-        { TokenType::RightParen, { 57, 1 } },
-        { TokenType::Semicolon, { 58, 1 } },
+        { TokenType::Var, "var" },
+        { TokenType::Identifier, "foo" },
+        { TokenType::Equal, "=" },
+        { TokenType::Identifier, "bar" },
+        { TokenType::Star, "*" },
+        { TokenType::Number, "3.14", 3.14 },
+        { TokenType::Semicolon, ";" },
+        { TokenType::Print, "print" },
+        { TokenType::LeftParen, "(" },
+        { TokenType::Identifier, "foo" },
+        { TokenType::Comma, "," },
+        { TokenType::String, R"("\tbaz")", "\tbaz" },
+        { TokenType::RightParen, ")" },
+        { TokenType::Semicolon, ";" },
     });
 }
 
 TEST(Lexer, MultipleErrors)
 {
     assert_tokens(R"(@ + "unterminated)", {
-        { TokenType::Invalid, { 0, 1 } },
-        { TokenType::Plus, { 2, 1 } },
-        { TokenType::Invalid, { 4, 13 } }
+        { TokenType::Invalid, "@" },
+        { TokenType::Plus, "+" },
+        { TokenType::Invalid, "\"unterminated" }
     }, {
-        { 0, 1 }, { 4, 13 },
+        { "@", "" }, { "\"unterminated", "" },
     });
 }
 
@@ -213,23 +213,23 @@ TEST(SourceMap, Lines)
     EXPECT_EQ(smap.line(1), "");
     EXPECT_EQ(smap.line(2), "        fn();");
     EXPECT_EQ(smap.line(3), "        var foo = \"bar\";");
-    EXPECT_EQ(smap.line(4).data(), nullptr);
 }
 
 TEST(SourceMap, Ranges)
 {
-    Lox::SourceMap smap(R"(
+    std::string_view source = R"(
 {
         var s = "multi
         line
         string
-)");
+)";
+    Lox::SourceMap smap(source);
+    #define SPAN(start, len) source.substr(start, len)
     #define RANGE(...) (Lox::Range { __VA_ARGS__ })
-    EXPECT_EQ(smap.span_to_range({ 0, 54 }), RANGE({ 1, 1 }, { 5, 16 })); // all
-    EXPECT_EQ(smap.span_to_range({ 1, 1 }), RANGE({ 2, 1 }, { 2, 2 })); // {
-    EXPECT_EQ(smap.span_to_range({ 11, 3 }), RANGE({ 3, 9 }, { 3, 12 })); // var
-    EXPECT_EQ(smap.span_to_range({ 19, 35 }), RANGE({ 3, 17 }, { 5, 16 })); // literal
-    EXPECT_EQ(smap.span_to_range({ 54, 1 }), RANGE()); // starts at eof
-    EXPECT_EQ(smap.span_to_range({ 0, 55 }), RANGE()); // extends past eof
+    EXPECT_EQ(smap.span_to_range(SPAN(0, 54)), RANGE({ 1, 1 }, { 5, 16 })); // all
+    EXPECT_EQ(smap.span_to_range(SPAN(1, 1)), RANGE({ 2, 1 }, { 2, 2 })); // {
+    EXPECT_EQ(smap.span_to_range(SPAN(11, 3)), RANGE({ 3, 9 }, { 3, 12 })); // var
+    EXPECT_EQ(smap.span_to_range(SPAN(19, 35)), RANGE({ 3, 17 }, { 5, 16 })); // literal
     #undef RANGE
+    #undef SPAN
 }
