@@ -5,9 +5,11 @@ using Lox::TokenType;
 
 static void assert_expr(std::vector<Lox::Token>&& tokens, std::string_view ast_repr)
 {
-    auto ast = Lox::Parser(std::move(tokens)).parse();
+    Lox::Parser parser(std::move(tokens));
+    auto ast = parser.parse();
+    EXPECT_FALSE(parser.has_errors());
     ASSERT_TRUE(ast);
-    ASSERT_EQ(ast->dump(0), ast_repr);
+    EXPECT_EQ(ast->dump(0), ast_repr);
 }
 
 static void assert_sexp(std::vector<Lox::Token>&& tokens, std::string_view ast_repr)
@@ -32,6 +34,14 @@ static void assert_errors(std::vector<Lox::Token> tokens,
     ASSERT_EQ(errs.size(), errors.size());
     for (std::size_t i = 0; i < errs.size(); ++i)
         EXPECT_EQ(errs[i].span, errors[i].span);
+}
+
+TEST(Parser, EmptyInputReturnsNoTree)
+{
+    Lox::Parser parser({});
+    auto ast = parser.parse();
+    EXPECT_FALSE(parser.has_errors());
+    EXPECT_FALSE(ast);
 }
 
 TEST(Parser, PrimaryExpressions)

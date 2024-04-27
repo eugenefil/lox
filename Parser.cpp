@@ -197,6 +197,8 @@ std::shared_ptr<Expr> Parser::parse_multiply()
 
 std::shared_ptr<Expr> Parser::parse()
 {
+    if (m_tokens.empty())
+        return {};
     return parse_multiply();
 }
 
