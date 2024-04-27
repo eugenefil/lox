@@ -102,7 +102,7 @@ void repl()
             continue;
         }
         if (expr)
-            std::cout << expr->dump() << std::endl;
+            std::cout << expr->dump(0) << std::endl;
     }
 }
 

@@ -4,6 +4,11 @@
 
 namespace Lox {
 
+static std::string make_indent(std::size_t indent)
+{
+    return std::string(indent * 2, ' ');
+}
+
 static std::string escape(std::string s)
 {
     for (std::size_t i = 0; i < s.size(); ++i) {
@@ -33,22 +38,38 @@ static std::string escape(std::string s)
     return s.insert(0, 1, '"').append(1, '"');
 }
 
-std::string StringLiteral::dump() const
+std::string StringLiteral::dump(std::size_t indent) const
 {
-    return escape(m_value);
+    return make_indent(indent).append(escape(m_value));
 }
 
-std::string NumberLiteral::dump() const
+std::string NumberLiteral::dump(std::size_t indent) const
 {
     char buf[32];
     auto [ptr, ec] = std::to_chars(buf, buf + sizeof(buf), m_value);
     assert(ec == std::errc()); // longest double is 24 chars long
-    return std::string(buf, ptr - buf);
+    return make_indent(indent).append(buf, ptr - buf);
 }
 
-std::string UnaryExpr::dump() const
+std::string Identifier::dump(std::size_t indent) const
 {
-    std::string s = "(";
+    return make_indent(indent).append(m_name);
+}
+
+std::string BoolLiteral::dump(std::size_t indent) const
+{
+    return make_indent(indent).append(m_value ? "true" : "false");
+}
+
+std::string NilLiteral::dump(std::size_t indent) const
+{
+    return make_indent(indent).append("nil");
+}
+
+std::string UnaryExpr::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += '(';
     switch (m_op) {
     case UnaryOp::Minus:
         s += '-';
@@ -57,8 +78,28 @@ std::string UnaryExpr::dump() const
         s += '+';
         break;
     }
-    s += ' ';
-    s += m_expr->dump();
+    s += '\n';
+    s += m_expr->dump(indent + 1);
+    s += ')';
+    return s;
+}
+
+std::string MultiplyExpr::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += '(';
+    switch (m_op) {
+    case MultiplyOp::Divide:
+        s += '/';
+        break;
+    case MultiplyOp::Multiply:
+        s += '*';
+        break;
+    }
+    s += '\n';
+    s += m_left->dump(indent + 1);
+    s += '\n';
+    s += m_right->dump(indent + 1);
     s += ')';
     return s;
 }
@@ -124,9 +165,39 @@ std::shared_ptr<Expr> Parser::parse_unary()
     return parse_primary();
 }
 
+std::shared_ptr<Expr> Parser::parse_multiply()
+{
+    auto left = parse_unary();
+    if (!left)
+        return {};
+
+    for (;;) {
+        auto& token = peek();
+        if (!(token.type() == TokenType::Slash ||
+            token.type() == TokenType::Star))
+            break;
+        advance();
+        auto right = parse_unary();
+        if (!right)
+            return {};
+        MultiplyOp op = [&token]() {
+            switch (token.type()) {
+            case TokenType::Slash:
+                return MultiplyOp::Divide;
+            case TokenType::Star:
+                return MultiplyOp::Multiply;
+            default:
+                assert(0);
+            }
+        }();
+        left = std::make_shared<MultiplyExpr>(op, left, right);
+    }
+    return left;
+}
+
 std::shared_ptr<Expr> Parser::parse()
 {
-    return parse_unary();
+    return parse_multiply();
 }
 
 }

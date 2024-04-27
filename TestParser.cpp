@@ -3,14 +3,28 @@
 
 using Lox::TokenType;
 
-void assert_expr(std::vector<Lox::Token> tokens, std::string_view ast_repr)
+static void assert_expr(std::vector<Lox::Token>&& tokens, std::string_view ast_repr)
 {
     auto ast = Lox::Parser(std::move(tokens)).parse();
     ASSERT_TRUE(ast);
-    ASSERT_EQ(ast->dump(), ast_repr);
+    ASSERT_EQ(ast->dump(0), ast_repr);
 }
 
-void assert_errors(std::vector<Lox::Token> tokens, std::vector<Lox::Error> errors)
+static void assert_sexp(std::vector<Lox::Token>&& tokens, std::string_view ast_repr)
+{
+    while (!ast_repr.starts_with('(')) {
+        ASSERT_TRUE(ast_repr.size() > 0);
+        ast_repr.remove_prefix(1);
+    }
+    while (!ast_repr.ends_with(')')) {
+        ASSERT_TRUE(ast_repr.size() > 0);
+        ast_repr.remove_suffix(1);
+    }
+    assert_expr(std::move(tokens), ast_repr);
+}
+
+static void assert_errors(std::vector<Lox::Token> tokens,
+                          std::vector<Lox::Error> errors)
 {
     Lox::Parser parser(std::move(tokens));
     parser.parse();
@@ -42,5 +56,49 @@ TEST(Parser, PrimaryExpressions)
 
 TEST(Parser, UnaryExpressions)
 {
-    assert_expr({ { TokenType::Minus, "" }, { TokenType::Number, "", 1.0 } }, "(- 1)");
+    assert_sexp({ { TokenType::Minus, "" }, { TokenType::Number, "", 123.0 } }, R"(
+(-
+  123)
+    )");
+
+    assert_errors({ { TokenType::Minus, "" }, { TokenType::Invalid, "foo" } },
+        { { "foo", "" } });
+}
+
+TEST(Parser, MultiplyExpressions)
+{
+    assert_sexp({
+        { TokenType::Number, "", 5.0 },
+        { TokenType::Slash, "" },
+        { TokenType::Number, "", 7.0 } }, R"(
+(/
+  5
+  7)
+    )");
+    assert_sexp({
+        { TokenType::Number, "", 500.0 },
+        { TokenType::Star, "" },
+        { TokenType::Number, "", 700.0 } }, R"(
+(*
+  500
+  700)
+    )");
+    assert_sexp({
+        { TokenType::Number, "", 5.0 },
+        { TokenType::Slash, "" },
+        { TokenType::Number, "", 7.0 },
+        { TokenType::Star, "" },
+        { TokenType::Number, "", 9.0 } }, R"(
+(*
+  (/
+    5
+    7)
+  9)
+    )");
+
+    assert_errors({
+        { TokenType::Number, "", 5.0 },
+        { TokenType::Slash, "" },
+        { TokenType::Invalid, "foo" },
+    }, { { "foo", "" } });
 }

@@ -10,7 +10,7 @@ namespace Lox {
 class Expr {
 public:
     virtual ~Expr() = default;
-    virtual std::string dump() const = 0;
+    virtual std::string dump(std::size_t indent) const = 0;
 };
 
 class StringLiteral : public Expr {
@@ -18,7 +18,7 @@ public:
     explicit StringLiteral(const std::string& value) : m_value(value)
     {}
 
-    std::string dump() const override;
+    std::string dump(std::size_t indent) const override;
 
 private:
     std::string m_value;
@@ -29,7 +29,7 @@ public:
     explicit NumberLiteral(double value) : m_value(value)
     {}
 
-    std::string dump() const override;
+    std::string dump(std::size_t indent) const override;
 
 private:
     double m_value { 0.0 };
@@ -40,7 +40,7 @@ public:
     explicit Identifier(std::string_view name) : m_name(name)
     {}
 
-    std::string dump() const override { return std::string(m_name); }
+    std::string dump(std::size_t indent) const override;
 
 private:
     std::string_view m_name;
@@ -51,7 +51,7 @@ public:
     explicit BoolLiteral(bool value) : m_value(value)
     {}
 
-    std::string dump() const override { return m_value ? "true" : "false"; }
+    std::string dump(std::size_t indent) const override;
 
 private:
     bool m_value { false };
@@ -59,7 +59,7 @@ private:
 
 class NilLiteral : public Expr {
 public:
-    std::string dump() const override { return "nil"; }
+    std::string dump(std::size_t indent) const override;
 };
 
 enum class UnaryOp {
@@ -76,11 +76,36 @@ public:
         assert(expr);
     }
 
-    std::string dump() const override;
+    std::string dump(std::size_t indent) const override;
 
 private:
     const UnaryOp m_op;
     std::shared_ptr<Expr> m_expr;
+};
+
+enum class MultiplyOp {
+    Divide,
+    Multiply,
+};
+
+class MultiplyExpr : public Expr {
+public:
+    MultiplyExpr(MultiplyOp op, std::shared_ptr<Expr> left,
+                 std::shared_ptr<Expr> right)
+        : m_op(op)
+        , m_left(left)
+        , m_right(right)
+    {
+        assert(left);
+        assert(right);
+    }
+
+    std::string dump(std::size_t indent) const override;
+
+private:
+    const MultiplyOp m_op;
+    std::shared_ptr<Expr> m_left;
+    std::shared_ptr<Expr> m_right;
 };
 
 class Parser {
@@ -101,6 +126,7 @@ private:
 
     std::shared_ptr<Expr> parse_primary();
     std::shared_ptr<Expr> parse_unary();
+    std::shared_ptr<Expr> parse_multiply();
 
     std::vector<Token> m_tokens;
     std::size_t m_cur { 0 };
