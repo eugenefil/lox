@@ -117,3 +117,41 @@ TEST(Parser, MultiplyExpressions)
         { TokenType::Invalid, "foo" },
     }, { { "foo", "" } });
 }
+
+TEST(Parser, AddExpressions)
+{
+    assert_sexp({
+        { TokenType::Number, "", 5.0 },
+        { TokenType::Plus, "" },
+        { TokenType::Number, "", 7.0 } }, R"(
+(+
+  5
+  7)
+    )");
+    assert_sexp({
+        { TokenType::Number, "", 500.0 },
+        { TokenType::Minus, "" },
+        { TokenType::Number, "", 700.0 } }, R"(
+(-
+  500
+  700)
+    )");
+    assert_sexp({
+        { TokenType::Number, "", 5.0 },
+        { TokenType::Plus, "" },
+        { TokenType::Number, "", 7.0 },
+        { TokenType::Minus, "" },
+        { TokenType::Number, "", 9.0 } }, R"(
+(-
+  (+
+    5
+    7)
+  9)
+    )");
+
+    assert_errors({
+        { TokenType::Number, "", 5.0 },
+        { TokenType::Plus, "" },
+        { TokenType::Invalid, "foo" },
+    }, { { "foo", "" } });
+}

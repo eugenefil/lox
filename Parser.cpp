@@ -104,6 +104,26 @@ std::string MultiplyExpr::dump(std::size_t indent) const
     return s;
 }
 
+std::string AddExpr::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += '(';
+    switch (m_op) {
+    case AddOp::Add:
+        s += '+';
+        break;
+    case AddOp::Subtract:
+        s += '-';
+        break;
+    }
+    s += '\n';
+    s += m_left->dump(indent + 1);
+    s += '\n';
+    s += m_right->dump(indent + 1);
+    s += ')';
+    return s;
+}
+
 static const Token EOF_TOKEN { TokenType::Eof, {} };
 
 const Token& Parser::peek() const
@@ -200,11 +220,41 @@ std::shared_ptr<Expr> Parser::parse_multiply()
     return left;
 }
 
+std::shared_ptr<Expr> Parser::parse_add()
+{
+    auto left = parse_multiply();
+    if (!left)
+        return {};
+
+    for (;;) {
+        auto& token = peek();
+        if (!(token.type() == TokenType::Plus ||
+            token.type() == TokenType::Minus))
+            break;
+        advance();
+        auto right = parse_multiply();
+        if (!right)
+            return {};
+        AddOp op = [&token]() {
+            switch (token.type()) {
+            case TokenType::Plus:
+                return AddOp::Add;
+            case TokenType::Minus:
+                return AddOp::Subtract;
+            default:
+                assert(0);
+            }
+        }();
+        left = std::make_shared<AddExpr>(op, left, right);
+    }
+    return left;
+}
+
 std::shared_ptr<Expr> Parser::parse()
 {
     if (m_tokens.empty())
         return {};
-    return parse_multiply();
+    return parse_add();
 }
 
 }
