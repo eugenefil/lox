@@ -115,7 +115,12 @@ const Token& Parser::peek() const
 
 void Parser::error(std::string_view msg)
 {
-    m_errors.push_back({ peek().text(), msg });
+    if (peek().type() == TokenType::Eof) {
+        // w/out tokens there can't be errors, so there must be at least one token
+        assert(m_tokens.size() > 0);
+        m_errors.push_back({ m_tokens.back().text(), msg });
+    } else
+        m_errors.push_back({ peek().text(), msg });
 }
 
 std::shared_ptr<Expr> Parser::parse_primary()

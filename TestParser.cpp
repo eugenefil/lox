@@ -75,6 +75,11 @@ TEST(Parser, UnaryExpressions)
         { { "foo", "" } });
 }
 
+TEST(Parser, ErrorAtEofPointsAtLastToken)
+{
+    assert_errors({ { TokenType::Minus, "-" } }, { { "-", "" } });
+}
+
 TEST(Parser, MultiplyExpressions)
 {
     assert_sexp({
