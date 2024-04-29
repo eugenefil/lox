@@ -93,67 +93,39 @@ std::string GroupExpr::dump(std::size_t indent) const
     return s;
 }
 
-std::string MultiplyExpr::dump(std::size_t indent) const
+std::string BinaryExpr::dump(std::size_t indent) const
 {
     std::string s = make_indent(indent);
     s += '(';
     switch (m_op) {
-    case MultiplyOp::Divide:
+    case BinaryOp::Divide:
         s += '/';
         break;
-    case MultiplyOp::Multiply:
+    case BinaryOp::Multiply:
         s += '*';
         break;
-    }
-    s += '\n';
-    s += m_left->dump(indent + 1);
-    s += '\n';
-    s += m_right->dump(indent + 1);
-    s += ')';
-    return s;
-}
-
-std::string AddExpr::dump(std::size_t indent) const
-{
-    std::string s = make_indent(indent);
-    s += '(';
-    switch (m_op) {
-    case AddOp::Add:
+    case BinaryOp::Add:
         s += '+';
         break;
-    case AddOp::Subtract:
+    case BinaryOp::Subtract:
         s += '-';
         break;
-    }
-    s += '\n';
-    s += m_left->dump(indent + 1);
-    s += '\n';
-    s += m_right->dump(indent + 1);
-    s += ')';
-    return s;
-}
-
-std::string CompareExpr::dump(std::size_t indent) const
-{
-    std::string s = make_indent(indent);
-    s += '(';
-    switch (m_op) {
-    case CompareOp::Equal:
+    case BinaryOp::Equal:
         s += "==";
         break;
-    case CompareOp::NotEqual:
+    case BinaryOp::NotEqual:
         s += "!=";
         break;
-    case CompareOp::Less:
+    case BinaryOp::Less:
         s += '<';
         break;
-    case CompareOp::LessOrEqual:
+    case BinaryOp::LessOrEqual:
         s += "<=";
         break;
-    case CompareOp::Greater:
+    case BinaryOp::Greater:
         s += '>';
         break;
-    case CompareOp::GreaterOrEqual:
+    case BinaryOp::GreaterOrEqual:
         s += ">=";
         break;
     }
@@ -264,17 +236,17 @@ std::shared_ptr<Expr> Parser::parse_multiply()
         auto right = parse_unary();
         if (!right)
             return {};
-        MultiplyOp op = [&token]() {
+        BinaryOp op = [&token]() {
             switch (token.type()) {
             case TokenType::Slash:
-                return MultiplyOp::Divide;
+                return BinaryOp::Divide;
             case TokenType::Star:
-                return MultiplyOp::Multiply;
+                return BinaryOp::Multiply;
             default:
                 assert(0);
             }
         }();
-        left = std::make_shared<MultiplyExpr>(op, left, right);
+        left = std::make_shared<BinaryExpr>(op, left, right);
     }
     return left;
 }
@@ -294,17 +266,17 @@ std::shared_ptr<Expr> Parser::parse_add()
         auto right = parse_multiply();
         if (!right)
             return {};
-        AddOp op = [&token]() {
+        BinaryOp op = [&token]() {
             switch (token.type()) {
             case TokenType::Plus:
-                return AddOp::Add;
+                return BinaryOp::Add;
             case TokenType::Minus:
-                return AddOp::Subtract;
+                return BinaryOp::Subtract;
             default:
                 assert(0);
             }
         }();
-        left = std::make_shared<AddExpr>(op, left, right);
+        left = std::make_shared<BinaryExpr>(op, left, right);
     }
     return left;
 }
@@ -323,25 +295,25 @@ std::shared_ptr<Expr> Parser::parse_compare()
         token.type() == TokenType::GreaterEqual) {
         advance();
         if (auto right = parse_add()) {
-            CompareOp op = [&token]() {
+            BinaryOp op = [&token]() {
                 switch (token.type()) {
                 case TokenType::EqualEqual:
-                    return CompareOp::Equal;
+                    return BinaryOp::Equal;
                 case TokenType::BangEqual:
-                    return CompareOp::NotEqual;
+                    return BinaryOp::NotEqual;
                 case TokenType::Less:
-                    return CompareOp::Less;
+                    return BinaryOp::Less;
                 case TokenType::LessEqual:
-                    return CompareOp::LessOrEqual;
+                    return BinaryOp::LessOrEqual;
                 case TokenType::Greater:
-                    return CompareOp::Greater;
+                    return BinaryOp::Greater;
                 case TokenType::GreaterEqual:
-                    return CompareOp::GreaterOrEqual;
+                    return BinaryOp::GreaterOrEqual;
                 default:
                     assert(0);
                 }
             }();
-            return std::make_shared<CompareExpr>(op, left, right);
+            return std::make_shared<BinaryExpr>(op, left, right);
         }
         return {};
     }

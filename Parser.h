@@ -96,56 +96,11 @@ private:
     std::shared_ptr<Expr> m_expr;
 };
 
-enum class MultiplyOp {
+enum class BinaryOp {
     Divide,
     Multiply,
-};
-
-class MultiplyExpr : public Expr {
-public:
-    MultiplyExpr(MultiplyOp op, std::shared_ptr<Expr> left,
-                 std::shared_ptr<Expr> right)
-        : m_op(op)
-        , m_left(left)
-        , m_right(right)
-    {
-        assert(left);
-        assert(right);
-    }
-
-    std::string dump(std::size_t indent) const override;
-
-private:
-    const MultiplyOp m_op;
-    std::shared_ptr<Expr> m_left;
-    std::shared_ptr<Expr> m_right;
-};
-
-enum class AddOp {
     Add,
     Subtract,
-};
-
-class AddExpr : public Expr {
-public:
-    AddExpr(AddOp op, std::shared_ptr<Expr> left, std::shared_ptr<Expr> right)
-        : m_op(op)
-        , m_left(left)
-        , m_right(right)
-    {
-        assert(left);
-        assert(right);
-    }
-
-    std::string dump(std::size_t indent) const override;
-
-private:
-    const AddOp m_op;
-    std::shared_ptr<Expr> m_left;
-    std::shared_ptr<Expr> m_right;
-};
-
-enum class CompareOp {
     Equal,
     NotEqual,
     Less,
@@ -154,10 +109,9 @@ enum class CompareOp {
     GreaterOrEqual,
 };
 
-class CompareExpr : public Expr {
+class BinaryExpr : public Expr {
 public:
-    CompareExpr(CompareOp op, std::shared_ptr<Expr> left,
-                std::shared_ptr<Expr> right)
+    BinaryExpr(BinaryOp op, std::shared_ptr<Expr> left, std::shared_ptr<Expr> right)
         : m_op(op)
         , m_left(left)
         , m_right(right)
@@ -169,7 +123,7 @@ public:
     std::string dump(std::size_t indent) const override;
 
 private:
-    const CompareOp m_op;
+    const BinaryOp m_op;
     std::shared_ptr<Expr> m_left;
     std::shared_ptr<Expr> m_right;
 };
