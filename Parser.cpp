@@ -74,8 +74,8 @@ std::string UnaryExpr::dump(std::size_t indent) const
     case UnaryOp::Minus:
         s += '-';
         break;
-    case UnaryOp::Plus:
-        s += '+';
+    case UnaryOp::Not:
+        s += '!';
         break;
     }
     s += '\n';
@@ -229,15 +229,15 @@ std::shared_ptr<Expr> Parser::parse_primary()
 std::shared_ptr<Expr> Parser::parse_unary()
 {
     if (auto& token = peek(); token.type() == TokenType::Minus ||
-        token.type() == TokenType::Plus) {
+        token.type() == TokenType::Bang) {
         advance();
         if (auto expr = parse_unary()) {
             UnaryOp op = [&token]() {
                 switch (token.type()) {
                 case TokenType::Minus:
                     return UnaryOp::Minus;
-                case TokenType::Plus:
-                    return UnaryOp::Plus;
+                case TokenType::Bang:
+                    return UnaryOp::Not;
                 default:
                     assert(0);
                 }

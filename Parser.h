@@ -64,7 +64,7 @@ public:
 
 enum class UnaryOp {
     Minus,
-    Plus,
+    Not,
 };
 
 class UnaryExpr : public Expr {

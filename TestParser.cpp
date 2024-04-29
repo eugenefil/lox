@@ -71,6 +71,10 @@ TEST(Parser, UnaryExpressions)
 (-
   123)
     )");
+    assert_sexp({ { TokenType::Bang, "" }, { TokenType::True, "", true } }, R"(
+(!
+  true)
+    )");
 
     assert_errors({ { TokenType::Minus, "" }, { TokenType::Invalid, "foo" } },
         { { "foo", "" } });

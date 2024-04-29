@@ -11,7 +11,7 @@ primary ->
     | '(' expression ')'
 
 unary ->
-      ('-' | '+') unary
+      ('-' | '!') unary
     | primary
 
 multiply ->
