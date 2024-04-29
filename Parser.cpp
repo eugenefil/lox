@@ -155,8 +155,12 @@ bool Parser::match(TokenType type)
     return false;
 }
 
-void Parser::error(std::string_view msg)
+void Parser::error(std::string_view msg, std::string_view span)
 {
+    if (!span.empty()) {
+        m_errors.push_back({ span, msg });
+        return;
+    }
     if (peek().type() == TokenType::Eof) {
         // w/out tokens there can't be errors, so there must be at least one token
         assert(m_tokens.size() > 0);
@@ -190,7 +194,7 @@ std::shared_ptr<Expr> Parser::parse_primary()
             if (match(TokenType::RightParen))
                 return std::make_shared<GroupExpr>(expr);
             else
-                error("expected ')'");
+                error("'(' was never closed", token.text());
         }
         return {};
     }

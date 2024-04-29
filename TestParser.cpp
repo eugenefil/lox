@@ -242,10 +242,10 @@ TEST(Parser, GroupExpression)
         { TokenType::Invalid, "foo" },
     }, { { "foo", "" } });
     assert_errors({
-        { TokenType::LeftParen, "" },
+        { TokenType::LeftParen, "(" },
         { TokenType::Number, "", 5.0 },
         { TokenType::Plus, "" },
         { TokenType::Number, "", 7.0 },
-        { TokenType::Invalid, "foo" },
-    }, { { "foo", "" } });
+        { TokenType::Invalid, "" },
+    }, { { "(", "" } });
 }

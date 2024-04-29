@@ -143,7 +143,7 @@ private:
     bool match(TokenType type);
     void advance() { ++m_cur; }
 
-    void error(std::string_view msg);
+    void error(std::string_view msg, std::string_view span = {});
 
     std::shared_ptr<Expr> parse_primary();
     std::shared_ptr<Expr> parse_unary();
