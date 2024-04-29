@@ -29,7 +29,8 @@ static void assert_errors(std::vector<Lox::Token> tokens,
                           std::vector<Lox::Error> errors)
 {
     Lox::Parser parser(std::move(tokens));
-    parser.parse();
+    auto ast = parser.parse();
+    EXPECT_FALSE(ast);
     auto& errs = parser.errors();
     ASSERT_EQ(errs.size(), errors.size());
     for (std::size_t i = 0; i < errs.size(); ++i)
@@ -210,6 +211,37 @@ TEST(Parser, CompareExpressions)
     assert_errors({
         { TokenType::Number, "", 5.0 },
         { TokenType::EqualEqual, "" },
+        { TokenType::Invalid, "foo" },
+    }, { { "foo", "" } });
+}
+
+TEST(Parser, GroupExpression)
+{
+    assert_sexp({
+        { TokenType::LeftParen, "" },
+        { TokenType::Number, "", 5.0 },
+        { TokenType::Plus, "" },
+        { TokenType::Number, "", 7.0 },
+        { TokenType::RightParen, "" },
+        { TokenType::Star, "" },
+        { TokenType::Number, "", 9.0 } }, R"(
+(*
+  (group
+    (+
+      5
+      7))
+  9)
+    )");
+
+    assert_errors({
+        { TokenType::LeftParen, "" },
+        { TokenType::Invalid, "foo" },
+    }, { { "foo", "" } });
+    assert_errors({
+        { TokenType::LeftParen, "" },
+        { TokenType::Number, "", 5.0 },
+        { TokenType::Plus, "" },
+        { TokenType::Number, "", 7.0 },
         { TokenType::Invalid, "foo" },
     }, { { "foo", "" } });
 }

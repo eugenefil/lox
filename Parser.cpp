@@ -84,6 +84,15 @@ std::string UnaryExpr::dump(std::size_t indent) const
     return s;
 }
 
+std::string GroupExpr::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += "(group\n";
+    s += m_expr->dump(indent + 1);
+    s += ')';
+    return s;
+}
+
 std::string MultiplyExpr::dump(std::size_t indent) const
 {
     std::string s = make_indent(indent);
@@ -165,6 +174,15 @@ const Token& Parser::peek() const
     return EOF_TOKEN;
 }
 
+bool Parser::match(TokenType type)
+{
+    if (peek().type() == type) {
+        advance();
+        return true;
+    }
+    return false;
+}
+
 void Parser::error(std::string_view msg)
 {
     if (peek().type() == TokenType::Eof) {
@@ -194,6 +212,15 @@ std::shared_ptr<Expr> Parser::parse_primary()
     } else if (token.type() == TokenType::Nil) {
         advance();
         return std::make_shared<NilLiteral>();
+    } else if (token.type() == TokenType::LeftParen) {
+        advance();
+        if (auto expr = parse_expression()) {
+            if (match(TokenType::RightParen))
+                return std::make_shared<GroupExpr>(expr);
+            else
+                error("expected ')'");
+        }
+        return {};
     }
     error("expected expression");
     return {};

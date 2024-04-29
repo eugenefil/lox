@@ -83,6 +83,19 @@ private:
     std::shared_ptr<Expr> m_expr;
 };
 
+class GroupExpr : public Expr {
+public:
+    GroupExpr(std::shared_ptr<Expr> expr) : m_expr(expr)
+    {
+        assert(expr);
+    }
+
+    std::string dump(std::size_t indent) const override;
+
+private:
+    std::shared_ptr<Expr> m_expr;
+};
+
 enum class MultiplyOp {
     Divide,
     Multiply,
@@ -173,6 +186,7 @@ public:
 
 private:
     const Token& peek() const;
+    bool match(TokenType type);
     void advance() { ++m_cur; }
 
     void error(std::string_view msg);
