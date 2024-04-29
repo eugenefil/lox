@@ -124,6 +124,38 @@ std::string AddExpr::dump(std::size_t indent) const
     return s;
 }
 
+std::string CompareExpr::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += '(';
+    switch (m_op) {
+    case CompareOp::Equal:
+        s += "==";
+        break;
+    case CompareOp::NotEqual:
+        s += "!=";
+        break;
+    case CompareOp::Less:
+        s += '<';
+        break;
+    case CompareOp::LessOrEqual:
+        s += "<=";
+        break;
+    case CompareOp::Greater:
+        s += '>';
+        break;
+    case CompareOp::GreaterOrEqual:
+        s += ">=";
+        break;
+    }
+    s += '\n';
+    s += m_left->dump(indent + 1);
+    s += '\n';
+    s += m_right->dump(indent + 1);
+    s += ')';
+    return s;
+}
+
 static const Token EOF_TOKEN { TokenType::Eof, {} };
 
 const Token& Parser::peek() const
@@ -250,11 +282,55 @@ std::shared_ptr<Expr> Parser::parse_add()
     return left;
 }
 
+std::shared_ptr<Expr> Parser::parse_compare()
+{
+    auto left = parse_add();
+    if (!left)
+        return {};
+
+    if (auto& token = peek(); token.type() == TokenType::EqualEqual ||
+        token.type() == TokenType::BangEqual ||
+        token.type() == TokenType::Less ||
+        token.type() == TokenType::LessEqual ||
+        token.type() == TokenType::Greater ||
+        token.type() == TokenType::GreaterEqual) {
+        advance();
+        if (auto right = parse_add()) {
+            CompareOp op = [&token]() {
+                switch (token.type()) {
+                case TokenType::EqualEqual:
+                    return CompareOp::Equal;
+                case TokenType::BangEqual:
+                    return CompareOp::NotEqual;
+                case TokenType::Less:
+                    return CompareOp::Less;
+                case TokenType::LessEqual:
+                    return CompareOp::LessOrEqual;
+                case TokenType::Greater:
+                    return CompareOp::Greater;
+                case TokenType::GreaterEqual:
+                    return CompareOp::GreaterOrEqual;
+                default:
+                    assert(0);
+                }
+            }();
+            return std::make_shared<CompareExpr>(op, left, right);
+        }
+        return {};
+    }
+    return left;
+}
+
+std::shared_ptr<Expr> Parser::parse_expression()
+{
+    return parse_compare();
+}
+
 std::shared_ptr<Expr> Parser::parse()
 {
     if (m_tokens.empty())
         return {};
-    return parse_add();
+    return parse_expression();
 }
 
 }

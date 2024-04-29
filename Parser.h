@@ -132,6 +132,35 @@ private:
     std::shared_ptr<Expr> m_right;
 };
 
+enum class CompareOp {
+    Equal,
+    NotEqual,
+    Less,
+    LessOrEqual,
+    Greater,
+    GreaterOrEqual,
+};
+
+class CompareExpr : public Expr {
+public:
+    CompareExpr(CompareOp op, std::shared_ptr<Expr> left,
+                std::shared_ptr<Expr> right)
+        : m_op(op)
+        , m_left(left)
+        , m_right(right)
+    {
+        assert(left);
+        assert(right);
+    }
+
+    std::string dump(std::size_t indent) const override;
+
+private:
+    const CompareOp m_op;
+    std::shared_ptr<Expr> m_left;
+    std::shared_ptr<Expr> m_right;
+};
+
 class Parser {
 public:
     explicit Parser(std::vector<Token>&& tokens)
@@ -152,6 +181,8 @@ private:
     std::shared_ptr<Expr> parse_unary();
     std::shared_ptr<Expr> parse_multiply();
     std::shared_ptr<Expr> parse_add();
+    std::shared_ptr<Expr> parse_compare();
+    std::shared_ptr<Expr> parse_expression();
 
     std::vector<Token> m_tokens;
     std::size_t m_cur { 0 };

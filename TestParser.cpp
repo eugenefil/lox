@@ -155,3 +155,61 @@ TEST(Parser, AddExpressions)
         { TokenType::Invalid, "foo" },
     }, { { "foo", "" } });
 }
+
+TEST(Parser, CompareExpressions)
+{
+    assert_sexp({
+        { TokenType::Number, "", 5.0 },
+        { TokenType::EqualEqual, "" },
+        { TokenType::Number, "", 7.0 } }, R"(
+(==
+  5
+  7)
+    )");
+    assert_sexp({
+        { TokenType::Number, "", 5.0 },
+        { TokenType::BangEqual, "" },
+        { TokenType::Number, "", 7.0 } }, R"(
+(!=
+  5
+  7)
+    )");
+    assert_sexp({
+        { TokenType::Number, "", 5.0 },
+        { TokenType::Less, "" },
+        { TokenType::Number, "", 7.0 } }, R"(
+(<
+  5
+  7)
+    )");
+    assert_sexp({
+        { TokenType::Number, "", 5.0 },
+        { TokenType::LessEqual, "" },
+        { TokenType::Number, "", 7.0 } }, R"(
+(<=
+  5
+  7)
+    )");
+    assert_sexp({
+        { TokenType::Number, "", 5.0 },
+        { TokenType::Greater, "" },
+        { TokenType::Number, "", 7.0 } }, R"(
+(>
+  5
+  7)
+    )");
+    assert_sexp({
+        { TokenType::Number, "", 5.0 },
+        { TokenType::GreaterEqual, "" },
+        { TokenType::Number, "", 7.0 } }, R"(
+(>=
+  5
+  7)
+    )");
+
+    assert_errors({
+        { TokenType::Number, "", 5.0 },
+        { TokenType::EqualEqual, "" },
+        { TokenType::Invalid, "foo" },
+    }, { { "foo", "" } });
+}
