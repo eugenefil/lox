@@ -14,7 +14,7 @@ set(CMAKE_COLOR_DIAGNOSTICS ON)
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-add_library(lib Lexer.cpp Parser.cpp AST.cpp)
+add_library(lib Lexer.cpp Parser.cpp AST.cpp Interpreter.cpp)
 
 add_executable(lox main.cpp)
 target_link_libraries(lox lib)
@@ -32,3 +32,4 @@ endfunction()
 
 lox_test(TestLexer.cpp)
 lox_test(TestParser.cpp)
+lox_test(TestInterpreter.cpp)

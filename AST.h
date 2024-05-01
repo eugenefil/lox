@@ -6,10 +6,14 @@
 
 namespace Lox {
 
+class Object;
+class Interpreter;
+
 class Expr {
 public:
     virtual ~Expr() = default;
     virtual std::string dump(std::size_t indent) const = 0;
+    virtual std::shared_ptr<Object> eval(Interpreter& interp) const;
 };
 
 class StringLiteral : public Expr {
@@ -18,6 +22,7 @@ public:
     {}
 
     std::string dump(std::size_t indent) const override;
+    std::shared_ptr<Object> eval(Interpreter& interp) const override;
 
 private:
     std::string m_value;
@@ -29,6 +34,7 @@ public:
     {}
 
     std::string dump(std::size_t indent) const override;
+    std::shared_ptr<Object> eval(Interpreter& interp) const override;
 
 private:
     double m_value { 0.0 };
@@ -51,6 +57,7 @@ public:
     {}
 
     std::string dump(std::size_t indent) const override;
+    std::shared_ptr<Object> eval(Interpreter& interp) const override;
 
 private:
     bool m_value { false };
@@ -59,6 +66,7 @@ private:
 class NilLiteral : public Expr {
 public:
     std::string dump(std::size_t indent) const override;
+    std::shared_ptr<Object> eval(Interpreter& interp) const override;
 };
 
 enum class UnaryOp {
