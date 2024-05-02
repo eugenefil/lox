@@ -12,9 +12,16 @@ public:
 
     virtual std::string_view type_name() const { return "Object"; }
 
+    bool is_string() const { return type_name() == "String"; }
+    bool is_number() const { return type_name() == "Number"; }
+    bool is_bool() const { return type_name() == "Bool"; }
+    bool is_niltype() const { return type_name() == "NilType"; }
+
     virtual std::string_view get_string() const { assert(0); }
     virtual double get_number() const { assert(0); }
     virtual bool get_bool() const { assert(0); }
+
+    virtual bool to_bool() const { return true; }
 };
 
 class String : public Object {
@@ -24,6 +31,7 @@ public:
 
     std::string_view type_name() const override { return "String"; }
     std::string_view get_string() const override { return m_value; }
+    bool to_bool() const override { return m_value.size() > 0; }
 
 private:
     std::string m_value;
@@ -36,6 +44,7 @@ public:
 
     std::string_view type_name() const override { return "Number"; }
     double get_number() const override { return m_value; }
+    bool to_bool() const override { return m_value != 0.0; }
 
 private:
     double m_value;
@@ -48,6 +57,7 @@ public:
 
     std::string_view type_name() const override { return "Bool"; }
     bool get_bool() const override { return m_value; }
+    bool to_bool() const override { return m_value; }
 
 private:
     bool m_value;
@@ -56,6 +66,7 @@ private:
 class NilType : public Object {
 public:
     std::string_view type_name() const override { return "NilType"; }
+    bool to_bool() const override { return false; }
 };
 
 struct RuntimeError {
@@ -72,6 +83,7 @@ public:
 
     std::shared_ptr<Object> interpret();
 
+    void error(std::string&&) {}
     bool has_errors() const { return m_errors.size() > 0; }
 
 private:

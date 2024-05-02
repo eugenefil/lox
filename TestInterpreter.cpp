@@ -40,10 +40,25 @@ static void assert_nil(std::shared_ptr<Lox::Expr> ast)
     ASSERT_EQ(obj->type_name(), "NilType");
 }
 
-TEST(Interpreter, Literals)
+#define EXPR(expr_class, ...) (std::make_shared<Lox::expr_class>(__VA_ARGS__))
+#define UNARY(op, expr) EXPR(UnaryExpr, Lox::UnaryOp::op, (expr))
+
+TEST(Interpreter, EvalLiterals)
 {
-    assert_string(std::make_shared<Lox::StringLiteral>("foo"), "foo");
-    assert_number(std::make_shared<Lox::NumberLiteral>(5.0), 5.0);
-    assert_bool(std::make_shared<Lox::BoolLiteral>(true), true);
-    assert_nil(std::make_shared<Lox::NilLiteral>());
+    assert_string(EXPR(StringLiteral, "foo"), "foo");
+    assert_number(EXPR(NumberLiteral, 5.0), 5.0);
+    assert_bool(EXPR(BoolLiteral, true), true);
+    assert_nil(EXPR(NilLiteral));
+}
+
+TEST(Interpreter, EvalUnaryExpressions)
+{
+    assert_number(UNARY(Minus, EXPR(NumberLiteral, 5.0)), -5.0);
+    assert_bool(UNARY(Not, EXPR(StringLiteral, "foo")), false);
+    assert_bool(UNARY(Not, EXPR(StringLiteral, "")), true);
+    assert_bool(UNARY(Not, EXPR(NumberLiteral, 5.0)), false);
+    assert_bool(UNARY(Not, EXPR(NumberLiteral, 0.0)), true);
+    assert_bool(UNARY(Not, EXPR(BoolLiteral, true)), false);
+    assert_bool(UNARY(Not, EXPR(BoolLiteral, false)), true);
+    assert_bool(UNARY(Not, EXPR(NilLiteral)), true);
 }
