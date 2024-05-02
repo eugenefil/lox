@@ -3,8 +3,11 @@
 
 using Lox::TokenType;
 
-static void assert_expr(std::vector<Lox::Token>&& tokens, std::string_view ast_repr)
+static void assert_expr(std::string_view input, std::string_view ast_repr)
 {
+    Lox::Lexer lexer(input);
+    auto tokens = lexer.lex();
+    ASSERT_FALSE(lexer.has_errors());
     Lox::Parser parser(std::move(tokens));
     auto ast = parser.parse();
     EXPECT_FALSE(parser.has_errors());
@@ -12,7 +15,7 @@ static void assert_expr(std::vector<Lox::Token>&& tokens, std::string_view ast_r
     EXPECT_EQ(ast->dump(0), ast_repr);
 }
 
-static void assert_sexp(std::vector<Lox::Token>&& tokens, std::string_view ast_repr)
+static void assert_sexp(std::string_view input, std::string_view ast_repr)
 {
     while (!ast_repr.starts_with('(')) {
         ASSERT_TRUE(ast_repr.size() > 0);
@@ -22,19 +25,20 @@ static void assert_sexp(std::vector<Lox::Token>&& tokens, std::string_view ast_r
         ASSERT_TRUE(ast_repr.size() > 0);
         ast_repr.remove_suffix(1);
     }
-    assert_expr(std::move(tokens), ast_repr);
+    assert_expr(input, ast_repr);
 }
 
-static void assert_errors(std::vector<Lox::Token> tokens,
-                          std::vector<Lox::Error> errors)
+static void assert_error(std::string_view input, std::string_view error_span)
 {
+    Lox::Lexer lexer(input);
+    auto tokens = lexer.lex();
+    ASSERT_FALSE(lexer.has_errors());
     Lox::Parser parser(std::move(tokens));
     auto ast = parser.parse();
     EXPECT_FALSE(ast);
     auto& errs = parser.errors();
-    ASSERT_EQ(errs.size(), errors.size());
-    for (std::size_t i = 0; i < errs.size(); ++i)
-        EXPECT_EQ(errs[i].span, errors[i].span);
+    ASSERT_EQ(errs.size(), 1);
+    EXPECT_EQ(errs[0].span, error_span);
 }
 
 TEST(Parser, EmptyInputReturnsNoTree)
@@ -47,68 +51,55 @@ TEST(Parser, EmptyInputReturnsNoTree)
 
 TEST(Parser, PrimaryExpressions)
 {
-    assert_expr({ { TokenType::String, "", "" } }, R"("")");
-    assert_expr({ { TokenType::String, "", "Hello world!" } }, R"("Hello world!")");
-    assert_expr({ { TokenType::String, "", "\t\r\n\"\\" } }, R"("\t\r\n\"\\")");
+    assert_expr(R"("")", R"("")");
+    assert_expr(R"("Hello world!")", R"("Hello world!")");
+    assert_expr(R"("\t\r\n\"\\")", R"("\t\r\n\"\\")");
 
-    assert_expr({ { TokenType::Number, "", 123.0 } }, "123");
-    assert_expr({ { TokenType::Number, "", -123.0 } }, "-123");
-    assert_expr({ { TokenType::Number, "", 3.14159265 } }, "3.14159265");
+    assert_expr("123", "123");
+    assert_expr("3.14159265", "3.14159265");
 
-    assert_expr({ { TokenType::Identifier, "foo" } }, "foo");
+    assert_expr("foo", "foo");
 
-    assert_expr({ { TokenType::True, "", true } }, "true");
-    assert_expr({ { TokenType::False, "", false } }, "false");
+    assert_expr("true", "true");
+    assert_expr("false", "false");
 
-    assert_expr({ { TokenType::Nil, "" } }, "nil");
+    assert_expr("nil", "nil");
 
-    assert_errors({ { TokenType::Slash, "/" } }, { { "/", "" } });
+    assert_error("/", "/");
 }
 
 TEST(Parser, UnaryExpressions)
 {
-    assert_sexp({ { TokenType::Minus, "" }, { TokenType::Number, "", 123.0 } }, R"(
+    assert_sexp("-123", R"(
 (-
   123)
     )");
-    assert_sexp({ { TokenType::Bang, "" }, { TokenType::True, "", true } }, R"(
+    assert_sexp("!true", R"(
 (!
   true)
     )");
 
-    assert_errors({ { TokenType::Minus, "" }, { TokenType::Invalid, "foo" } },
-        { { "foo", "" } });
+    assert_error("-/", "/");
 }
 
 TEST(Parser, ErrorAtEofPointsAtLastToken)
 {
-    assert_errors({ { TokenType::Minus, "-" } }, { { "-", "" } });
+    assert_error("-", "-");
 }
 
 TEST(Parser, MultiplyExpressions)
 {
-    assert_sexp({
-        { TokenType::Number, "", 5.0 },
-        { TokenType::Slash, "" },
-        { TokenType::Number, "", 7.0 } }, R"(
+    assert_sexp("5 / 7", R"(
 (/
   5
   7)
     )");
-    assert_sexp({
-        { TokenType::Number, "", 500.0 },
-        { TokenType::Star, "" },
-        { TokenType::Number, "", 700.0 } }, R"(
+    assert_sexp("500 * 700", R"(
 (*
   500
   700)
     )");
-    assert_sexp({
-        { TokenType::Number, "", 5.0 },
-        { TokenType::Slash, "" },
-        { TokenType::Number, "", 7.0 },
-        { TokenType::Star, "" },
-        { TokenType::Number, "", 9.0 } }, R"(
+    assert_sexp("5 / 7 * 9", R"(
 (*
   (/
     5
@@ -116,37 +107,22 @@ TEST(Parser, MultiplyExpressions)
   9)
     )");
 
-    assert_errors({
-        { TokenType::Number, "", 5.0 },
-        { TokenType::Slash, "" },
-        { TokenType::Invalid, "foo" },
-    }, { { "foo", "" } });
+    assert_error("5 * /", "/");
 }
 
 TEST(Parser, AddExpressions)
 {
-    assert_sexp({
-        { TokenType::Number, "", 5.0 },
-        { TokenType::Plus, "" },
-        { TokenType::Number, "", 7.0 } }, R"(
+    assert_sexp("5 + 7", R"(
 (+
   5
   7)
     )");
-    assert_sexp({
-        { TokenType::Number, "", 500.0 },
-        { TokenType::Minus, "" },
-        { TokenType::Number, "", 700.0 } }, R"(
+    assert_sexp("500 - 700", R"(
 (-
   500
   700)
     )");
-    assert_sexp({
-        { TokenType::Number, "", 5.0 },
-        { TokenType::Plus, "" },
-        { TokenType::Number, "", 7.0 },
-        { TokenType::Minus, "" },
-        { TokenType::Number, "", 9.0 } }, R"(
+    assert_sexp("5 + 7 - 9", R"(
 (-
   (+
     5
@@ -154,81 +130,48 @@ TEST(Parser, AddExpressions)
   9)
     )");
 
-    assert_errors({
-        { TokenType::Number, "", 5.0 },
-        { TokenType::Plus, "" },
-        { TokenType::Invalid, "foo" },
-    }, { { "foo", "" } });
+    assert_error("5 + /", "/");
 }
 
 TEST(Parser, CompareExpressions)
 {
-    assert_sexp({
-        { TokenType::Number, "", 5.0 },
-        { TokenType::EqualEqual, "" },
-        { TokenType::Number, "", 7.0 } }, R"(
+    assert_sexp("5 == 7", R"(
 (==
   5
   7)
     )");
-    assert_sexp({
-        { TokenType::Number, "", 5.0 },
-        { TokenType::BangEqual, "" },
-        { TokenType::Number, "", 7.0 } }, R"(
+    assert_sexp("5 != 7", R"(
 (!=
   5
   7)
     )");
-    assert_sexp({
-        { TokenType::Number, "", 5.0 },
-        { TokenType::Less, "" },
-        { TokenType::Number, "", 7.0 } }, R"(
+    assert_sexp("5 < 7", R"(
 (<
   5
   7)
     )");
-    assert_sexp({
-        { TokenType::Number, "", 5.0 },
-        { TokenType::LessEqual, "" },
-        { TokenType::Number, "", 7.0 } }, R"(
+    assert_sexp("5 <= 7", R"(
 (<=
   5
   7)
     )");
-    assert_sexp({
-        { TokenType::Number, "", 5.0 },
-        { TokenType::Greater, "" },
-        { TokenType::Number, "", 7.0 } }, R"(
+    assert_sexp("5 > 7", R"(
 (>
   5
   7)
     )");
-    assert_sexp({
-        { TokenType::Number, "", 5.0 },
-        { TokenType::GreaterEqual, "" },
-        { TokenType::Number, "", 7.0 } }, R"(
+    assert_sexp("5 >= 7", R"(
 (>=
   5
   7)
     )");
 
-    assert_errors({
-        { TokenType::Number, "", 5.0 },
-        { TokenType::EqualEqual, "" },
-        { TokenType::Invalid, "foo" },
-    }, { { "foo", "" } });
+    assert_error("5 == /", "/");
 }
 
 TEST(Parser, GroupExpression)
 {
-    assert_sexp({
-        { TokenType::LeftParen, "" },
-        { TokenType::Number, "", 5.0 },
-        { TokenType::Plus, "" },
-        { TokenType::Number, "", 7.0 },
-        { TokenType::RightParen, "" },
-        { TokenType::Star, "" },
-        { TokenType::Number, "", 9.0 } }, R"(
+    assert_sexp("(5 + 7) * 9", R"(
 (*
   (group
     (+
@@ -237,15 +180,6 @@ TEST(Parser, GroupExpression)
   9)
     )");
 
-    assert_errors({
-        { TokenType::LeftParen, "" },
-        { TokenType::Invalid, "foo" },
-    }, { { "foo", "" } });
-    assert_errors({
-        { TokenType::LeftParen, "(" },
-        { TokenType::Number, "", 5.0 },
-        { TokenType::Plus, "" },
-        { TokenType::Number, "", 7.0 },
-        { TokenType::Invalid, "" },
-    }, { { "(", "" } });
+    assert_error("(/", "/");
+    assert_error("(5 + 7", "(");
 }
