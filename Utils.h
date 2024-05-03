@@ -44,8 +44,8 @@ private:
 };
 
 struct Error {
-    std::string_view span;
     std::string msg;
+    std::string_view span;
 };
 
 std::string escape(std::string s);

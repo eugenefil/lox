@@ -60,7 +60,7 @@ std::string Number::__str__() const
 
 void Interpreter::error(std::string msg, std::string_view span)
 {
-    m_errors.push_back({ span, std::move(msg) });
+    m_errors.push_back({ std::move(msg), span });
 }
 
 std::shared_ptr<Object> Interpreter::interpret()

@@ -5,7 +5,7 @@ using Lox::TokenType;
 
 static void assert_tokens(std::string_view input,
                           std::vector<Lox::Token> tokens,
-                          std::vector<Lox::Error> errors = {})
+                          std::vector<std::string_view> error_spans = {})
 {
     Lox::Lexer lexer(input);
     auto output = lexer.lex();
@@ -19,9 +19,9 @@ static void assert_tokens(std::string_view input,
     }
 
     auto& errs = lexer.errors();
-    ASSERT_EQ(errs.size(), errors.size());
+    ASSERT_EQ(errs.size(), error_spans.size());
     for (std::size_t i = 0; i < errs.size(); ++i)
-        EXPECT_EQ(errs[i].span, errors[i].span);
+        EXPECT_EQ(errs[i].span, error_spans[i]);
 }
 
 static void assert_token(std::string_view input, TokenType type,
@@ -30,12 +30,11 @@ static void assert_token(std::string_view input, TokenType type,
     assert_tokens(input, { { type, input, std::move(value) } });
 }
 
-static void assert_invalid_token(std::string_view input,
-                                 std::string_view error_span = {})
+static void assert_error(std::string_view input, std::string_view error_span = {})
 {
     if (error_span.empty())
         error_span = input;
-    assert_tokens(input, { { TokenType::Invalid, input } }, { { error_span, "" } });
+    assert_tokens(input, { { TokenType::Invalid, input } }, { error_span });
 }
 
 TEST(Lexer, EmptyInputReturnsNoTokens)
@@ -57,7 +56,7 @@ TEST(Lexer, OneCharTokens)
     assert_token("*", TokenType::Star);
     assert_token("/", TokenType::Slash);
 
-    assert_invalid_token("@");
+    assert_error("@");
 }
 
 TEST(Lexer, SkipWhitespace)
@@ -104,8 +103,8 @@ TEST(Lexer, Strings)
     assert_token(R"("newline \
 escape")", TokenType::String, "newline escape");
 
-    assert_invalid_token(R"("foo\z")", "\\z");
-    assert_invalid_token(R"("unterminated string)");
+    assert_error(R"("foo\z")", "\\z");
+    assert_error(R"("unterminated string)");
 }
 
 TEST(Lexer, Numbers)
@@ -115,7 +114,7 @@ TEST(Lexer, Numbers)
     assert_token("4e9", TokenType::Number, 4e9);
     assert_token("7.843e-9", TokenType::Number, 7.843e-9);
 
-    assert_invalid_token("1e999999");
+    assert_error("1e999999");
 }
 
 TEST(Lexer, Keywords)
@@ -178,10 +177,8 @@ TEST(Lexer, MultipleErrors)
     assert_tokens(R"(@ + "unterminated)", {
         { TokenType::Invalid, "@" },
         { TokenType::Plus, "+" },
-        { TokenType::Invalid, "\"unterminated" }
-    }, {
-        { "@", "" }, { "\"unterminated", "" },
-    });
+        { TokenType::Invalid, "\"unterminated" } },
+    { "@", "\"unterminated" });
 }
 
 static void assert_lines(std::string_view source,

@@ -44,7 +44,7 @@ void Lexer::error(std::string msg, std::string_view span)
 {
     if (span.empty())
         span = token_text();
-    m_errors.push_back({ span, std::move(msg) });
+    m_errors.push_back({ std::move(msg), span });
 }
 
 bool Lexer::unescape(std::string& s)

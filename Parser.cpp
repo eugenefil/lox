@@ -15,15 +15,15 @@ const Token& Parser::peek() const
 void Parser::error(std::string msg, std::string_view span)
 {
     if (!span.empty()) {
-        m_errors.push_back({ span, std::move(msg) });
+        m_errors.push_back({ std::move(msg), span });
         return;
     }
     if (peek().type() == TokenType::Eof) {
         // w/out tokens there can't be errors, so there must be at least one token
         assert(m_tokens.size() > 0);
-        m_errors.push_back({ m_tokens.back().text(), std::move(msg) });
+        m_errors.push_back({ std::move(msg), m_tokens.back().text() });
     } else
-        m_errors.push_back({ peek().text(), std::move(msg) });
+        m_errors.push_back({ std::move(msg), peek().text() });
 }
 
 static std::string_view merge_texts(std::initializer_list<std::string_view> texts)
