@@ -1,4 +1,5 @@
 #include "Parser.h"
+#include "Interpreter.h"
 #include <iostream>
 #include <string>
 #include <filesystem>
@@ -8,7 +9,7 @@ namespace fs = std::filesystem;
 
 static std::string argv0;
 
-[[noreturn]] void usage(bool error = false)
+[[noreturn]] static void usage(bool error = false)
 {
     (error ? std::cerr : std::cout) <<
     "Usage: " << argv0 << " [OPTIONS] [FILE]\n"
@@ -19,11 +20,11 @@ static std::string argv0;
     std::exit(error);
 }
 
-[[noreturn]] void errusage() { usage(true); }
+[[noreturn]] static void errusage() { usage(true); }
 
-void print_errors(const std::vector<Lox::Error>& errors,
-                  std::string_view source, std::string_view filename,
-                  bool color = false)
+static void print_errors(const std::vector<Lox::Error>& errors,
+                         std::string_view source, std::string_view filename,
+                         bool color = false)
 {
     Lox::SourceMap smap(source);
     for (auto& error : errors) {
@@ -80,7 +81,7 @@ void print_errors(const std::vector<Lox::Error>& errors,
     }
 }
 
-void repl()
+static void repl()
 {
     for (;;) {
         std::cout << ">>> ";
@@ -89,24 +90,37 @@ void repl()
             std::cout << std::endl;
             break;
         }
+
         Lox::Lexer lexer(line);
         auto tokens = lexer.lex();
         if (lexer.has_errors()) {
             print_errors(lexer.errors(), line, "stdin", isatty(STDERR_FILENO));
             continue;
         }
+
         Lox::Parser parser(std::move(tokens));
-        auto expr = parser.parse();
+        auto ast = parser.parse();
         if (parser.has_errors()) {
             print_errors(parser.errors(), line, "stdin", isatty(STDERR_FILENO));
             continue;
         }
-        if (expr)
-            std::cout << expr->dump(0) << std::endl;
+
+        Lox::Interpreter interp(ast);
+        auto value = interp.interpret();
+        if (interp.has_errors()) {
+            print_errors(interp.errors(), line, "stdin", isatty(STDERR_FILENO));
+            continue;
+        }
+        if (value) {
+            auto str = value->__str__();
+            if (value->is_string())
+                str = Lox::escape(str);
+            std::cout << str << '\n';
+        }
     }
 }
 
-int run(std::string_view)
+static int run(std::string_view)
 {
     return 0;
 }

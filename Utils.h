@@ -48,4 +48,6 @@ struct Error {
     std::string msg;
 };
 
+std::string escape(std::string s);
+
 }

@@ -1,4 +1,5 @@
 #include "AST.h"
+#include "Utils.h"
 #include <charconv>
 
 namespace Lox {
@@ -6,35 +7,6 @@ namespace Lox {
 static std::string make_indent(std::size_t indent)
 {
     return std::string(indent * 2, ' ');
-}
-
-static std::string escape(std::string s)
-{
-    for (std::size_t i = 0; i < s.size(); ++i) {
-        auto& ch = s[i];
-        char sub = 0;
-        switch (ch) {
-        case '\t':
-            sub = 't';
-            break;
-        case '\r':
-            sub = 'r';
-            break;
-        case '\n':
-            sub = 'n';
-            break;
-        case '"':
-        case '\\':
-            sub = ch;
-            break;
-        }
-        if (sub > 0) {
-            ch = '\\';
-            s.insert(i + 1, 1, sub);
-            ++i;
-        }
-    }
-    return s.insert(0, 1, '"').append(1, '"');
 }
 
 std::string StringLiteral::dump(std::size_t indent) const

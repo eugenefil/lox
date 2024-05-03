@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AST.h"
+#include "Utils.h"
 #include <cassert>
 #include <vector>
 
@@ -23,6 +24,11 @@ public:
 
     virtual bool __bool__() const { return true; }
     virtual bool __eq__(const Object&) const { return false; }
+
+    virtual std::string __str__() const
+    {
+        return std::string("<").append(type_name()).append(">");
+    }
 };
 
 class String : public Object {
@@ -38,6 +44,8 @@ public:
     {
         return rhs.is_string() && rhs.get_string() == m_value;
     }
+
+    std::string __str__() const override { return m_value; }
 
 private:
     std::string m_value;
@@ -57,6 +65,8 @@ public:
         return rhs.is_number() && rhs.get_number() == m_value;
     }
 
+    std::string __str__() const override;
+
 private:
     double m_value;
 };
@@ -75,6 +85,8 @@ public:
         return rhs.is_bool() && rhs.get_bool() == m_value;
     }
 
+    std::string __str__() const override { return m_value ? "true" : "false"; }
+
 private:
     bool m_value;
 };
@@ -84,29 +96,23 @@ public:
     std::string_view type_name() const override { return "NilType"; }
     bool __bool__() const override { return false; }
     bool __eq__(const Object& rhs) const override { return rhs.is_niltype(); }
-};
-
-struct RuntimeError {
-    std::string_view span;
-    std::string msg;
+    std::string __str__() const override { return "nil"; }
 };
 
 class Interpreter {
 public:
     explicit Interpreter(std::shared_ptr<Expr> ast) : m_ast(ast)
-    {
-        assert(ast);
-    }
+    {}
 
     std::shared_ptr<Object> interpret();
 
-    void error(std::string_view span, std::string&& msg);
+    void error(std::string msg, std::string_view span);
     bool has_errors() const { return m_errors.size() > 0; }
-    const std::vector<RuntimeError>& errors() const { return m_errors; }
+    const std::vector<Error>& errors() const { return m_errors; }
 
 private:
     std::shared_ptr<Expr> m_ast;
-    std::vector<RuntimeError> m_errors;
+    std::vector<Error> m_errors;
 };
 
 }

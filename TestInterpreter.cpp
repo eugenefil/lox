@@ -58,6 +58,14 @@ static void assert_error(std::string_view input)
     ASSERT_EQ(errs[0].span, input);
 }
 
+TEST(Interpreter, EmptyAst)
+{
+    Lox::Interpreter interp { std::shared_ptr<Lox::Expr>() };
+    auto obj = interp.interpret();
+    EXPECT_FALSE(interp.has_errors());
+    EXPECT_FALSE(obj);
+}
+
 TEST(Interpreter, EvalLiterals)
 {
     assert_string(R"("foo")", "foo");
