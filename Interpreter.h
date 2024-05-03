@@ -21,17 +21,23 @@ public:
     virtual double get_number() const { assert(0); }
     virtual bool get_bool() const { assert(0); }
 
-    virtual bool to_bool() const { return true; }
+    virtual bool __bool__() const { return true; }
+    virtual bool __eq__(const Object&) const { return false; }
 };
 
 class String : public Object {
 public:
-    String(std::string value) : m_value(value)
+    String(std::string_view value) : m_value(value)
     {}
 
     std::string_view type_name() const override { return "String"; }
     std::string_view get_string() const override { return m_value; }
-    bool to_bool() const override { return m_value.size() > 0; }
+    bool __bool__() const override { return m_value.size() > 0; }
+
+    bool __eq__(const Object& rhs) const override
+    {
+        return rhs.is_string() && rhs.get_string() == m_value;
+    }
 
 private:
     std::string m_value;
@@ -44,7 +50,12 @@ public:
 
     std::string_view type_name() const override { return "Number"; }
     double get_number() const override { return m_value; }
-    bool to_bool() const override { return m_value != 0.0; }
+    bool __bool__() const override { return m_value != 0.0; }
+
+    bool __eq__(const Object& rhs) const override
+    {
+        return rhs.is_number() && rhs.get_number() == m_value;
+    }
 
 private:
     double m_value;
@@ -57,7 +68,12 @@ public:
 
     std::string_view type_name() const override { return "Bool"; }
     bool get_bool() const override { return m_value; }
-    bool to_bool() const override { return m_value; }
+    bool __bool__() const override { return m_value; }
+
+    bool __eq__(const Object& rhs) const override
+    {
+        return rhs.is_bool() && rhs.get_bool() == m_value;
+    }
 
 private:
     bool m_value;
@@ -66,7 +82,8 @@ private:
 class NilType : public Object {
 public:
     std::string_view type_name() const override { return "NilType"; }
-    bool to_bool() const override { return false; }
+    bool __bool__() const override { return false; }
+    bool __eq__(const Object& rhs) const override { return rhs.is_niltype(); }
 };
 
 struct RuntimeError {

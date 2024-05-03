@@ -1,64 +1,62 @@
 #include "Interpreter.h"
+#include "Lexer.h"
+#include "Parser.h"
 #include <gtest/gtest.h>
 
-static void assert_string(std::shared_ptr<Lox::Expr> ast, std::string_view value)
+static void assert_value(std::string_view input,
+                         std::shared_ptr<Lox::Object> value)
 {
+    Lox::Lexer lexer(input);
+    auto tokens = lexer.lex();
+    ASSERT_FALSE(lexer.has_errors());
+    Lox::Parser parser(std::move(tokens));
+    auto ast = parser.parse();
+    ASSERT_FALSE(parser.has_errors());
     Lox::Interpreter interp(ast);
     auto obj = interp.interpret();
     EXPECT_FALSE(interp.has_errors());
     ASSERT_TRUE(obj);
-    ASSERT_EQ(obj->type_name(), "String");
-    ASSERT_EQ(obj->get_string(), value);
+    ASSERT_TRUE(value);
+    ASSERT_TRUE(obj->__eq__(*value));
 }
 
-static void assert_number(std::shared_ptr<Lox::Expr> ast, double value)
+static void assert_string(std::string_view input, std::string_view value)
 {
-    Lox::Interpreter interp(ast);
-    auto obj = interp.interpret();
-    EXPECT_FALSE(interp.has_errors());
-    ASSERT_TRUE(obj);
-    ASSERT_EQ(obj->type_name(), "Number");
-    ASSERT_EQ(obj->get_number(), value);
+    assert_value(input, std::make_shared<Lox::String>(value));
 }
 
-static void assert_bool(std::shared_ptr<Lox::Expr> ast, bool value)
+static void assert_number(std::string_view input, double value)
 {
-    Lox::Interpreter interp(ast);
-    auto obj = interp.interpret();
-    EXPECT_FALSE(interp.has_errors());
-    ASSERT_TRUE(obj);
-    ASSERT_EQ(obj->type_name(), "Bool");
-    ASSERT_EQ(obj->get_bool(), value);
+    assert_value(input, std::make_shared<Lox::Number>(value));
 }
 
-static void assert_nil(std::shared_ptr<Lox::Expr> ast)
+static void assert_bool(std::string_view input, bool value)
 {
-    Lox::Interpreter interp(ast);
-    auto obj = interp.interpret();
-    EXPECT_FALSE(interp.has_errors());
-    ASSERT_TRUE(obj);
-    ASSERT_EQ(obj->type_name(), "NilType");
+    assert_value(input, std::make_shared<Lox::Bool>(value));
 }
 
-#define EXPR(expr_class, ...) (std::make_shared<Lox::expr_class>(__VA_ARGS__))
-#define UNARY(op, expr) EXPR(UnaryExpr, Lox::UnaryOp::op, (expr))
+static void assert_nil(std::string_view input)
+{
+    assert_value(input, std::make_shared<Lox::NilType>());
+}
 
 TEST(Interpreter, EvalLiterals)
 {
-    assert_string(EXPR(StringLiteral, "foo"), "foo");
-    assert_number(EXPR(NumberLiteral, 5.0), 5.0);
-    assert_bool(EXPR(BoolLiteral, true), true);
-    assert_nil(EXPR(NilLiteral));
+    assert_string(R"("foo")", "foo");
+    assert_number("5", 5.0);
+    assert_bool("true", true);
+    assert_bool("false", false);
+    assert_nil("nil");
 }
 
 TEST(Interpreter, EvalUnaryExpressions)
 {
-    assert_number(UNARY(Minus, EXPR(NumberLiteral, 5.0)), -5.0);
-    assert_bool(UNARY(Not, EXPR(StringLiteral, "foo")), false);
-    assert_bool(UNARY(Not, EXPR(StringLiteral, "")), true);
-    assert_bool(UNARY(Not, EXPR(NumberLiteral, 5.0)), false);
-    assert_bool(UNARY(Not, EXPR(NumberLiteral, 0.0)), true);
-    assert_bool(UNARY(Not, EXPR(BoolLiteral, true)), false);
-    assert_bool(UNARY(Not, EXPR(BoolLiteral, false)), true);
-    assert_bool(UNARY(Not, EXPR(NilLiteral)), true);
+    assert_number("-5", -5.0);
+    assert_bool(R"(!"foo")", false);
+    assert_bool(R"(!"")", true);
+    assert_bool("!5", false);
+    assert_bool("!0", true);
+    assert_bool("!true", false);
+    assert_bool("!false", true);
+    assert_bool("!nil", true);
 }

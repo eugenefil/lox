@@ -45,7 +45,7 @@ std::shared_ptr<Object> UnaryExpr::eval(Interpreter& interp) const
         return std::make_shared<Number>(-obj->get_number());
 
     case UnaryOp::Not:
-        return std::make_shared<Bool>(!obj->to_bool());
+        return std::make_shared<Bool>(!obj->__bool__());
     }
     assert(0);
 }
