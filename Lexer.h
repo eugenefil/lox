@@ -73,7 +73,7 @@ private:
 
     std::string_view token_text() const;
     bool unescape(std::string&);
-    void error(std::string_view msg, std::string_view span = {});
+    void error(std::string msg, std::string_view span = {});
 
     std::string_view m_input;
     std::size_t m_start { 0 };

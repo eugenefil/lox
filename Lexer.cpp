@@ -40,11 +40,11 @@ constexpr bool is_identifier_char(char ch)
     return is_identifier_first_char(ch) || is_ascii_digit(ch);
 }
 
-void Lexer::error(std::string_view msg, std::string_view span)
+void Lexer::error(std::string msg, std::string_view span)
 {
     if (span.empty())
         span = token_text();
-    m_errors.push_back({ span, msg });
+    m_errors.push_back({ span, std::move(msg) });
 }
 
 bool Lexer::unescape(std::string& s)

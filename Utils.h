@@ -45,7 +45,7 @@ private:
 
 struct Error {
     std::string_view span;
-    std::string_view msg;
+    std::string msg;
 };
 
 }

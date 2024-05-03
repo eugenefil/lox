@@ -12,18 +12,18 @@ const Token& Parser::peek() const
     return EOF_TOKEN;
 }
 
-void Parser::error(std::string_view msg, std::string_view span)
+void Parser::error(std::string msg, std::string_view span)
 {
     if (!span.empty()) {
-        m_errors.push_back({ span, msg });
+        m_errors.push_back({ span, std::move(msg) });
         return;
     }
     if (peek().type() == TokenType::Eof) {
         // w/out tokens there can't be errors, so there must be at least one token
         assert(m_tokens.size() > 0);
-        m_errors.push_back({ m_tokens.back().text(), msg });
+        m_errors.push_back({ m_tokens.back().text(), std::move(msg) });
     } else
-        m_errors.push_back({ peek().text(), msg });
+        m_errors.push_back({ peek().text(), std::move(msg) });
 }
 
 static std::string_view merge_texts(std::initializer_list<std::string_view> texts)
