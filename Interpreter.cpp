@@ -37,7 +37,7 @@ std::shared_ptr<Object> UnaryExpr::eval(Interpreter& interp) const
     switch (m_op) {
     case UnaryOp::Minus:
         if (!obj->is_number()) {
-            interp.error(std::format(
+            interp.error(m_text, std::format(
                 "cannot apply unary operator '-' to type '{}'",
                 obj->type_name()));
             return {};
@@ -48,6 +48,11 @@ std::shared_ptr<Object> UnaryExpr::eval(Interpreter& interp) const
         return std::make_shared<Bool>(!obj->__bool__());
     }
     assert(0);
+}
+
+void Interpreter::error(std::string_view span, std::string&& msg)
+{
+    m_errors.push_back({ span, std::move(msg) });
 }
 
 std::shared_ptr<Object> Interpreter::interpret()

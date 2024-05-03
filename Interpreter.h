@@ -88,7 +88,7 @@ public:
 
 struct RuntimeError {
     std::string_view span;
-    std::string_view msg;
+    std::string msg;
 };
 
 class Interpreter {
@@ -100,8 +100,9 @@ public:
 
     std::shared_ptr<Object> interpret();
 
-    void error(std::string&&) {}
+    void error(std::string_view span, std::string&& msg);
     bool has_errors() const { return m_errors.size() > 0; }
+    const std::vector<RuntimeError>& errors() const { return m_errors; }
 
 private:
     std::shared_ptr<Expr> m_ast;
