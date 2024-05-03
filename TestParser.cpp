@@ -12,6 +12,7 @@ static void assert_expr(std::string_view input, std::string_view ast_repr)
     auto ast = parser.parse();
     EXPECT_FALSE(parser.has_errors());
     ASSERT_TRUE(ast);
+    EXPECT_EQ(ast->text(), input);
     EXPECT_EQ(ast->dump(0), ast_repr);
 }
 

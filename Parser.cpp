@@ -12,15 +12,6 @@ const Token& Parser::peek() const
     return EOF_TOKEN;
 }
 
-bool Parser::match(TokenType type)
-{
-    if (peek().type() == type) {
-        advance();
-        return true;
-    }
-    return false;
-}
-
 void Parser::error(std::string_view msg, std::string_view span)
 {
     if (!span.empty()) {
@@ -35,31 +26,54 @@ void Parser::error(std::string_view msg, std::string_view span)
         m_errors.push_back({ peek().text(), msg });
 }
 
+static std::string_view merge_texts(std::initializer_list<std::string_view> texts)
+{
+    assert(texts.size() > 1);
+    auto iter = texts.begin();
+    auto merged = *iter;
+    assert(merged.data());
+    assert(merged.size() > 0);
+    while (++iter != texts.end()) {
+        auto text = *iter;
+        assert(text.data());
+        assert(text.size() > 0);
+        assert(merged.data() + merged.size() <= text.data());
+        merged = std::string_view(merged.data(),
+                                  text.data() - merged.data() + text.size());
+    }
+    return merged;
+}
+
 std::shared_ptr<Expr> Parser::parse_primary()
 {
     auto& token = peek();
     if (token.type() == TokenType::String) {
         advance();
-        return std::make_shared<StringLiteral>(std::get<std::string>(token.value()));
+        return std::make_shared<StringLiteral>(std::get<std::string>(token.value()),
+                                               token.text());
     } else if (token.type() == TokenType::Number) {
         advance();
-        return std::make_shared<NumberLiteral>(std::get<double>(token.value()));
+        return std::make_shared<NumberLiteral>(std::get<double>(token.value()),
+                                               token.text());
     } else if (token.type() == TokenType::Identifier) {
         advance();
-        return std::make_shared<Identifier>(token.text());
+        return std::make_shared<Identifier>(token.text(), token.text());
     } else if (token.type() == TokenType::True ||
                token.type() == TokenType::False) {
         advance();
-        return std::make_shared<BoolLiteral>(std::get<bool>(token.value()));
+        return std::make_shared<BoolLiteral>(std::get<bool>(token.value()),
+                                             token.text());
     } else if (token.type() == TokenType::Nil) {
         advance();
-        return std::make_shared<NilLiteral>();
+        return std::make_shared<NilLiteral>(token.text());
     } else if (token.type() == TokenType::LeftParen) {
         advance();
         if (auto expr = parse_expression()) {
-            if (match(TokenType::RightParen))
-                return std::make_shared<GroupExpr>(expr);
-            else
+            if (auto& closing = peek(); closing.type() == TokenType::RightParen) {
+                advance();
+                return std::make_shared<GroupExpr>(expr,
+                    merge_texts({ token.text(), expr->text(), closing.text() }));
+            } else
                 error("'(' was never closed", token.text());
         }
         return {};
@@ -84,7 +98,8 @@ std::shared_ptr<Expr> Parser::parse_unary()
                     assert(0);
                 }
             }();
-            return std::make_shared<UnaryExpr>(op, expr);
+            return std::make_shared<UnaryExpr>(op, expr,
+                merge_texts({ token.text(), expr->text() }));
         }
         return {};
     }
@@ -116,7 +131,8 @@ std::shared_ptr<Expr> Parser::parse_multiply()
                 assert(0);
             }
         }();
-        left = std::make_shared<BinaryExpr>(op, left, right);
+        left = std::make_shared<BinaryExpr>(op, left, right,
+            merge_texts({ left->text(), token.text(), right->text() }));
     }
     return left;
 }
@@ -146,7 +162,8 @@ std::shared_ptr<Expr> Parser::parse_add()
                 assert(0);
             }
         }();
-        left = std::make_shared<BinaryExpr>(op, left, right);
+        left = std::make_shared<BinaryExpr>(op, left, right,
+            merge_texts({ left->text(), token.text(), right->text() }));
     }
     return left;
 }
@@ -183,7 +200,8 @@ std::shared_ptr<Expr> Parser::parse_compare()
                     assert(0);
                 }
             }();
-            return std::make_shared<BinaryExpr>(op, left, right);
+            return std::make_shared<BinaryExpr>(op, left, right,
+                merge_texts({ left->text(), token.text(), right->text() }));
         }
         return {};
     }

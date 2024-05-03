@@ -18,7 +18,6 @@ public:
 
 private:
     const Token& peek() const;
-    bool match(TokenType type);
     void advance() { ++m_cur; }
 
     void error(std::string_view msg, std::string_view span = {});
