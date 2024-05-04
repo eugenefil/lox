@@ -35,6 +35,8 @@ class String : public Object {
 public:
     String(std::string_view value) : m_value(value)
     {}
+    String(std::string&& value) : m_value(std::move(value))
+    {}
 
     std::string_view type_name() const override { return "String"; }
     std::string_view get_string() const override { return m_value; }

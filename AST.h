@@ -121,6 +121,7 @@ public:
     }
 
     std::string dump(std::size_t indent) const override;
+    std::shared_ptr<Object> eval(Interpreter& interp) const override;
 
 private:
     std::shared_ptr<Expr> m_expr;
@@ -153,6 +154,7 @@ public:
     }
 
     std::string dump(std::size_t indent) const override;
+    std::shared_ptr<Object> eval(Interpreter& interp) const override;
 
 private:
     const BinaryOp m_op;

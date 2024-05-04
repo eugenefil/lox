@@ -78,6 +78,8 @@ TEST(Interpreter, EvalLiterals)
 TEST(Interpreter, EvalUnaryExpressions)
 {
     assert_number("-5", -5.0);
+    assert_error(R"(-"foo")");
+
     assert_bool(R"(!"foo")", false);
     assert_bool(R"(!"")", true);
     assert_bool("!5", false);
@@ -85,6 +87,60 @@ TEST(Interpreter, EvalUnaryExpressions)
     assert_bool("!true", false);
     assert_bool("!false", true);
     assert_bool("!nil", true);
+}
 
-    assert_error(R"(-"foo")");
+TEST(Interpreter, EvalBinaryExpressions)
+{
+    assert_number("10 / 2", 5.0);
+    assert_error("10 / nil");
+
+    assert_number("10 * 2", 20.0);
+    assert_error("10 * nil");
+
+    assert_number("10 + 2", 12.0);
+    assert_string(R"("foo" + "bar")", "foobar");
+    assert_error("10 + nil");
+
+    assert_number("2 - 10", -8.0);
+    assert_error("2 - nil");
+
+    assert_bool("5 == 5", true);
+    assert_bool("5 == 7", false);
+    assert_bool("5 == nil", false);
+    assert_bool(R"("foo" == "foo")", true);
+    assert_bool(R"("foo" == "bar")", false);
+    assert_bool(R"("foo" == nil)", false);
+    assert_bool("true == true", true);
+    assert_bool("true == false", false);
+    assert_bool("true == nil", false);
+    assert_bool("nil == nil", true);
+    assert_bool("nil == 5", false);
+
+    assert_bool("5 < 7", true);
+    assert_bool("5 < 5", false);
+    assert_error("5 < nil");
+    assert_bool(R"("aaa" < "bbb")", true);
+    assert_bool(R"("aaa" < "aaa")", false);
+
+    assert_bool("5 <= 7", true);
+    assert_bool("5 <= 5", true);
+    assert_bool("5 <= 4", false);
+    assert_error("5 <= nil");
+    assert_bool(R"("aaa" <= "bbb")", true);
+    assert_bool(R"("aaa" <= "aaa")", true);
+    assert_bool(R"("aaa" <= "000")", false);
+
+    assert_bool("5 > 4", true);
+    assert_bool("5 > 5", false);
+    assert_error("5 > nil");
+    assert_bool(R"("bbb" > "aaa")", true);
+    assert_bool(R"("bbb" > "bbb")", false);
+
+    assert_bool("5 >= 4", true);
+    assert_bool("5 >= 5", true);
+    assert_bool("5 >= 7", false);
+    assert_error("5 >= nil");
+    assert_bool(R"("bbb" >= "aaa")", true);
+    assert_bool(R"("bbb" >= "bbb")", true);
+    assert_bool(R"("bbb" >= "ccc")", false);
 }
