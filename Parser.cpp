@@ -213,11 +213,75 @@ std::shared_ptr<Expr> Parser::parse_expression()
     return parse_compare();
 }
 
-std::shared_ptr<Expr> Parser::parse()
+std::shared_ptr<Stmt> Parser::parse_expression_statement()
 {
-    if (m_tokens.empty())
+    auto expr = parse_expression();
+    if (!expr)
         return {};
-    return parse_expression();
+    if (auto& token = peek(); token.type() == TokenType::Semicolon) {
+        advance();
+        return std::make_shared<ExpressionStmt>(expr,
+            merge_texts({ expr->text(), token.text() }));
+    } else
+        error("expected ';'", token.text());
+    return {};
+}
+
+std::shared_ptr<Stmt> Parser::parse_var_statement()
+{
+    auto& var = peek();
+    assert(var.type() == TokenType::Var);
+    advance();
+
+    auto& ident = peek();
+    if (ident.type() != TokenType::Identifier) {
+        error("expected identifier", ident.text());
+        return {};
+    }
+    advance();
+
+    std::shared_ptr<Expr> init;
+    if (auto& token = peek(); token.type() == TokenType::Equal) {
+        advance();
+        init = parse_expression();
+        if (!init)
+            return {};
+    }
+
+    if (auto& semi = peek(); semi.type() == TokenType::Semicolon) {
+        advance();
+        return std::make_shared<VarStmt>(
+            std::make_shared<Identifier>(ident.text(), ident.text()),
+            init, merge_texts({ var.text(), semi.text() }));
+    } else
+        error("expected ';'", semi.text());
+    return {};
+}
+
+std::shared_ptr<Stmt> Parser::parse_statement()
+{
+    if (auto& token = peek(); token.type() == TokenType::Var)
+        return parse_var_statement();
+    return parse_expression_statement();
+}
+
+std::shared_ptr<Program> Parser::parse()
+{
+    std::vector<std::shared_ptr<Stmt>> stmts;
+    while (peek().type() != TokenType::Eof) {
+        auto stmt = parse_statement();
+        if (!stmt)
+            return {};
+        stmts.push_back(stmt);
+    }
+
+    std::string_view text;
+    if (!stmts.empty()) {
+        text = stmts[0]->text();
+        for (std::size_t i = 1; i < stmts.size(); ++i)
+            text = merge_texts({ text, stmts[i]->text() });
+    }
+    return std::make_shared<Program>(std::move(stmts), text);
 }
 
 }

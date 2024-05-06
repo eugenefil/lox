@@ -3,25 +3,35 @@
 #include <string>
 #include <memory>
 #include <cassert>
+#include <vector>
 
 namespace Lox {
 
-class Object;
-class Interpreter;
-
-class Expr {
+class ASTNode {
 public:
-    virtual ~Expr() = default;
+    virtual ~ASTNode() = default;
 
-    explicit Expr(std::string_view text) : m_text(text)
+    explicit ASTNode(std::string_view text) : m_text(text)
     {}
 
     std::string_view text() const { return m_text; }
     virtual std::string dump(std::size_t indent) const = 0;
-    virtual std::shared_ptr<Object> eval(Interpreter& interp) const;
 
 protected:
     std::string_view m_text;
+};
+
+class Object;
+class Interpreter;
+
+class Expr : public ASTNode {
+public:
+    virtual ~Expr() = default;
+
+    explicit Expr(std::string_view text) : ASTNode(text)
+    {}
+
+    virtual std::shared_ptr<Object> eval(Interpreter&) const = 0;
 };
 
 class StringLiteral : public Expr {
@@ -32,7 +42,7 @@ public:
     {}
 
     std::string dump(std::size_t indent) const override;
-    std::shared_ptr<Object> eval(Interpreter& interp) const override;
+    std::shared_ptr<Object> eval(Interpreter&) const override;
 
 private:
     std::string m_value;
@@ -46,7 +56,7 @@ public:
     {}
 
     std::string dump(std::size_t indent) const override;
-    std::shared_ptr<Object> eval(Interpreter& interp) const override;
+    std::shared_ptr<Object> eval(Interpreter&) const override;
 
 private:
     double m_value { 0.0 };
@@ -60,6 +70,9 @@ public:
     {}
 
     std::string dump(std::size_t indent) const override;
+    std::shared_ptr<Object> eval(Interpreter&) const override { assert(0); }
+
+    std::string_view name() const { return m_name; }
 
 private:
     std::string_view m_name;
@@ -73,7 +86,7 @@ public:
     {}
 
     std::string dump(std::size_t indent) const override;
-    std::shared_ptr<Object> eval(Interpreter& interp) const override;
+    std::shared_ptr<Object> eval(Interpreter&) const override;
 
 private:
     bool m_value { false };
@@ -85,7 +98,7 @@ public:
     {}
 
     std::string dump(std::size_t indent) const override;
-    std::shared_ptr<Object> eval(Interpreter& interp) const override;
+    std::shared_ptr<Object> eval(Interpreter&) const override;
 };
 
 enum class UnaryOp {
@@ -104,7 +117,7 @@ public:
     }
 
     std::string dump(std::size_t indent) const override;
-    std::shared_ptr<Object> eval(Interpreter& interp) const override;
+    std::shared_ptr<Object> eval(Interpreter&) const override;
 
 private:
     const UnaryOp m_op;
@@ -121,7 +134,7 @@ public:
     }
 
     std::string dump(std::size_t indent) const override;
-    std::shared_ptr<Object> eval(Interpreter& interp) const override;
+    std::shared_ptr<Object> eval(Interpreter&) const override;
 
 private:
     std::shared_ptr<Expr> m_expr;
@@ -154,12 +167,74 @@ public:
     }
 
     std::string dump(std::size_t indent) const override;
-    std::shared_ptr<Object> eval(Interpreter& interp) const override;
+    std::shared_ptr<Object> eval(Interpreter&) const override;
 
 private:
     const BinaryOp m_op;
     std::shared_ptr<Expr> m_left;
     std::shared_ptr<Expr> m_right;
+};
+
+class Stmt : public ASTNode {
+public:
+    explicit Stmt(std::string_view text) : ASTNode(text)
+    {}
+
+    virtual bool execute(Interpreter&) = 0;
+};
+
+class ExpressionStmt : public Stmt {
+public:
+    explicit ExpressionStmt(std::shared_ptr<Expr> expr, std::string_view text)
+        : Stmt(text)
+        , m_expr(expr)
+    {
+        assert(expr);
+    }
+
+    std::string dump(std::size_t indent) const override;
+    bool execute(Interpreter&) override;
+
+private:
+    std::shared_ptr<Expr> m_expr;
+};
+
+class VarStmt : public Stmt {
+public:
+    explicit VarStmt(std::shared_ptr<Identifier> ident,
+                     std::shared_ptr<Expr> init, std::string_view text)
+        : Stmt(text)
+        , m_ident(ident)
+        , m_init(init)
+    {
+        assert(ident);
+        // initializer may be null
+    }
+
+    std::string dump(std::size_t indent) const override;
+    bool execute(Interpreter&) override;
+
+private:
+    std::shared_ptr<Identifier> m_ident;
+    std::shared_ptr<Expr> m_init;
+};
+
+class Program : public Stmt {
+public:
+    explicit Program(std::vector<std::shared_ptr<Stmt>>&& stmts,
+                     std::string_view text)
+        : Stmt(text)
+        , m_stmts(stmts)
+    {
+        for (auto& stmt : stmts)
+            assert(stmt);
+    }
+
+    std::string dump(std::size_t indent) const override;
+    bool execute(Interpreter&) override;
+
+private:
+    std::vector<std::shared_ptr<Stmt>> m_stmts;
 };
 
 }

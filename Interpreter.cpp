@@ -4,11 +4,6 @@
 
 namespace Lox {
 
-std::shared_ptr<Object> Expr::eval(Interpreter&) const
-{
-    assert(0);
-}
-
 std::shared_ptr<Object> StringLiteral::eval(Interpreter&) const
 {
     return std::make_shared<String>(m_value);
@@ -160,16 +155,47 @@ std::string Number::__str__() const
     return std::string(buf, ptr - buf);
 }
 
+bool ExpressionStmt::execute(Interpreter& interp)
+{
+    return static_cast<bool>(m_expr->eval(interp));
+}
+
+bool VarStmt::execute(Interpreter& interp)
+{
+    std::shared_ptr<Object> val;
+    if (m_init) {
+        val = m_init->eval(interp);
+        if (!val)
+            return false;
+    } else
+        val = std::make_shared<NilType>();
+    assert(val);
+    interp.define_var(m_ident->name(), val);
+    return true;
+}
+
+bool Program::execute(Interpreter& interp)
+{
+    for (auto& stmt : m_stmts) {
+        if (!stmt->execute(interp))
+            return false;
+    }
+    return true;
+}
+
+void Interpreter::define_var(std::string_view name, std::shared_ptr<Object> value)
+{
+    m_env[name] = value;
+}
+
 void Interpreter::error(std::string msg, std::string_view span)
 {
     m_errors.push_back({ std::move(msg), span });
 }
 
-std::shared_ptr<Object> Interpreter::interpret()
+void Interpreter::interpret()
 {
-    if (!m_ast)
-        return {};
-    return m_ast->eval(*this);
+    m_program->execute(*this);
 }
 
 }

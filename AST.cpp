@@ -108,4 +108,34 @@ std::string BinaryExpr::dump(std::size_t indent) const
     return s;
 }
 
+std::string ExpressionStmt::dump(std::size_t indent) const
+{
+    return m_expr->dump(indent);
+}
+
+std::string VarStmt::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += "(var\n";
+    s += m_ident->dump(indent + 1);
+    if (m_init) {
+        s += '\n';
+        s += m_init->dump(indent + 1);
+    }
+    s += ')';
+    return s;
+}
+
+std::string Program::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += "(program";
+    for (auto& stmt : m_stmts) {
+        s += '\n';
+        s += stmt->dump(indent + 1);
+    }
+    s += ')';
+    return s;
+}
+
 }

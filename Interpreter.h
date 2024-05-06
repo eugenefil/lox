@@ -4,6 +4,7 @@
 #include "Utils.h"
 #include <cassert>
 #include <vector>
+#include <unordered_map>
 
 namespace Lox {
 
@@ -103,18 +104,26 @@ public:
 
 class Interpreter {
 public:
-    explicit Interpreter(std::shared_ptr<Expr> ast) : m_ast(ast)
-    {}
+    explicit Interpreter(std::shared_ptr<Program> program)
+        : m_program(program)
+    {
+        assert(program);
+    }
 
-    std::shared_ptr<Object> interpret();
+    void interpret();
+
+    using EnvType = std::unordered_map<std::string_view, std::shared_ptr<Object>>;
+    const EnvType& globals() const { return m_env; }
+    void define_var(std::string_view name, std::shared_ptr<Object> value);
 
     void error(std::string msg, std::string_view span);
     bool has_errors() const { return m_errors.size() > 0; }
     const std::vector<Error>& errors() const { return m_errors; }
 
 private:
-    std::shared_ptr<Expr> m_ast;
+    std::shared_ptr<Program> m_program;
     std::vector<Error> m_errors;
+    EnvType m_env;
 };
 
 }

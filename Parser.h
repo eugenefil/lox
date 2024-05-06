@@ -12,7 +12,7 @@ public:
     : m_tokens(std::move(tokens))
     {}
 
-    std::shared_ptr<Expr> parse();
+    std::shared_ptr<Program> parse();
     bool has_errors() const { return m_errors.size() > 0; }
     const std::vector<Error>& errors() const { return m_errors; }
 
@@ -28,6 +28,10 @@ private:
     std::shared_ptr<Expr> parse_add();
     std::shared_ptr<Expr> parse_compare();
     std::shared_ptr<Expr> parse_expression();
+
+    std::shared_ptr<Stmt> parse_expression_statement();
+    std::shared_ptr<Stmt> parse_var_statement();
+    std::shared_ptr<Stmt> parse_statement();
 
     std::vector<Token> m_tokens;
     std::size_t m_cur { 0 };

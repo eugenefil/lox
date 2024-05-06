@@ -1,4 +1,16 @@
-# Expression grammar
+## Statement grammar
+
+```
+statement ->
+      'print' expression ';'
+    | 'var' IDENTIFIER ('=' expression)? ';'
+    | expression ';'
+
+program ->
+      statement*
+```
+
+## Expression grammar
 
 ```
 primary ->

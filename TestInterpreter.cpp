@@ -6,19 +6,27 @@
 static void assert_value(std::string_view input,
                          std::shared_ptr<Lox::Object> value)
 {
-    Lox::Lexer lexer(input);
+    auto src = std::string("var x = ").append(input) + ';';
+    Lox::Lexer lexer(src);
     auto tokens = lexer.lex();
     ASSERT_FALSE(lexer.has_errors());
+
     Lox::Parser parser(std::move(tokens));
-    auto ast = parser.parse();
+    auto program = parser.parse();
     ASSERT_FALSE(parser.has_errors());
-    ASSERT_TRUE(ast);
-    Lox::Interpreter interp(ast);
-    auto obj = interp.interpret();
-    EXPECT_FALSE(interp.has_errors());
+    ASSERT_TRUE(program);
+
+    Lox::Interpreter interp(program);
+    interp.interpret();
+    ASSERT_FALSE(interp.has_errors());
+
+    auto& globals = interp.globals();
+    ASSERT_EQ(globals.size(), 1);
+    ASSERT_TRUE(globals.contains("x"));
+    auto& obj = globals.at("x");
     ASSERT_TRUE(obj);
     ASSERT_TRUE(value);
-    ASSERT_TRUE(obj->__eq__(*value));
+    EXPECT_TRUE(obj->__eq__(*value));
 }
 
 static void assert_string(std::string_view input, std::string_view value)
@@ -43,27 +51,29 @@ static void assert_nil(std::string_view input)
 
 static void assert_error(std::string_view input)
 {
-    Lox::Lexer lexer(input);
+    auto src = std::string("var x = ").append(input) + ';';
+    Lox::Lexer lexer(src);
     auto tokens = lexer.lex();
     ASSERT_FALSE(lexer.has_errors());
+
     Lox::Parser parser(std::move(tokens));
-    auto ast = parser.parse();
+    auto program = parser.parse();
     ASSERT_FALSE(parser.has_errors());
-    ASSERT_TRUE(ast);
-    Lox::Interpreter interp(ast);
-    auto obj = interp.interpret();
-    EXPECT_FALSE(obj);
+    ASSERT_TRUE(program);
+
+    Lox::Interpreter interp(program);
+    interp.interpret();
     auto& errs = interp.errors();
     ASSERT_EQ(errs.size(), 1);
     ASSERT_EQ(errs[0].span, input);
 }
 
-TEST(Interpreter, EmptyAst)
+TEST(Interpreter, EmptyProgram)
 {
-    Lox::Interpreter interp { std::shared_ptr<Lox::Expr>() };
-    auto obj = interp.interpret();
+    Lox::Interpreter interp(std::make_shared<Lox::Program>(
+        std::vector<std::shared_ptr<Lox::Stmt>>(), ""));
+    interp.interpret();
     EXPECT_FALSE(interp.has_errors());
-    EXPECT_FALSE(obj);
 }
 
 TEST(Interpreter, EvalLiterals)

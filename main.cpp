@@ -99,23 +99,17 @@ static void repl()
         }
 
         Lox::Parser parser(std::move(tokens));
-        auto ast = parser.parse();
+        auto program = parser.parse();
         if (parser.has_errors()) {
             print_errors(parser.errors(), line, "stdin", isatty(STDERR_FILENO));
             continue;
         }
 
-        Lox::Interpreter interp(ast);
-        auto value = interp.interpret();
+        Lox::Interpreter interp(program);
+        interp.interpret();
         if (interp.has_errors()) {
             print_errors(interp.errors(), line, "stdin", isatty(STDERR_FILENO));
             continue;
-        }
-        if (value) {
-            auto str = value->__str__();
-            if (value->is_string())
-                str = Lox::escape(str);
-            std::cout << str << '\n';
         }
     }
 }
