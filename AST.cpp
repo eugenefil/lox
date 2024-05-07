@@ -138,6 +138,17 @@ std::string PrintStmt::dump(std::size_t indent) const
     return s;
 }
 
+std::string AssignStmt::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += "(=\n";
+    s += m_place->dump(indent + 1);
+    s += '\n';
+    s += m_value->dump(indent + 1);
+    s += ')';
+    return s;
+}
+
 std::string Program::dump(std::size_t indent) const
 {
     std::string s = make_indent(indent);

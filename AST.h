@@ -32,6 +32,7 @@ public:
     {}
 
     virtual std::shared_ptr<Object> eval(Interpreter&) const = 0;
+    virtual bool is_identifier() const { return false; }
 };
 
 class StringLiteral : public Expr {
@@ -71,6 +72,7 @@ public:
 
     std::string dump(std::size_t indent) const override;
     std::shared_ptr<Object> eval(Interpreter&) const override;
+    bool is_identifier() const override { return true; }
 
     std::string_view name() const { return m_name; }
 
@@ -231,6 +233,27 @@ public:
 
 private:
     std::shared_ptr<Expr> m_expr;
+};
+
+class AssignStmt : public Stmt {
+public:
+    explicit AssignStmt(std::shared_ptr<Expr> place, std::shared_ptr<Expr> value,
+                        std::string_view text)
+        : Stmt(text)
+        , m_place(place)
+        , m_value(value)
+    {
+        assert(place);
+        assert(place->is_identifier());
+        assert(value);
+    }
+
+    std::string dump(std::size_t indent) const override;
+    bool execute(Interpreter&) override;
+
+private:
+    std::shared_ptr<Expr> m_place;
+    std::shared_ptr<Expr> m_value;
 };
 
 class Program : public Stmt {

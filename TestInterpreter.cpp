@@ -209,3 +209,11 @@ TEST(Interpreter, ProgramsShareEnv)
         { "y", Lox::make_number(10) },
     });
 }
+
+TEST(Interpreter, ExecuteAssignStatements)
+{
+    assert_env("var x = 5; x = x + 7;", { { "x", Lox::make_number(12) } });
+
+    assert_error("x = foo;", "foo");
+    assert_error("x = 5;", "x");
+}

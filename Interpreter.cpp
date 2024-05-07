@@ -19,7 +19,7 @@ std::shared_ptr<Object> Identifier::eval(Interpreter& interp) const
 {
     if (auto val = interp.get_var(m_name))
         return val;
-    interp.error(std::format("identifier '{}' is not defined", m_name), m_text);
+    interp.error(std::format("variable '{}' is not defined", m_name), m_text);
     return {};
 }
 
@@ -183,6 +183,28 @@ bool PrintStmt::execute(Interpreter& interp)
     return true;
 }
 
+bool AssignStmt::execute(Interpreter& interp)
+{
+    auto val = m_value->eval(interp);
+    if (!val)
+        return false;
+
+    std::string_view name;
+    if (m_place->is_identifier())
+        name = std::static_pointer_cast<Identifier>(m_place)->name();
+    assert(!name.empty());
+
+    if (interp.set_var(name, val))
+        return true;
+
+    if (m_place->is_identifier())
+        interp.error(std::format("variable '{}' is not defined", name),
+                     m_place->text());
+    else
+        assert(0);
+    return false;
+}
+
 bool Program::execute(Interpreter& interp)
 {
     for (auto& stmt : m_stmts) {
@@ -201,9 +223,21 @@ void Interpreter::define_var(std::string_view name, std::shared_ptr<Object> valu
 
 std::shared_ptr<Object> Interpreter::get_var(std::string_view name) const
 {
+    assert(!name.empty());
     if (auto pair = m_env.find(std::string(name)); pair != m_env.end())
         return pair->second;
     return {};
+}
+
+bool Interpreter::set_var(std::string_view name, std::shared_ptr<Object> value)
+{
+    assert(!name.empty());
+    assert(value);
+    if (auto pair = m_env.find(std::string(name)); pair != m_env.end()) {
+        pair->second = value;
+        return true;
+    }
+    return false;
 }
 
 void Interpreter::error(std::string msg, std::string_view span)

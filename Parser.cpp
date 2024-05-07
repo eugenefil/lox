@@ -205,20 +205,6 @@ std::shared_ptr<Expr> Parser::parse_expression()
     return parse_compare();
 }
 
-std::shared_ptr<Stmt> Parser::parse_expression_statement()
-{
-    auto expr = parse_expression();
-    if (!expr)
-        return {};
-    if (auto& token = peek(); token.type() == TokenType::Semicolon) {
-        advance();
-        return std::make_shared<ExpressionStmt>(expr,
-            merge_texts(expr->text(), token.text()));
-    } else
-        error("expected ';'", token.text());
-    return {};
-}
-
 std::shared_ptr<Stmt> Parser::parse_var_statement()
 {
     auto& var = peek();
@@ -275,13 +261,45 @@ std::shared_ptr<Stmt> Parser::parse_print_statement()
     return {};
 }
 
+std::shared_ptr<Stmt> Parser::parse_assign_statement(std::shared_ptr<Expr> place)
+{
+    assert(place);
+
+    auto val = parse_expression();
+    if (!val)
+        return {};
+
+    if (auto& token = peek(); token.type() == TokenType::Semicolon) {
+        advance();
+        return std::make_shared<AssignStmt>(place, val,
+            merge_texts(place->text(), token.text()));
+    } else
+        error("expected ';'", token.text());
+    return {};
+}
+
 std::shared_ptr<Stmt> Parser::parse_statement()
 {
     if (auto& token = peek(); token.type() == TokenType::Var)
         return parse_var_statement();
     else if (token.type() == TokenType::Print)
         return parse_print_statement();
-    return parse_expression_statement();
+
+    auto expr = parse_expression();
+    if (!expr)
+        return {};
+
+    if (auto& token = peek(); expr->is_identifier() &&
+        token.type() == TokenType::Equal) {
+        advance();
+        return parse_assign_statement(expr);
+    } else if (token.type() == TokenType::Semicolon) {
+        advance();
+        return std::make_shared<ExpressionStmt>(expr,
+            merge_texts(expr->text(), token.text()));
+    } else
+        error("expected ';'", token.text());
+    return {};
 }
 
 std::shared_ptr<Program> Parser::parse()

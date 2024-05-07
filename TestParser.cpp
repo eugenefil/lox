@@ -9,10 +9,10 @@ static void assert_program(std::string_view input, std::string_view sexp)
     auto tokens = lexer.lex();
     ASSERT_FALSE(lexer.has_errors());
     Lox::Parser parser(std::move(tokens));
-    auto ast = parser.parse();
+    auto program = parser.parse();
     EXPECT_FALSE(parser.has_errors());
-    ASSERT_TRUE(ast);
-    EXPECT_EQ(ast->text(), input);
+    ASSERT_TRUE(program);
+    EXPECT_EQ(program->text(), input);
 
     auto indented_sexp = std::string(sexp);
     for (std::size_t i = indented_sexp.find('\n'); i != indented_sexp.npos;) {
@@ -21,7 +21,7 @@ static void assert_program(std::string_view input, std::string_view sexp)
     }
     if (!indented_sexp.empty())
         indented_sexp.insert(0, "\n  "); // add indent for line 1 if any
-    EXPECT_EQ(ast->dump(0), "(program" + indented_sexp + ')');
+    EXPECT_EQ(program->dump(0), "(program" + indented_sexp + ')');
 }
 
 static std::string_view strip_sexp(std::string_view sexp)
@@ -58,8 +58,8 @@ static void assert_error(std::string_view input, std::string_view error_span)
     auto tokens = lexer.lex();
     ASSERT_FALSE(lexer.has_errors());
     Lox::Parser parser(std::move(tokens));
-    auto ast = parser.parse();
-    EXPECT_FALSE(ast);
+    auto program = parser.parse();
+    EXPECT_FALSE(program);
     auto& errs = parser.errors();
     ASSERT_EQ(errs.size(), 1);
     EXPECT_EQ(errs[0].span, error_span);
@@ -249,4 +249,18 @@ TEST(Parser, PrintStatement)
 
     assert_error("print /", "/");
     assert_error("print 5_", "_");
+}
+
+TEST(Parser, AssignStatement)
+{
+    assert_stmt("x = 5 + 7;", R"(
+(=
+  x
+  (+
+    5
+    7))
+    )");
+
+    assert_error("x = /", "/");
+    assert_error("x = 5_", "_");
 }

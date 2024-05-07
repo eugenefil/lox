@@ -4,6 +4,7 @@
 statement ->
       'print' expression? ';'
     | 'var' IDENTIFIER ('=' expression)? ';'
+    | IDENTIFIER '=' expression ';'
     | expression ';'
 
 program ->
