@@ -124,15 +124,9 @@ inline std::shared_ptr<NilType> make_nil()
 
 class Interpreter {
 public:
-    explicit Interpreter(std::shared_ptr<Program> program)
-        : m_program(program)
-    {
-        assert(program);
-    }
+    void interpret(std::shared_ptr<Program> program);
 
-    void interpret();
-
-    using EnvType = std::unordered_map<std::string_view, std::shared_ptr<Object>>;
+    using EnvType = std::unordered_map<std::string, std::shared_ptr<Object>>;
     const EnvType& env() const { return m_env; }
     void define_var(std::string_view name, std::shared_ptr<Object> value);
     std::shared_ptr<Object> get_var(std::string_view name) const;
@@ -142,7 +136,6 @@ public:
     const std::vector<Error>& errors() const { return m_errors; }
 
 private:
-    std::shared_ptr<Program> m_program;
     std::vector<Error> m_errors;
     EnvType m_env;
 };

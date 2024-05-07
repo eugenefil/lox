@@ -3,21 +3,23 @@
 #include "Parser.h"
 #include <gtest/gtest.h>
 
-static void assert_env(std::string_view input,
-                       const Lox::Interpreter::EnvType& env)
+static void assert_env_multi_program(std::vector<std::string_view> inputs,
+                                     const Lox::Interpreter::EnvType& env)
 {
-    Lox::Lexer lexer(input);
-    auto tokens = lexer.lex();
-    ASSERT_FALSE(lexer.has_errors());
+    Lox::Interpreter interp;
+    for (auto input : inputs) {
+        Lox::Lexer lexer(input);
+        auto tokens = lexer.lex();
+        ASSERT_FALSE(lexer.has_errors());
 
-    Lox::Parser parser(std::move(tokens));
-    auto program = parser.parse();
-    ASSERT_FALSE(parser.has_errors());
-    ASSERT_TRUE(program);
+        Lox::Parser parser(std::move(tokens));
+        auto program = parser.parse();
+        ASSERT_FALSE(parser.has_errors());
+        ASSERT_TRUE(program);
 
-    Lox::Interpreter interp(program);
-    interp.interpret();
-    ASSERT_FALSE(interp.has_errors());
+        interp.interpret(program);
+        ASSERT_FALSE(interp.has_errors());
+    }
 
     auto& e = interp.env();
     for (auto& [name, value] : env) {
@@ -27,6 +29,12 @@ static void assert_env(std::string_view input,
         ASSERT_TRUE(value);
         EXPECT_TRUE(obj->__eq__(*value));
     }
+}
+
+static void assert_env(std::string_view input,
+                       const Lox::Interpreter::EnvType& env)
+{
+    assert_env_multi_program({ input }, env);
 }
 
 static void assert_value(std::string_view input,
@@ -67,8 +75,8 @@ static void assert_error(std::string_view input, std::string_view error_span)
     ASSERT_FALSE(parser.has_errors());
     ASSERT_TRUE(program);
 
-    Lox::Interpreter interp(program);
-    interp.interpret();
+    Lox::Interpreter interp;
+    interp.interpret(program);
     auto& errs = interp.errors();
     ASSERT_EQ(errs.size(), 1);
     ASSERT_EQ(errs[0].span, error_span);
@@ -81,9 +89,9 @@ static void assert_value_error(std::string_view input)
 
 TEST(Interpreter, EmptyProgram)
 {
-    Lox::Interpreter interp(std::make_shared<Lox::Program>(
+    Lox::Interpreter interp;
+    interp.interpret(std::make_shared<Lox::Program>(
         std::vector<std::shared_ptr<Lox::Stmt>>(), ""));
-    interp.interpret();
     EXPECT_FALSE(interp.has_errors());
 }
 
@@ -192,4 +200,12 @@ TEST(Interpreter, ExecuteVarStatements)
 TEST(Interpreter, ExecutePrintStatements)
 {
     assert_error("print -nil;", "-nil");
+}
+
+TEST(Interpreter, ProgramsShareEnv)
+{
+    assert_env_multi_program({ "var x = 5;", "var y = x * 2;" }, {
+        { "x", Lox::make_number(5) },
+        { "y", Lox::make_number(10) },
+    });
 }

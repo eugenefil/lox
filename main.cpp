@@ -83,6 +83,7 @@ static void print_errors(const std::vector<Lox::Error>& errors,
 
 static void repl()
 {
+    Lox::Interpreter interp;
     for (;;) {
         std::cout << ">>> ";
         std::string line;
@@ -105,8 +106,7 @@ static void repl()
             continue;
         }
 
-        Lox::Interpreter interp(program);
-        interp.interpret();
+        interp.interpret(program);
         if (interp.has_errors()) {
             print_errors(interp.errors(), line, "stdin", isatty(STDERR_FILENO));
             continue;

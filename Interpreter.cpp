@@ -194,12 +194,14 @@ bool Program::execute(Interpreter& interp)
 
 void Interpreter::define_var(std::string_view name, std::shared_ptr<Object> value)
 {
-    m_env[name] = value;
+    assert(!name.empty());
+    assert(value);
+    m_env[std::string(name)] = value;
 }
 
 std::shared_ptr<Object> Interpreter::get_var(std::string_view name) const
 {
-    if (auto pair = m_env.find(name); pair != m_env.end())
+    if (auto pair = m_env.find(std::string(name)); pair != m_env.end())
         return pair->second;
     return {};
 }
@@ -209,9 +211,11 @@ void Interpreter::error(std::string msg, std::string_view span)
     m_errors.push_back({ std::move(msg), span });
 }
 
-void Interpreter::interpret()
+void Interpreter::interpret(std::shared_ptr<Program> program)
 {
-    m_program->execute(*this);
+    m_errors.clear();
+    assert(program);
+    program->execute(*this);
 }
 
 }
