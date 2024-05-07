@@ -6,22 +6,22 @@ namespace Lox {
 
 std::shared_ptr<Object> StringLiteral::eval(Interpreter&) const
 {
-    return std::make_shared<String>(m_value);
+    return make_string(m_value);
 }
 
 std::shared_ptr<Object> NumberLiteral::eval(Interpreter&) const
 {
-    return std::make_shared<Number>(m_value);
+    return make_number(m_value);
 }
 
 std::shared_ptr<Object> BoolLiteral::eval(Interpreter&) const
 {
-    return std::make_shared<Bool>(m_value);
+    return make_bool(m_value);
 }
 
 std::shared_ptr<Object> NilLiteral::eval(Interpreter&) const
 {
-    return std::make_shared<NilType>();
+    return make_nil();
 }
 
 std::shared_ptr<Object> UnaryExpr::eval(Interpreter& interp) const
@@ -37,10 +37,10 @@ std::shared_ptr<Object> UnaryExpr::eval(Interpreter& interp) const
                 obj->type_name()), m_text);
             return {};
         }
-        return std::make_shared<Number>(-obj->get_number());
+        return make_number(-obj->get_number());
 
     case UnaryOp::Not:
-        return std::make_shared<Bool>(!obj->__bool__());
+        return make_bool(!obj->__bool__());
     }
     assert(0);
 }
@@ -62,84 +62,72 @@ std::shared_ptr<Object> BinaryExpr::eval(Interpreter& interp) const
     switch (m_op) {
     case BinaryOp::Divide:
         if (left->is_number() && right->is_number())
-            return std::make_shared<Number>(left->get_number() /
-                                            right->get_number());
+            return make_number(left->get_number() / right->get_number());
         interp.error(std::format("cannot divide '{}' by '{}'",
             left->type_name(), right->type_name()), m_text);
         return {};
 
     case BinaryOp::Multiply:
         if (left->is_number() && right->is_number())
-            return std::make_shared<Number>(left->get_number() *
-                                            right->get_number());
+            return make_number(left->get_number() * right->get_number());
         interp.error(std::format("cannot multiply '{}' by '{}'",
             left->type_name(), right->type_name()), m_text);
         return {};
 
     case BinaryOp::Add:
         if (left->is_number() && right->is_number())
-            return std::make_shared<Number>(left->get_number() +
-                                            right->get_number());
+            return make_number(left->get_number() + right->get_number());
         else if (left->is_string() && right->is_string())
-            return std::make_shared<String>(
-                std::string(left->get_string()).append(right->get_string()));
+            return make_string(std::string(left->get_string())
+                .append(right->get_string()));
         interp.error(std::format("cannot add '{}' to '{}'",
             left->type_name(), right->type_name()), m_text);
         return {};
 
     case BinaryOp::Subtract:
         if (left->is_number() && right->is_number())
-            return std::make_shared<Number>(left->get_number() -
-                                            right->get_number());
+            return make_number(left->get_number() - right->get_number());
         interp.error(std::format("cannot subtract '{}' from '{}'",
             right->type_name(), left->type_name()), m_text);
         return {};
 
     case BinaryOp::Equal:
-        return std::make_shared<Bool>(left->__eq__(*right));
+        return make_bool(left->__eq__(*right));
     case BinaryOp::NotEqual:
-        return std::make_shared<Bool>(!left->__eq__(*right));
+        return make_bool(!left->__eq__(*right));
 
     case BinaryOp::Less:
         if (left->is_number() && right->is_number())
-            return std::make_shared<Bool>(left->get_number() <
-                                          right->get_number());
+            return make_bool(left->get_number() < right->get_number());
         else if (left->is_string() && right->is_string())
-            return std::make_shared<Bool>(left->get_string() <
-                                          right->get_string());
+            return make_bool(left->get_string() < right->get_string());
         interp.error(std::format("cannot compare '{}' with '{}'",
             left->type_name(), right->type_name()), m_text);
         return {};
 
     case BinaryOp::LessOrEqual:
         if (left->is_number() && right->is_number())
-            return std::make_shared<Bool>(left->get_number() <=
-                                          right->get_number());
+            return make_bool(left->get_number() <= right->get_number());
         else if (left->is_string() && right->is_string())
-            return std::make_shared<Bool>(left->get_string() <=
-                                          right->get_string());
+            return make_bool(left->get_string() <= right->get_string());
         interp.error(std::format("cannot compare '{}' with '{}'",
             left->type_name(), right->type_name()), m_text);
         return {};
 
     case BinaryOp::Greater:
         if (left->is_number() && right->is_number())
-            return std::make_shared<Bool>(left->get_number() >
-                                          right->get_number());
+            return make_bool(left->get_number() > right->get_number());
         else if (left->is_string() && right->is_string())
-            return std::make_shared<Bool>(left->get_string() >
-                                          right->get_string());
+            return make_bool(left->get_string() > right->get_string());
         interp.error(std::format("cannot compare '{}' with '{}'",
             left->type_name(), right->type_name()), m_text);
         return {};
 
     case BinaryOp::GreaterOrEqual:
         if (left->is_number() && right->is_number())
-            return std::make_shared<Bool>(left->get_number() >=
-                                          right->get_number());
+            return make_bool(left->get_number() >= right->get_number());
         else if (left->is_string() && right->is_string())
-            return std::make_shared<Bool>(left->get_string() >=
-                                          right->get_string());
+            return make_bool(left->get_string() >= right->get_string());
         interp.error(std::format("cannot compare '{}' with '{}'",
             left->type_name(), right->type_name()), m_text);
         return {};
@@ -168,7 +156,7 @@ bool VarStmt::execute(Interpreter& interp)
         if (!val)
             return false;
     } else
-        val = std::make_shared<NilType>();
+        val = make_nil();
     assert(val);
     interp.define_var(m_ident->name(), val);
     return true;

@@ -54,6 +54,11 @@ private:
     std::string m_value;
 };
 
+inline std::shared_ptr<String> make_string(std::string_view val)
+{
+    return std::make_shared<String>(val);
+}
+
 class Number : public Object {
 public:
     Number(double value) : m_value(value)
@@ -73,6 +78,11 @@ public:
 private:
     double m_value;
 };
+
+inline std::shared_ptr<Number> make_number(double val)
+{
+    return std::make_shared<Number>(val);
+}
 
 class Bool : public Object {
 public:
@@ -94,6 +104,11 @@ private:
     bool m_value;
 };
 
+inline std::shared_ptr<Bool> make_bool(bool val)
+{
+    return std::make_shared<Bool>(val);
+}
+
 class NilType : public Object {
 public:
     std::string_view type_name() const override { return "NilType"; }
@@ -101,6 +116,11 @@ public:
     bool __eq__(const Object& rhs) const override { return rhs.is_niltype(); }
     std::string __str__() const override { return "nil"; }
 };
+
+inline std::shared_ptr<NilType> make_nil()
+{
+    return std::make_shared<NilType>();
+}
 
 class Interpreter {
 public:
@@ -113,7 +133,7 @@ public:
     void interpret();
 
     using EnvType = std::unordered_map<std::string_view, std::shared_ptr<Object>>;
-    const EnvType& globals() const { return m_env; }
+    const EnvType& env() const { return m_env; }
     void define_var(std::string_view name, std::shared_ptr<Object> value);
 
     void error(std::string msg, std::string_view span);

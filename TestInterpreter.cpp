@@ -3,11 +3,10 @@
 #include "Parser.h"
 #include <gtest/gtest.h>
 
-static void assert_value(std::string_view input,
-                         std::shared_ptr<Lox::Object> value)
+static void assert_env(std::string_view input,
+                       const Lox::Interpreter::EnvType& env)
 {
-    auto src = std::string("var x = ").append(input) + ';';
-    Lox::Lexer lexer(src);
+    Lox::Lexer lexer(input);
     auto tokens = lexer.lex();
     ASSERT_FALSE(lexer.has_errors());
 
@@ -20,33 +19,41 @@ static void assert_value(std::string_view input,
     interp.interpret();
     ASSERT_FALSE(interp.has_errors());
 
-    auto& globals = interp.globals();
-    ASSERT_EQ(globals.size(), 1);
-    ASSERT_TRUE(globals.contains("x"));
-    auto& obj = globals.at("x");
-    ASSERT_TRUE(obj);
-    ASSERT_TRUE(value);
-    EXPECT_TRUE(obj->__eq__(*value));
+    auto& e = interp.env();
+    for (auto& [name, value] : env) {
+        ASSERT_TRUE(e.contains(name));
+        auto& obj = e.at(name);
+        ASSERT_TRUE(obj);
+        ASSERT_TRUE(value);
+        EXPECT_TRUE(obj->__eq__(*value));
+    }
+}
+
+static void assert_value(std::string_view input,
+                         std::shared_ptr<Lox::Object> value)
+{
+    assert_env(std::string("var x = ").append(input) + ';',
+               { { "x", value } });
 }
 
 static void assert_string(std::string_view input, std::string_view value)
 {
-    assert_value(input, std::make_shared<Lox::String>(value));
+    assert_value(input, Lox::make_string(value));
 }
 
 static void assert_number(std::string_view input, double value)
 {
-    assert_value(input, std::make_shared<Lox::Number>(value));
+    assert_value(input, Lox::make_number(value));
 }
 
 static void assert_bool(std::string_view input, bool value)
 {
-    assert_value(input, std::make_shared<Lox::Bool>(value));
+    assert_value(input, Lox::make_bool(value));
 }
 
 static void assert_nil(std::string_view input)
 {
-    assert_value(input, std::make_shared<Lox::NilType>());
+    assert_value(input, Lox::make_nil());
 }
 
 static void assert_error(std::string_view input)
@@ -153,4 +160,17 @@ TEST(Interpreter, EvalBinaryExpressions)
     assert_bool(R"("bbb" >= "aaa")", true);
     assert_bool(R"("bbb" >= "bbb")", true);
     assert_bool(R"("bbb" >= "ccc")", false);
+}
+
+TEST(Interpreter, ExecuteVarStatements)
+{
+    assert_env("var x;", { { "x", Lox::make_nil() } });
+
+    assert_env("var x = 5; var s = \"foo\"; var b = true;", {
+        { "x", Lox::make_number(5) },
+        { "s", Lox::make_string("foo") },
+        { "b", Lox::make_bool(true) },
+    });
+
+    assert_env("var x = 5; var x = \"foo\";", { { "x", Lox::make_string("foo") } });
 }
