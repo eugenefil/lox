@@ -126,6 +126,18 @@ std::string VarStmt::dump(std::size_t indent) const
     return s;
 }
 
+std::string PrintStmt::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += "(print";
+    if (m_expr) {
+        s += '\n';
+        s += m_expr->dump(indent + 1);
+    }
+    s += ')';
+    return s;
+}
+
 std::string Program::dump(std::size_t indent) const
 {
     std::string s = make_indent(indent);

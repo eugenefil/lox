@@ -224,11 +224,6 @@ TEST(Parser, VarStatement)
 (var
   x)
     )");
-    assert_stmt("var x = 5;", R"(
-(var
-  x
-  5)
-    )");
     assert_stmt("var x = 5 + 7;", R"(
 (var
   x
@@ -240,4 +235,18 @@ TEST(Parser, VarStatement)
     assert_error("var 5;", "5");
     assert_error("var x = ;", ";");
     assert_error("var x = 5_", "_");
+}
+
+TEST(Parser, PrintStatement)
+{
+    assert_stmt("print;", "(print)");
+    assert_stmt("print 5 + 7;", R"(
+(print
+  (+
+    5
+    7))
+    )");
+
+    assert_error("print /", "/");
+    assert_error("print 5_", "_");
 }

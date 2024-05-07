@@ -1,6 +1,7 @@
 #include "Interpreter.h"
 #include <format>
 #include <charconv>
+#include <iostream>
 
 namespace Lox {
 
@@ -159,6 +160,18 @@ bool VarStmt::execute(Interpreter& interp)
         val = make_nil();
     assert(val);
     interp.define_var(m_ident->name(), val);
+    return true;
+}
+
+bool PrintStmt::execute(Interpreter& interp)
+{
+    if (m_expr) {
+        auto val = m_expr->eval(interp);
+        if (!val)
+            return false;
+        std::cout << val->__str__();
+    }
+    std::cout << '\n';
     return true;
 }
 

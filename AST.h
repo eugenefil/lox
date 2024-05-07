@@ -219,6 +219,20 @@ private:
     std::shared_ptr<Expr> m_init;
 };
 
+class PrintStmt : public Stmt {
+public:
+    explicit PrintStmt(std::shared_ptr<Expr> expr, std::string_view text)
+        : Stmt(text)
+        , m_expr(expr)
+    {}
+
+    std::string dump(std::size_t indent) const override;
+    bool execute(Interpreter&) override;
+
+private:
+    std::shared_ptr<Expr> m_expr;
+};
+
 class Program : public Stmt {
 public:
     explicit Program(std::vector<std::shared_ptr<Stmt>>&& stmts,

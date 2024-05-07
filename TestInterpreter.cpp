@@ -56,10 +56,9 @@ static void assert_nil(std::string_view input)
     assert_value(input, Lox::make_nil());
 }
 
-static void assert_error(std::string_view input)
+static void assert_error(std::string_view input, std::string_view error_span)
 {
-    auto src = std::string("var x = ").append(input) + ';';
-    Lox::Lexer lexer(src);
+    Lox::Lexer lexer(input);
     auto tokens = lexer.lex();
     ASSERT_FALSE(lexer.has_errors());
 
@@ -72,7 +71,12 @@ static void assert_error(std::string_view input)
     interp.interpret();
     auto& errs = interp.errors();
     ASSERT_EQ(errs.size(), 1);
-    ASSERT_EQ(errs[0].span, input);
+    ASSERT_EQ(errs[0].span, error_span);
+}
+
+static void assert_value_error(std::string_view input)
+{
+    assert_error(std::string("var x = ").append(input) + ';', input);
 }
 
 TEST(Interpreter, EmptyProgram)
@@ -95,7 +99,7 @@ TEST(Interpreter, EvalLiterals)
 TEST(Interpreter, EvalUnaryExpressions)
 {
     assert_number("-5", -5.0);
-    assert_error(R"(-"foo")");
+    assert_value_error(R"(-"foo")");
 
     assert_bool(R"(!"foo")", false);
     assert_bool(R"(!"")", true);
@@ -109,17 +113,17 @@ TEST(Interpreter, EvalUnaryExpressions)
 TEST(Interpreter, EvalBinaryExpressions)
 {
     assert_number("10 / 2", 5.0);
-    assert_error("10 / nil");
+    assert_value_error("10 / nil");
 
     assert_number("10 * 2", 20.0);
-    assert_error("10 * nil");
+    assert_value_error("10 * nil");
 
     assert_number("10 + 2", 12.0);
     assert_string(R"("foo" + "bar")", "foobar");
-    assert_error("10 + nil");
+    assert_value_error("10 + nil");
 
     assert_number("2 - 10", -8.0);
-    assert_error("2 - nil");
+    assert_value_error("2 - nil");
 
     assert_bool("5 == 5", true);
     assert_bool("5 == 7", false);
@@ -135,28 +139,28 @@ TEST(Interpreter, EvalBinaryExpressions)
 
     assert_bool("5 < 7", true);
     assert_bool("5 < 5", false);
-    assert_error("5 < nil");
+    assert_value_error("5 < nil");
     assert_bool(R"("aaa" < "bbb")", true);
     assert_bool(R"("aaa" < "aaa")", false);
 
     assert_bool("5 <= 7", true);
     assert_bool("5 <= 5", true);
     assert_bool("5 <= 4", false);
-    assert_error("5 <= nil");
+    assert_value_error("5 <= nil");
     assert_bool(R"("aaa" <= "bbb")", true);
     assert_bool(R"("aaa" <= "aaa")", true);
     assert_bool(R"("aaa" <= "000")", false);
 
     assert_bool("5 > 4", true);
     assert_bool("5 > 5", false);
-    assert_error("5 > nil");
+    assert_value_error("5 > nil");
     assert_bool(R"("bbb" > "aaa")", true);
     assert_bool(R"("bbb" > "bbb")", false);
 
     assert_bool("5 >= 4", true);
     assert_bool("5 >= 5", true);
     assert_bool("5 >= 7", false);
-    assert_error("5 >= nil");
+    assert_value_error("5 >= nil");
     assert_bool(R"("bbb" >= "aaa")", true);
     assert_bool(R"("bbb" >= "bbb")", true);
     assert_bool(R"("bbb" >= "ccc")", false);
@@ -173,4 +177,9 @@ TEST(Interpreter, ExecuteVarStatements)
     });
 
     assert_env("var x = 5; var x = \"foo\";", { { "x", Lox::make_string("foo") } });
+}
+
+TEST(Interpreter, ExecutePrintStatements)
+{
+    assert_error("print -nil;", "-nil");
 }

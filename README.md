@@ -2,7 +2,7 @@
 
 ```
 statement ->
-      'print' expression ';'
+      'print' expression? ';'
     | 'var' IDENTIFIER ('=' expression)? ';'
     | expression ';'
 
