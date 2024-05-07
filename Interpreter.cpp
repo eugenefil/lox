@@ -15,6 +15,14 @@ std::shared_ptr<Object> NumberLiteral::eval(Interpreter&) const
     return make_number(m_value);
 }
 
+std::shared_ptr<Object> Identifier::eval(Interpreter& interp) const
+{
+    if (auto val = interp.get_var(m_name))
+        return val;
+    interp.error(std::format("identifier '{}' is not defined", m_name), m_text);
+    return {};
+}
+
 std::shared_ptr<Object> BoolLiteral::eval(Interpreter&) const
 {
     return make_bool(m_value);
@@ -187,6 +195,13 @@ bool Program::execute(Interpreter& interp)
 void Interpreter::define_var(std::string_view name, std::shared_ptr<Object> value)
 {
     m_env[name] = value;
+}
+
+std::shared_ptr<Object> Interpreter::get_var(std::string_view name) const
+{
+    if (auto pair = m_env.find(name); pair != m_env.end())
+        return pair->second;
+    return {};
 }
 
 void Interpreter::error(std::string msg, std::string_view span)

@@ -166,6 +166,16 @@ TEST(Interpreter, EvalBinaryExpressions)
     assert_bool(R"("bbb" >= "ccc")", false);
 }
 
+TEST(Interpreter, EvalIdentifier)
+{
+    assert_env("var x = 5; var y = x * 2;", {
+        { "x", Lox::make_number(5) },
+        { "y", Lox::make_number(10) },
+    });
+
+    assert_error("var x = y;", "y");
+}
+
 TEST(Interpreter, ExecuteVarStatements)
 {
     assert_env("var x;", { { "x", Lox::make_nil() } });

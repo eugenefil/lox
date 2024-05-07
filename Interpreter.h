@@ -135,6 +135,7 @@ public:
     using EnvType = std::unordered_map<std::string_view, std::shared_ptr<Object>>;
     const EnvType& env() const { return m_env; }
     void define_var(std::string_view name, std::shared_ptr<Object> value);
+    std::shared_ptr<Object> get_var(std::string_view name) const;
 
     void error(std::string msg, std::string_view span);
     bool has_errors() const { return m_errors.size() > 0; }

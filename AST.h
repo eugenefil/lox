@@ -70,7 +70,7 @@ public:
     {}
 
     std::string dump(std::size_t indent) const override;
-    std::shared_ptr<Object> eval(Interpreter&) const override { assert(0); }
+    std::shared_ptr<Object> eval(Interpreter&) const override;
 
     std::string_view name() const { return m_name; }
 
