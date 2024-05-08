@@ -3,6 +3,7 @@
 #include "Lexer.h"
 #include "AST.h"
 #include <vector>
+#include <utility>
 
 namespace Lox {
 
@@ -15,6 +16,7 @@ public:
     std::shared_ptr<Program> parse();
     bool has_errors() const { return m_errors.size() > 0; }
     const std::vector<Error>& errors() const { return m_errors; }
+    void repl_mode(bool on) { m_implicit_semicolon = on; }
 
 private:
     const Token& peek() const;
@@ -34,10 +36,12 @@ private:
     std::shared_ptr<Stmt> parse_assign_statement(std::shared_ptr<Expr>);
     std::shared_ptr<Stmt> parse_block_statement();
     std::shared_ptr<Stmt> parse_statement();
+    std::pair<bool, std::string_view> finish_statement();
 
     std::vector<Token> m_tokens;
     std::size_t m_cur { 0 };
     std::vector<Error> m_errors;
+    bool m_implicit_semicolon { false };
 };
 
 }

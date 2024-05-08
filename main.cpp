@@ -100,6 +100,7 @@ static void repl()
         }
 
         Lox::Parser parser(std::move(tokens));
+        parser.repl_mode(true);
         auto program = parser.parse();
         if (parser.has_errors()) {
             print_errors(parser.errors(), line, "stdin", isatty(STDERR_FILENO));
