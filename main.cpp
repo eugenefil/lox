@@ -1,10 +1,14 @@
 #include "Parser.h"
 #include "Interpreter.h"
 #include <iostream>
+#include <sstream>
+#include <fstream>
 #include <string>
 #include <filesystem>
 #include <cmath>
+#include <cstdio>
 #include <unistd.h>
+
 namespace fs = std::filesystem;
 
 static std::string argv0;
@@ -81,44 +85,78 @@ static void print_errors(const std::vector<Lox::Error>& errors,
     }
 }
 
+static bool eval(std::string_view source, std::string_view path,
+                 Lox::Interpreter& interp, bool repl_mode)
+{
+    Lox::Lexer lexer(source);
+    auto tokens = lexer.lex();
+    if (lexer.has_errors()) {
+        print_errors(lexer.errors(), source, path, isatty(STDERR_FILENO));
+        return false;
+    }
+
+    Lox::Parser parser(std::move(tokens));
+    parser.repl_mode(repl_mode);
+    auto program = parser.parse();
+    if (parser.has_errors()) {
+        print_errors(parser.errors(), source, path, isatty(STDERR_FILENO));
+        return false;
+    }
+
+    interp.interpret(program);
+    if (interp.has_errors()) {
+        print_errors(interp.errors(), source, path, isatty(STDERR_FILENO));
+        return false;
+    }
+
+    return true;
+}
+
 static void repl()
 {
     Lox::Interpreter interp;
     interp.repl_mode(true);
     for (;;) {
-        std::cout << ">>> ";
+        std::cerr << ">>> ";
         std::string line;
         if (!std::getline(std::cin, line)) {
-            std::cout << std::endl;
+            std::cerr << '\n';
             break;
         }
-
-        Lox::Lexer lexer(line);
-        auto tokens = lexer.lex();
-        if (lexer.has_errors()) {
-            print_errors(lexer.errors(), line, "stdin", isatty(STDERR_FILENO));
-            continue;
-        }
-
-        Lox::Parser parser(std::move(tokens));
-        parser.repl_mode(true);
-        auto program = parser.parse();
-        if (parser.has_errors()) {
-            print_errors(parser.errors(), line, "stdin", isatty(STDERR_FILENO));
-            continue;
-        }
-
-        interp.interpret(program);
-        if (interp.has_errors()) {
-            print_errors(interp.errors(), line, "stdin", isatty(STDERR_FILENO));
-            continue;
-        }
+        eval(line, "<stdin>", interp, true);
     }
 }
 
-static int run(std::string_view)
+static int run(std::string path)
 {
-    return 0;
+    std::ostringstream buf;
+    if (path == "-") {
+        path = "<stdin>";
+        while (buf << std::cin.rdbuf())
+            ;
+        if (buf.bad()) {
+            std::perror("error: cannot read from stdin");
+            return 1;
+        }
+    } else {
+        std::ifstream fin(path);
+        if (!fin.is_open()) {
+            std::perror(("error: cannot open '" + path + "'").c_str());
+            return 1;
+        }
+        while (buf << fin.rdbuf())
+            ;
+        if (buf.bad()) {
+            std::perror(("error: cannot read from '" + path + "'").c_str());
+            return 1;
+        }
+        fin.close();
+    }
+
+    Lox::Interpreter interp;
+    if (eval(buf.view(), path, interp, false))
+        return 0;
+    return 1;
 }
 
 int main(int argc, char* argv[])
