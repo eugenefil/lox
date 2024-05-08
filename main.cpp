@@ -84,6 +84,7 @@ static void print_errors(const std::vector<Lox::Error>& errors,
 static void repl()
 {
     Lox::Interpreter interp;
+    interp.repl_mode(true);
     for (;;) {
         std::cout << ">>> ";
         std::string line;

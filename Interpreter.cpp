@@ -154,7 +154,16 @@ std::string Number::__str__() const
 
 bool ExpressionStmt::execute(Interpreter& interp)
 {
-    return static_cast<bool>(m_expr->eval(interp));
+    if (auto val = m_expr->eval(interp)) {
+        if (interp.is_repl_mode()) {
+            auto str = val->__str__();
+            if (val->is_string())
+                str = escape(str);
+            std::cout << str << '\n';
+        }
+        return true;
+    }
+    return false;
 }
 
 bool VarStmt::execute(Interpreter& interp)

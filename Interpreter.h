@@ -145,9 +145,13 @@ public:
     bool has_errors() const { return m_errors.size() > 0; }
     const std::vector<Error>& errors() const { return m_errors; }
 
+    bool is_repl_mode() const { return m_repl_mode; }
+    void repl_mode(bool on) { m_repl_mode = on; }
+
 private:
     std::vector<Error> m_errors;
     std::list<EnvType> m_env_stack { 1 };
+    bool m_repl_mode { false };
 };
 
 }
