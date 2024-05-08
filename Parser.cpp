@@ -278,12 +278,38 @@ std::shared_ptr<Stmt> Parser::parse_assign_statement(std::shared_ptr<Expr> place
     return {};
 }
 
+std::shared_ptr<Stmt> Parser::parse_block_statement()
+{
+    auto& lbrace = peek();
+    assert(lbrace.type() == TokenType::LeftBrace);
+    advance();
+
+    std::vector<std::shared_ptr<Stmt>> stmts;
+    for (;;) {
+        if (auto& token = peek(); token.type() == TokenType::RightBrace) {
+            advance();
+            return std::make_shared<BlockStmt>(std::move(stmts),
+                merge_texts(lbrace.text(), token.text()));
+        } else if (token.type() == TokenType::Eof) {
+            error("'{' was never closed", lbrace.text());
+            return {};
+        }
+        auto stmt = parse_statement();
+        if (!stmt)
+            return {};
+        stmts.push_back(stmt);
+    }
+    assert(0);
+}
+
 std::shared_ptr<Stmt> Parser::parse_statement()
 {
     if (auto& token = peek(); token.type() == TokenType::Var)
         return parse_var_statement();
     else if (token.type() == TokenType::Print)
         return parse_print_statement();
+    else if (token.type() == TokenType::LeftBrace)
+        return parse_block_statement();
 
     auto expr = parse_expression();
     if (!expr)

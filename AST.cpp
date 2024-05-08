@@ -149,6 +149,18 @@ std::string AssignStmt::dump(std::size_t indent) const
     return s;
 }
 
+std::string BlockStmt::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += "(block";
+    for (auto& stmt : m_stmts) {
+        s += '\n';
+        s += stmt->dump(indent + 1);
+    }
+    s += ')';
+    return s;
+}
+
 std::string Program::dump(std::size_t indent) const
 {
     std::string s = make_indent(indent);

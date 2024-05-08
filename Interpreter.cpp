@@ -205,6 +205,19 @@ bool AssignStmt::execute(Interpreter& interp)
     return false;
 }
 
+bool BlockStmt::execute(Interpreter& interp)
+{
+    interp.push_env();
+    for (auto& stmt : m_stmts) {
+        if (!stmt->execute(interp)) {
+            interp.pop_env();
+            return false;
+        }
+    }
+    interp.pop_env();
+    return true;
+}
+
 bool Program::execute(Interpreter& interp)
 {
     for (auto& stmt : m_stmts) {
@@ -214,18 +227,36 @@ bool Program::execute(Interpreter& interp)
     return true;
 }
 
+void Interpreter::push_env()
+{
+    m_env_stack.emplace_front();
+}
+
+void Interpreter::pop_env()
+{
+    assert(!m_env_stack.empty());
+    m_env_stack.pop_front();
+    assert(!m_env_stack.empty()); // global env must always exist
+}
+
 void Interpreter::define_var(std::string_view name, std::shared_ptr<Object> value)
 {
     assert(!name.empty());
     assert(value);
-    m_env[std::string(name)] = value;
+    assert(!m_env_stack.empty());
+    m_env_stack.front()[std::string(name)] = value;
 }
 
 std::shared_ptr<Object> Interpreter::get_var(std::string_view name) const
 {
     assert(!name.empty());
-    if (auto pair = m_env.find(std::string(name)); pair != m_env.end())
-        return pair->second;
+    assert(!m_env_stack.empty());
+
+    std::string strname(name);
+    for (auto& env : m_env_stack) {
+        if (auto pair = env.find(strname); pair != env.end())
+            return pair->second;
+    }
     return {};
 }
 
@@ -233,9 +264,14 @@ bool Interpreter::set_var(std::string_view name, std::shared_ptr<Object> value)
 {
     assert(!name.empty());
     assert(value);
-    if (auto pair = m_env.find(std::string(name)); pair != m_env.end()) {
-        pair->second = value;
-        return true;
+    assert(!m_env_stack.empty());
+
+    std::string strname(name);
+    for (auto& env : m_env_stack) {
+        if (auto pair = env.find(strname); pair != env.end()) {
+            pair->second = value;
+            return true;
+        }
     }
     return false;
 }
@@ -249,7 +285,9 @@ void Interpreter::interpret(std::shared_ptr<Program> program)
 {
     m_errors.clear();
     assert(program);
+    assert(m_env_stack.size() == 1);
     program->execute(*this);
+    assert(m_env_stack.size() == 1);
 }
 
 }

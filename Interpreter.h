@@ -5,6 +5,7 @@
 #include <cassert>
 #include <vector>
 #include <unordered_map>
+#include <list>
 
 namespace Lox {
 
@@ -127,7 +128,15 @@ public:
     void interpret(std::shared_ptr<Program> program);
 
     using EnvType = std::unordered_map<std::string, std::shared_ptr<Object>>;
-    const EnvType& env() const { return m_env; }
+
+    const EnvType& env() const
+    {
+        assert(!m_env_stack.empty());
+        return m_env_stack.front();
+    }
+
+    void push_env();
+    void pop_env();
     void define_var(std::string_view name, std::shared_ptr<Object> value);
     std::shared_ptr<Object> get_var(std::string_view name) const;
     bool set_var(std::string_view name, std::shared_ptr<Object> value);
@@ -138,7 +147,7 @@ public:
 
 private:
     std::vector<Error> m_errors;
-    EnvType m_env;
+    std::list<EnvType> m_env_stack { 1 };
 };
 
 }

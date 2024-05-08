@@ -2,7 +2,8 @@
 
 ```
 statement ->
-      'print' expression? ';'
+      '{' statement* '}'
+    | 'print' expression? ';'
     | 'var' IDENTIFIER ('=' expression)? ';'
     | IDENTIFIER '=' expression ';'
     | expression ';'

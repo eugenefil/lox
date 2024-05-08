@@ -256,6 +256,24 @@ private:
     std::shared_ptr<Expr> m_value;
 };
 
+class BlockStmt : public Stmt {
+public:
+    explicit BlockStmt(std::vector<std::shared_ptr<Stmt>>&& stmts,
+                       std::string_view text)
+        : Stmt(text)
+        , m_stmts(stmts)
+    {
+        for (auto& stmt : stmts)
+            assert(stmt);
+    }
+
+    std::string dump(std::size_t indent) const override;
+    bool execute(Interpreter&) override;
+
+private:
+    std::vector<std::shared_ptr<Stmt>> m_stmts;
+};
+
 class Program : public Stmt {
 public:
     explicit Program(std::vector<std::shared_ptr<Stmt>>&& stmts,

@@ -4,11 +4,16 @@
 #include <gtest/gtest.h>
 
 static void assert_env_multi_program(std::vector<std::string_view> inputs,
-                                     const Lox::Interpreter::EnvType& env)
+                                     const Lox::Interpreter::EnvType& env,
+                                     std::vector<std::string_view> error_spans = {})
 {
+    if (error_spans.size() > 0) {
+        ASSERT_EQ(error_spans.size(), inputs.size());
+    }
+
     Lox::Interpreter interp;
-    for (auto input : inputs) {
-        Lox::Lexer lexer(input);
+    for (std::size_t i = 0; i < inputs.size(); ++i) {
+        Lox::Lexer lexer(inputs[i]);
         auto tokens = lexer.lex();
         ASSERT_FALSE(lexer.has_errors());
 
@@ -18,10 +23,17 @@ static void assert_env_multi_program(std::vector<std::string_view> inputs,
         ASSERT_TRUE(program);
 
         interp.interpret(program);
-        ASSERT_FALSE(interp.has_errors());
+        if (error_spans.empty() || error_spans[i].empty())
+            ASSERT_FALSE(interp.has_errors());
+        else {
+            auto& errs = interp.errors();
+            ASSERT_EQ(errs.size(), 1);
+            ASSERT_EQ(errs[0].span, error_spans[i]);
+        }
     }
 
     auto& e = interp.env();
+    EXPECT_EQ(e.size(), env.size());
     for (auto& [name, value] : env) {
         ASSERT_TRUE(e.contains(name));
         auto& obj = e.at(name);
@@ -216,4 +228,22 @@ TEST(Interpreter, ExecuteAssignStatements)
 
     assert_error("x = foo;", "foo");
     assert_error("x = 5;", "x");
+}
+
+TEST(Interpreter, ExecuteBlockStatements)
+{
+    assert_env("var x = 5; { var y = 7; x = x + y; }", {
+        { "x", Lox::make_number(12) },
+    });
+    assert_env("var x = 5; var y = 7; { var x = x + 10; y = x; }", {
+        { "x", Lox::make_number(5) },
+        { "y", Lox::make_number(15) },
+    });
+}
+
+TEST(Interpreter, EnvIsRestoredAfterError)
+{
+    assert_env_multi_program({ "var x; { var y; foo; }" },
+        { { "x", Lox::make_nil() } },
+        { "foo" });
 }

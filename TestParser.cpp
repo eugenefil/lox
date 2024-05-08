@@ -264,3 +264,20 @@ TEST(Parser, AssignStatement)
     assert_error("x = /", "/");
     assert_error("x = 5_", "_");
 }
+
+TEST(Parser, BlockStatement)
+{
+    assert_stmt("{}", "(block)");
+    assert_stmt("{ var x = 5; { var x = 7; } }", R"(
+(block
+  (var
+    x
+    5)
+  (block
+    (var
+      x
+      7)))
+    )");
+
+    assert_error("{ foo;", "{");
+}
