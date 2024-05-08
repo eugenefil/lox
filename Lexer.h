@@ -8,8 +8,6 @@
 namespace Lox {
 
 enum class TokenType {
-    Invalid,
-
     // one-char tokens
     LeftParen, RightParen, LeftBrace, RightBrace,
     Comma, Dot, Minus, Plus, Semicolon, Star,
@@ -49,7 +47,7 @@ public:
     const ValueType& value() const { return m_value; }
 
 private:
-    TokenType m_type { TokenType::Invalid };
+    const TokenType m_type;
     std::string_view m_text;
     ValueType m_value;
 };

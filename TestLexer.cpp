@@ -5,7 +5,7 @@ using Lox::TokenType;
 
 static void assert_tokens(std::string_view input,
                           std::vector<Lox::Token> tokens,
-                          std::vector<std::string_view> error_spans = {})
+                          std::string_view error_span = {})
 {
     Lox::Lexer lexer(input);
     auto output = lexer.lex();
@@ -18,10 +18,13 @@ static void assert_tokens(std::string_view input,
         EXPECT_EQ(lhs.value(), rhs.value());
     }
 
-    auto& errs = lexer.errors();
-    ASSERT_EQ(errs.size(), error_spans.size());
-    for (std::size_t i = 0; i < errs.size(); ++i)
-        EXPECT_EQ(errs[i].span, error_spans[i]);
+    if (error_span.empty())
+        EXPECT_FALSE(lexer.has_errors());
+    else {
+        auto& errs = lexer.errors();
+        ASSERT_EQ(errs.size(), 1);
+        EXPECT_EQ(errs[0].span, error_span);
+    }
 }
 
 static void assert_token(std::string_view input, TokenType type,
@@ -34,7 +37,7 @@ static void assert_error(std::string_view input, std::string_view error_span = {
 {
     if (error_span.empty())
         error_span = input;
-    assert_tokens(input, { { TokenType::Invalid, input } }, { error_span });
+    assert_tokens(input, {}, error_span);
 }
 
 TEST(Lexer, EmptyInputReturnsNoTokens)
@@ -170,15 +173,6 @@ TEST(Lexer, MultipleTokens)
         { TokenType::RightParen, ")" },
         { TokenType::Semicolon, ";" },
     });
-}
-
-TEST(Lexer, MultipleErrors)
-{
-    assert_tokens(R"(@ + "unterminated)", {
-        { TokenType::Invalid, "@" },
-        { TokenType::Plus, "+" },
-        { TokenType::Invalid, "\"unterminated" } },
-    { "@", "\"unterminated" });
 }
 
 static void assert_lines(std::string_view source,

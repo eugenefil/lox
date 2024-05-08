@@ -194,17 +194,14 @@ std::vector<Token> Lexer::lex()
             }
             if (!more()) {
                 error("unterminated string");
-                add_token(TokenType::Invalid);
-                break;
+                return {};
             }
             advance();
             assert(m_end >= m_start + 2);
             auto substr = m_input.substr(m_start + 1, m_end - m_start - 2);
             auto value = std::string(substr);
-            if (num_escapes > 0 && !unescape(value)) {
-                add_token(TokenType::Invalid);
-                break;
-            }
+            if (num_escapes > 0 && !unescape(value))
+                return {};
             add_token(TokenType::String, std::move(value));
             break;
         }
@@ -238,12 +235,12 @@ std::vector<Token> Lexer::lex()
                     add_token(TokenType::Number, num);
                 else if (ec == std::errc::result_out_of_range) {
                     error("literal exceeds range of double-precision floating point");
-                    add_token(TokenType::Invalid);
+                    return {};
                 } else
                     assert(0); // unknown error, shouldn't happen
             } else {
                 error("unknown token");
-                add_token(TokenType::Invalid);
+                return {};
             }
         }
     }
