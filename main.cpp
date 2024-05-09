@@ -17,7 +17,7 @@ static std::string argv0;
 {
     (error ? std::cerr : std::cout) <<
     "Usage: " << argv0 << " [OPTIONS] [FILE]\n"
-    "Without FILE, start repl. Otherwise, eval FILE.\n"
+    "If given, eval FILE. Otherwise, eval stdin. If stdin is a tty, start REPL instead.\n"
     "\n"
     "Options:\n"
     "  -h, --help    Display this message\n";
