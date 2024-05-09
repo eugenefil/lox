@@ -6,7 +6,7 @@
 #include <string>
 #include <filesystem>
 #include <cmath>
-#include <cstdio>
+#include <cstring>
 #include <unistd.h>
 
 namespace fs = std::filesystem;
@@ -24,13 +24,46 @@ static std::string argv0;
     std::exit(error);
 }
 
+class Formatter {
+public:
+    Formatter(bool has_color) : m_has_color(has_color)
+    {}
+
+    std::string colorize(std::string_view color, std::string_view text)
+    {
+        return std::string(m_has_color ? color : "")
+            .append(text)
+            .append(m_has_color ? "\033[0m" : "");
+    }
+
+    std::string red(std::string_view text) { return colorize("\033[31;1m", text); }
+    std::string blue(std::string_view text) { return colorize("\033[34;1m", text); }
+    std::string bold(std::string_view text) { return colorize("\033[39;1m", text); }
+
+    std::string error(std::string_view text)
+    {
+        return red("error")
+            .append(bold(": "))
+            .append(bold(text))
+            .append("\n");
+    }
+
+    std::string strerror(std::string_view text)
+    {
+        return error(std::string(text) + ": " + std::strerror(errno));
+    }
+
+private:
+    bool m_has_color { false };
+};
+
 [[noreturn]] static void errusage() { usage(true); }
 
 static void print_errors(const std::vector<Lox::Error>& errors,
-                         std::string_view source, std::string_view filename,
-                         bool color = false)
+                         std::string_view source, std::string_view filename)
 {
     Lox::SourceMap smap(source);
+    Formatter fmt(isatty(STDERR_FILENO));
     for (auto& error : errors) {
         auto [start, end] = smap.span_to_range(error.span);
         assert(start.line_num == end.line_num);
@@ -40,48 +73,31 @@ static void print_errors(const std::vector<Lox::Error>& errors,
         auto marker = std::string(start.col_num - 1, ' ') +
             std::string(end.col_num - start.col_num, '^');
 
-        constexpr auto red_bold = "\033[31;1m";
-        constexpr auto blue_bold = "\033[34;1m";
-        constexpr auto bold = "\033[39;1m";
-        constexpr auto reset = "\033[0m";
-        std::cerr << std::string()
-            .append(color ? red_bold : "")
-            .append("error")
-            .append(color ? bold : "")
-            .append(": ")
-            .append(error.msg)
-            .append(1, '\n')
-
-            .append(color ? blue_bold : "")
+        std::cerr <<
+            // error message line
+            fmt.error(error.msg)
+            // source location line
             .append(spacer)
-            .append("--> ")
-            .append(color ? reset : "")
+            .append(fmt.blue("--> "))
             .append(filename)
-            .append(1, ':')
+            .append(":")
             .append(std::to_string(start.line_num))
-            .append(1, ':')
+            .append(":")
             .append(std::to_string(start.col_num))
-            .append(1, '\n')
-
-            .append(color ? blue_bold : "")
+            .append("\n")
+            // padding line
             .append(spacer)
-            .append(" |")
-            .append(1, '\n')
-
-            .append(color ? blue_bold : "")
-            .append(std::to_string(start.line_num))
-            .append(" | ")
-            .append(color ? reset : "")
+            .append(fmt.blue(" |"))
+            .append("\n")
+            // source line
+            .append(fmt.blue(std::to_string(start.line_num) + " | "))
             .append(line)
-            .append(1, '\n')
-
-            .append(color ? blue_bold : "")
+            .append("\n")
+            // marker line
             .append(spacer)
-            .append(" | ")
-            .append(color ? red_bold : "")
-            .append(marker)
-            .append(color ? reset : "")
-            .append("\n\n");
+            .append(fmt.blue(" | "))
+            .append(fmt.red(marker))
+            .append("\n");
     }
 }
 
@@ -91,7 +107,7 @@ static bool eval(std::string_view source, std::string_view path,
     Lox::Lexer lexer(source);
     auto tokens = lexer.lex();
     if (lexer.has_errors()) {
-        print_errors(lexer.errors(), source, path, isatty(STDERR_FILENO));
+        print_errors(lexer.errors(), source, path);
         return false;
     }
 
@@ -99,13 +115,13 @@ static bool eval(std::string_view source, std::string_view path,
     parser.repl_mode(repl_mode);
     auto program = parser.parse();
     if (parser.has_errors()) {
-        print_errors(parser.errors(), source, path, isatty(STDERR_FILENO));
+        print_errors(parser.errors(), source, path);
         return false;
     }
 
     interp.interpret(program);
     if (interp.has_errors()) {
-        print_errors(interp.errors(), source, path, isatty(STDERR_FILENO));
+        print_errors(interp.errors(), source, path);
         return false;
     }
 
@@ -130,24 +146,25 @@ static void repl()
 static int run(std::string path)
 {
     std::ostringstream buf;
+    Formatter fmt(isatty(STDERR_FILENO));
     if (path == "-") {
         path = "<stdin>";
         while (buf << std::cin.rdbuf())
             ;
         if (buf.bad()) {
-            std::perror("error: cannot read from stdin");
+            std::cerr << fmt.strerror("cannot read from '" + path + "'");
             return 1;
         }
     } else {
         std::ifstream fin(path);
         if (!fin.is_open()) {
-            std::perror(("error: cannot open '" + path + "'").c_str());
+            std::cerr << fmt.strerror("cannot open '" + path + "'");
             return 1;
         }
         while (buf << fin.rdbuf())
             ;
         if (buf.bad()) {
-            std::perror(("error: cannot read from '" + path + "'").c_str());
+            std::cerr << fmt.strerror("cannot read from '" + path + "'");
             return 1;
         }
         fin.close();
