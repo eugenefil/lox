@@ -147,15 +147,12 @@ TEST(Interpreter, EvalBinaryExpressions)
 
     assert_bool("5 == 5", true);
     assert_bool("5 == 7", false);
-    assert_bool("5 == nil", false);
+    assert_value_error("5 == nil");
     assert_bool(R"("foo" == "foo")", true);
     assert_bool(R"("foo" == "bar")", false);
-    assert_bool(R"("foo" == nil)", false);
     assert_bool("true == true", true);
     assert_bool("true == false", false);
-    assert_bool("true == nil", false);
     assert_bool("nil == nil", true);
-    assert_bool("nil == 5", false);
 
     assert_bool("5 < 7", true);
     assert_bool("5 < 5", false);

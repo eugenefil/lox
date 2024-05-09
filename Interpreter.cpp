@@ -101,9 +101,18 @@ std::shared_ptr<Object> BinaryExpr::eval(Interpreter& interp) const
         return {};
 
     case BinaryOp::Equal:
-        return make_bool(left->__eq__(*right));
+        if (left->type_name() == right->type_name())
+            return make_bool(left->__eq__(*right));
+        interp.error(std::format("cannot compare '{}' with '{}'",
+            left->type_name(), right->type_name()), m_text);
+        return {};
+
     case BinaryOp::NotEqual:
-        return make_bool(!left->__eq__(*right));
+        if (left->type_name() == right->type_name())
+            return make_bool(!left->__eq__(*right));
+        interp.error(std::format("cannot compare '{}' with '{}'",
+            left->type_name(), right->type_name()), m_text);
+        return {};
 
     case BinaryOp::Less:
         if (left->is_number() && right->is_number())

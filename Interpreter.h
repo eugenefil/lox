@@ -46,7 +46,8 @@ public:
 
     bool __eq__(const Object& rhs) const override
     {
-        return rhs.is_string() && rhs.get_string() == m_value;
+        assert(rhs.is_string());
+        return rhs.get_string() == m_value;
     }
 
     std::string __str__() const override { return m_value; }
@@ -71,7 +72,8 @@ public:
 
     bool __eq__(const Object& rhs) const override
     {
-        return rhs.is_number() && rhs.get_number() == m_value;
+        assert(rhs.is_number());
+        return rhs.get_number() == m_value;
     }
 
     std::string __str__() const override;
@@ -96,7 +98,8 @@ public:
 
     bool __eq__(const Object& rhs) const override
     {
-        return rhs.is_bool() && rhs.get_bool() == m_value;
+        assert(rhs.is_bool());
+        return rhs.get_bool() == m_value;
     }
 
     std::string __str__() const override { return m_value ? "true" : "false"; }
@@ -114,7 +117,13 @@ class NilType : public Object {
 public:
     std::string_view type_name() const override { return "NilType"; }
     bool __bool__() const override { return false; }
-    bool __eq__(const Object& rhs) const override { return rhs.is_niltype(); }
+
+    bool __eq__(const Object& rhs) const override
+    {
+        assert(rhs.is_niltype());
+        return true;
+    }
+
     std::string __str__() const override { return "nil"; }
 };
 
