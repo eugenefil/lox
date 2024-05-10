@@ -12,6 +12,7 @@ statement ->
     | 'var' IDENTIFIER ('=' expression)? ';'
     | block
     | if-statement
+    | 'while' expression block
     | IDENTIFIER '=' expression ';'
     | expression ';'
 

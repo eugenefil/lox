@@ -249,6 +249,22 @@ bool IfStmt::execute(Interpreter& interp)
     return true;
 }
 
+bool WhileStmt::execute(Interpreter& interp)
+{
+    for (;;) {
+        auto val = m_test->eval(interp);
+        if (!val)
+            return false;
+
+        if (!val->__bool__())
+            break;
+
+        if (!m_stmt->execute(interp))
+            return false;
+    }
+    return true;
+}
+
 bool Program::execute(Interpreter& interp)
 {
     for (auto& stmt : m_stmts) {

@@ -49,6 +49,13 @@ static void assert_env(std::string_view input,
     assert_env_multi_program({ input }, env);
 }
 
+static void assert_env_and_error(std::string_view input,
+                                 const Lox::Interpreter::EnvType& env,
+                                 std::string_view error_span)
+{
+    assert_env_multi_program({ input }, env, { error_span });
+}
+
 static void assert_value(std::string_view input,
                          std::shared_ptr<Lox::Object> value)
 {
@@ -269,4 +276,27 @@ TEST(Interpreter, ExecuteIfStatements)
     assert_error("if x { y; }", "x");
     assert_error("if true { x; } else { y; }", "x");
     assert_error("if false { x; } else { y; }", "y");
+}
+
+TEST(Interpreter, ExecuteWhileStatements)
+{
+    assert_env("var x = 5; while false { x = 7; }", {
+        { "x", Lox::make_number(5) },
+    });
+    assert_env("var x = 3; var y = 0; while x > 0 { x = x - 1; y = y + 1; }", {
+        { "x", Lox::make_number(0) },
+        { "y", Lox::make_number(3) },
+    });
+
+    assert_error("while x { y; }", "x");
+    assert_error("while true { y; }", "y");
+    // test loop is executed before error happens
+    assert_env_and_error("var x = 0; while true { x = x + 1; if x == 3 { y; } }",
+        { { "x", Lox::make_number(3) } },
+        "y"
+    );
+    // test loop finishes normally if error is not triggered
+    assert_env("var x = 3; while x > 0 { x = x - 1; if x == 5 { y; } }", {
+        { "x", Lox::make_number(0) },
+    });
 }

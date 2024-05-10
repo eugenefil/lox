@@ -345,6 +345,24 @@ std::shared_ptr<Stmt> Parser::parse_if_statement()
             else_stmt ? else_stmt->text() : then_stmt->text()));
 }
 
+std::shared_ptr<Stmt> Parser::parse_while_statement()
+{
+    auto while_tok = peek();
+    assert(while_tok.type() == TokenType::While);
+    advance();
+
+    auto test = parse_expression();
+    if (!test)
+        return {};
+
+    auto stmt = parse_block_statement();
+    if (!stmt)
+        return {};
+
+    return std::make_shared<WhileStmt>(test, stmt,
+        merge_texts(while_tok.text(), stmt->text()));
+}
+
 std::shared_ptr<Stmt> Parser::parse_statement()
 {
     if (auto& token = peek(); token.type() == TokenType::Var)
@@ -355,6 +373,8 @@ std::shared_ptr<Stmt> Parser::parse_statement()
         return parse_block_statement();
     else if (token.type() == TokenType::If)
         return parse_if_statement();
+    else if (token.type() == TokenType::While)
+        return parse_while_statement();
 
     auto expr = parse_expression();
     if (!expr)

@@ -328,3 +328,22 @@ TEST(Parser, IfStatement)
     assert_error("if x _", "_");
     assert_error("if x {} else _", "_");
 }
+
+TEST(Parser, WhileStatement)
+{
+    assert_stmt("while x > 0 { x = x - 1; }", R"(
+(while
+  (>
+    x
+    0)
+  (block
+    (=
+      x
+      (-
+        x
+        1))))
+    )");
+
+    assert_error("while / {}", "/");
+    assert_error("while 1 {_", "_");
+}

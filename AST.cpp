@@ -176,6 +176,17 @@ std::string IfStmt::dump(std::size_t indent) const
     return s;
 }
 
+std::string WhileStmt::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += "(while\n";
+    s += m_test->dump(indent + 1);
+    s += '\n';
+    s += m_stmt->dump(indent + 1);
+    s += ')';
+    return s;
+}
+
 std::string Program::dump(std::size_t indent) const
 {
     std::string s = make_indent(indent);

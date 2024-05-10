@@ -297,6 +297,26 @@ private:
     std::shared_ptr<Stmt> m_else_stmt;
 };
 
+class WhileStmt : public Stmt {
+public:
+    explicit WhileStmt(std::shared_ptr<Expr> test, std::shared_ptr<Stmt> stmt,
+                       std::string_view text)
+        : Stmt(text)
+        , m_test(test)
+        , m_stmt(stmt)
+    {
+        assert(test);
+        assert(stmt);
+    }
+
+    std::string dump(std::size_t indent) const override;
+    bool execute(Interpreter&) override;
+
+private:
+    std::shared_ptr<Expr> m_test;
+    std::shared_ptr<Stmt> m_stmt;
+};
+
 class Program : public Stmt {
 public:
     explicit Program(std::vector<std::shared_ptr<Stmt>>&& stmts,
