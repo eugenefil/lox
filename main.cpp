@@ -67,11 +67,30 @@ static void print_errors(const std::vector<Lox::Error>& errors,
     for (auto& error : errors) {
         auto [start, end] = smap.span_to_range(error.span);
         assert(start.line_num == end.line_num);
-        auto line = smap.line(start.line_num);
         auto num_len = static_cast<std::size_t>(std::log10(end.line_num)) + 1;
         auto spacer = std::string(num_len, ' ');
-        auto marker = std::string(start.col_num - 1, ' ') +
-            std::string(end.col_num - start.col_num, '^');
+
+        // convert tabs to spaces
+        auto orig_line = smap.line(start.line_num);
+        std::string line;
+        constexpr std::size_t spaces_in_tab = 4;
+        const std::string spaces(spaces_in_tab, ' ');
+        auto start_col = start.col_num;
+        auto end_col = end.col_num;
+        for (std::size_t i = 0; i < orig_line.size(); ++i) {
+            auto ch = orig_line[i];
+            if (ch == '\t') {
+                line += spaces;
+                if (i + 1 < start.col_num)
+                    start_col += spaces_in_tab - 1;
+                if (i + 1 < end.col_num)
+                    end_col += spaces_in_tab - 1;
+            } else
+                line += ch;
+        }
+        assert(end_col > start_col);
+        auto marker = std::string(start_col - 1, ' ') +
+            std::string(end_col - start_col, '^');
 
         std::cerr <<
             // error message line
