@@ -244,3 +244,29 @@ TEST(Interpreter, EnvIsRestoredAfterError)
         { { "x", Lox::make_nil() } },
         { "foo" });
 }
+
+TEST(Interpreter, ExecuteIfStatements)
+{
+    assert_env("var x = 5; if x > 0 { x = 7; }", {
+        { "x", Lox::make_number(7) },
+    });
+    assert_env("var x = -1; if x > 0 { x = 7; }", {
+        { "x", Lox::make_number(-1) },
+    });
+    assert_env("var x = 5; if x > 0 { x = 7; } else { x = 3; }", {
+        { "x", Lox::make_number(7) },
+    });
+    assert_env("var x = -1; if x > 0 { x = 7; } else { x = 3; }", {
+        { "x", Lox::make_number(3) },
+    });
+    assert_env("var x = -1; if x > 0 { x = 7; } else if x < 0 { x = 3; }", {
+        { "x", Lox::make_number(3) },
+    });
+    assert_env("var x = 0; if x > 0 { x = 7; } else if x < 0 { x = 3; }", {
+        { "x", Lox::make_number(0) },
+    });
+
+    assert_error("if x { y; }", "x");
+    assert_error("if true { x; } else { y; }", "x");
+    assert_error("if false { x; } else { y; }", "y");
+}

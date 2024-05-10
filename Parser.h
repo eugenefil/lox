@@ -21,6 +21,7 @@ public:
 private:
     const Token& peek() const;
     void advance() { ++m_cur; }
+    bool match(TokenType next);
 
     void error(std::string msg, std::string_view span = {});
 
@@ -35,6 +36,7 @@ private:
     std::shared_ptr<Stmt> parse_print_statement();
     std::shared_ptr<Stmt> parse_assign_statement(std::shared_ptr<Expr>);
     std::shared_ptr<Stmt> parse_block_statement();
+    std::shared_ptr<Stmt> parse_if_statement();
     std::shared_ptr<Stmt> parse_statement();
     std::pair<bool, std::string_view> finish_statement();
 

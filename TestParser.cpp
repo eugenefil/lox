@@ -281,3 +281,50 @@ TEST(Parser, BlockStatement)
 
     assert_error("{ foo;", "{");
 }
+
+TEST(Parser, IfStatement)
+{
+    assert_stmt("if x > 0 { print x; }", R"(
+(if
+  (>
+    x
+    0)
+  (block
+    (print
+      x)))
+    )");
+
+    assert_stmt("if x > 0 { print x; } else { print y; }", R"(
+(if
+  (>
+    x
+    0)
+  (block
+    (print
+      x))
+  (block
+    (print
+      y)))
+    )");
+
+    assert_stmt("if x > 0 { print x; } else if y > 0 { print y; }", R"(
+(if
+  (>
+    x
+    0)
+  (block
+    (print
+      x))
+  (if
+    (>
+      y
+      0)
+    (block
+      (print
+        y))))
+    )");
+
+    assert_error("if / ", "/");
+    assert_error("if x _", "_");
+    assert_error("if x {} else _", "_");
+}

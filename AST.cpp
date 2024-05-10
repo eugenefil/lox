@@ -161,6 +161,21 @@ std::string BlockStmt::dump(std::size_t indent) const
     return s;
 }
 
+std::string IfStmt::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += "(if\n";
+    s += m_test->dump(indent + 1);
+    s += '\n';
+    s += m_then_stmt->dump(indent + 1);
+    if (m_else_stmt) {
+        s += '\n';
+        s += m_else_stmt->dump(indent + 1);
+    }
+    s += ')';
+    return s;
+}
+
 std::string Program::dump(std::size_t indent) const
 {
     std::string s = make_indent(indent);

@@ -12,6 +12,15 @@ const Token& Parser::peek() const
     return EOF_TOKEN;
 }
 
+bool Parser::match(TokenType next)
+{
+    if (peek().type() == next) {
+        advance();
+        return true;
+    }
+    return false;
+}
+
 void Parser::error(std::string msg, std::string_view span)
 {
     if (!span.empty()) {
@@ -286,7 +295,10 @@ std::shared_ptr<Stmt> Parser::parse_assign_statement(std::shared_ptr<Expr> place
 std::shared_ptr<Stmt> Parser::parse_block_statement()
 {
     auto& lbrace = peek();
-    assert(lbrace.type() == TokenType::LeftBrace);
+    if (lbrace.type() != TokenType::LeftBrace) {
+        error("expected '{'", lbrace.text());
+        return {};
+    }
     advance();
 
     std::vector<std::shared_ptr<Stmt>> stmts;
@@ -307,6 +319,34 @@ std::shared_ptr<Stmt> Parser::parse_block_statement()
     assert(0);
 }
 
+std::shared_ptr<Stmt> Parser::parse_if_statement()
+{
+    auto if_tok = peek();
+    assert(if_tok.type() == TokenType::If);
+    advance();
+
+    auto test = parse_expression();
+    if (!test)
+        return {};
+
+    auto then_stmt = parse_block_statement();
+    if (!then_stmt)
+        return {};
+
+    std::shared_ptr<Stmt> else_stmt;
+    if (match(TokenType::Else)) {
+        if (peek().type() == TokenType::If)
+            else_stmt = parse_if_statement();
+        else
+            else_stmt = parse_block_statement();
+        if (!else_stmt)
+            return {};
+    }
+    return std::make_shared<IfStmt>(test, then_stmt, else_stmt,
+        merge_texts(if_tok.text(),
+            else_stmt ? else_stmt->text() : then_stmt->text()));
+}
+
 std::shared_ptr<Stmt> Parser::parse_statement()
 {
     if (auto& token = peek(); token.type() == TokenType::Var)
@@ -315,6 +355,8 @@ std::shared_ptr<Stmt> Parser::parse_statement()
         return parse_print_statement();
     else if (token.type() == TokenType::LeftBrace)
         return parse_block_statement();
+    else if (token.type() == TokenType::If)
+        return parse_if_statement();
 
     auto expr = parse_expression();
     if (!expr)

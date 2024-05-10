@@ -1,10 +1,17 @@
 ## Statement grammar
 
 ```
-statement ->
+block ->
       '{' statement* '}'
-    | 'print' expression? ';'
+
+if-statement ->
+      'if' expression block ('else' (block | if-statement))?
+
+statement ->
+      'print' expression? ';'
     | 'var' IDENTIFIER ('=' expression)? ';'
+    | block
+    | if-statement
     | IDENTIFIER '=' expression ';'
     | expression ';'
 

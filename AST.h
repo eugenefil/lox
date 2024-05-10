@@ -210,7 +210,7 @@ public:
         , m_init(init)
     {
         assert(ident);
-        // initializer may be null
+        // initializer can be null
     }
 
     std::string dump(std::size_t indent) const override;
@@ -272,6 +272,29 @@ public:
 
 private:
     std::vector<std::shared_ptr<Stmt>> m_stmts;
+};
+
+class IfStmt : public Stmt {
+public:
+    explicit IfStmt(std::shared_ptr<Expr> test, std::shared_ptr<Stmt> then_stmt,
+                    std::shared_ptr<Stmt> else_stmt, std::string_view text)
+        : Stmt(text)
+        , m_test(test)
+        , m_then_stmt(then_stmt)
+        , m_else_stmt(else_stmt)
+    {
+        assert(test);
+        assert(then_stmt);
+        // else statement can be null
+    }
+
+    std::string dump(std::size_t indent) const override;
+    bool execute(Interpreter&) override;
+
+private:
+    std::shared_ptr<Expr> m_test;
+    std::shared_ptr<Stmt> m_then_stmt;
+    std::shared_ptr<Stmt> m_else_stmt;
 };
 
 class Program : public Stmt {

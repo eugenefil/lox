@@ -236,6 +236,19 @@ bool BlockStmt::execute(Interpreter& interp)
     return true;
 }
 
+bool IfStmt::execute(Interpreter& interp)
+{
+    auto val = m_test->eval(interp);
+    if (!val)
+        return false;
+
+    if (val->__bool__())
+        return m_then_stmt->execute(interp);
+    if (m_else_stmt)
+        return m_else_stmt->execute(interp);
+    return true;
+}
+
 bool Program::execute(Interpreter& interp)
 {
     for (auto& stmt : m_stmts) {
