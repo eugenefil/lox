@@ -27,12 +27,11 @@ void Parser::error(std::string msg, std::string_view span)
         m_errors.push_back({ std::move(msg), span });
         return;
     }
-    if (peek().type() == TokenType::Eof) {
-        // w/out tokens there can't be errors, so there must be at least one token
-        assert(m_tokens.size() > 0);
-        m_errors.push_back({ std::move(msg), m_tokens.back().text() });
-    } else
-        m_errors.push_back({ std::move(msg), peek().text() });
+
+    assert(peek().type() == TokenType::Eof);
+    // w/out tokens there can't be errors, so there must be at least one token
+    assert(m_tokens.size() > 0);
+    m_errors.push_back({ std::move(msg), m_tokens.back().text() });
 }
 
 static std::string_view merge_texts(std::string_view start, std::string_view end)
@@ -47,8 +46,7 @@ static std::string_view merge_texts(std::string_view start, std::string_view end
 
 std::shared_ptr<Expr> Parser::parse_primary()
 {
-    auto& token = peek();
-    if (token.type() == TokenType::String) {
+    if (auto& token = peek(); token.type() == TokenType::String) {
         advance();
         return std::make_shared<StringLiteral>(std::get<std::string>(token.value()),
                                                token.text());
@@ -78,8 +76,8 @@ std::shared_ptr<Expr> Parser::parse_primary()
                 error("'(' was never closed", token.text());
         }
         return {};
-    }
-    error("expected expression");
+    } else
+        error("expected expression", token.text());
     return {};
 }
 
@@ -222,7 +220,7 @@ std::pair<bool, std::string_view> Parser::finish_statement()
     } else if (token.type() == TokenType::Eof && m_implicit_semicolon)
         return { true, {} };
     else
-        error("expected ';'");
+        error("expected ';'", token.text());
     return { false, {} };
 }
 

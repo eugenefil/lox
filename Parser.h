@@ -23,7 +23,7 @@ private:
     void advance() { ++m_cur; }
     bool match(TokenType next);
 
-    void error(std::string msg, std::string_view span = {});
+    void error(std::string msg, std::string_view span);
 
     std::shared_ptr<Expr> parse_primary();
     std::shared_ptr<Expr> parse_unary();
