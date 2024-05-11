@@ -145,6 +145,7 @@ private:
 enum class BinaryOp {
     Divide,
     Multiply,
+    Modulo,
     Add,
     Subtract,
     Equal,

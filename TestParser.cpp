@@ -110,22 +110,14 @@ TEST(Parser, ErrorAtEofPointsAtLastToken)
 
 TEST(Parser, MultiplyExpressions)
 {
-    assert_expr("5 / 7", R"(
-(/
-  5
-  7)
-    )");
-    assert_expr("500 * 700", R"(
-(*
-  500
-  700)
-    )");
-    assert_expr("5 / 7 * 9", R"(
-(*
-  (/
-    5
-    7)
-  9)
+    assert_expr("5 / 7 * 9 % 2", R"(
+(%
+  (*
+    (/
+      5
+      7)
+    9)
+  2)
     )");
 
     assert_error("5 * /", "/");

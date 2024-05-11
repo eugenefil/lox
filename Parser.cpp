@@ -114,7 +114,8 @@ std::shared_ptr<Expr> Parser::parse_multiply()
     for (;;) {
         auto& token = peek();
         if (!(token.type() == TokenType::Slash ||
-            token.type() == TokenType::Star))
+            token.type() == TokenType::Star ||
+            token.type() == TokenType::Percent))
             break;
         advance();
         auto right = parse_unary();
@@ -126,6 +127,8 @@ std::shared_ptr<Expr> Parser::parse_multiply()
                 return BinaryOp::Divide;
             case TokenType::Star:
                 return BinaryOp::Multiply;
+            case TokenType::Percent:
+                return BinaryOp::Modulo;
             default:
                 assert(0);
             }

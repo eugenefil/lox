@@ -58,6 +58,7 @@ TEST(Lexer, OneCharTokens)
     assert_token(";", TokenType::Semicolon);
     assert_token("*", TokenType::Star);
     assert_token("/", TokenType::Slash);
+    assert_token("%", TokenType::Percent);
 
     assert_error("@");
 }

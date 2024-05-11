@@ -75,6 +75,9 @@ std::string BinaryExpr::dump(std::size_t indent) const
     case BinaryOp::Multiply:
         s += '*';
         break;
+    case BinaryOp::Modulo:
+        s += '%';
+        break;
     case BinaryOp::Add:
         s += '+';
         break;

@@ -2,6 +2,7 @@
 #include <format>
 #include <charconv>
 #include <iostream>
+#include <cmath>
 
 namespace Lox {
 
@@ -80,6 +81,13 @@ std::shared_ptr<Object> BinaryExpr::eval(Interpreter& interp) const
         if (left->is_number() && right->is_number())
             return make_number(left->get_number() * right->get_number());
         interp.error(std::format("cannot multiply '{}' by '{}'",
+            left->type_name(), right->type_name()), m_text);
+        return {};
+
+    case BinaryOp::Modulo:
+        if (left->is_number() && right->is_number())
+            return make_number(std::fmod(left->get_number(), right->get_number()));
+        interp.error(std::format("cannot divide '{}' by '{}'",
             left->type_name(), right->type_name()), m_text);
         return {};
 

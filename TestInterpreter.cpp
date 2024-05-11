@@ -145,6 +145,9 @@ TEST(Interpreter, EvalBinaryExpressions)
     assert_number("10 * 2", 20.0);
     assert_value_error("10 * nil");
 
+    assert_number("10 % 3", 1.0);
+    assert_value_error("10 % nil");
+
     assert_number("10 + 2", 12.0);
     assert_string(R"("foo" + "bar")", "foobar");
     assert_value_error("10 + nil");

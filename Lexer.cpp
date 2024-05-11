@@ -171,6 +171,9 @@ std::vector<Token> Lexer::lex()
         case '*':
             add_token(TokenType::Star);
             break;
+        case '%':
+            add_token(TokenType::Percent);
+            break;
         case '!':
             add_token(match('=') ? TokenType::BangEqual : TokenType::Bang);
             break;

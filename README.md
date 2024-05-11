@@ -39,7 +39,7 @@ unary ->
     | primary
 
 multiply ->
-      unary (('/' | '*') unary)*
+      unary (('/' | '*' | '%') unary)*
 
 add ->
       multiply (('-' | '+') multiply)*
