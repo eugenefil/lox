@@ -326,6 +326,15 @@ public:
     bool execute(Interpreter&) override;
 };
 
+class ContinueStmt : public Stmt {
+public:
+    explicit ContinueStmt(std::string_view text) : Stmt(text)
+    {}
+
+    std::string dump(std::size_t indent) const override;
+    bool execute(Interpreter&) override;
+};
+
 class Program : public Stmt {
 public:
     explicit Program(std::vector<std::shared_ptr<Stmt>>&& stmts,

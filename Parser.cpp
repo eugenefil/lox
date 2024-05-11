@@ -382,6 +382,23 @@ std::shared_ptr<Stmt> Parser::parse_break_statement()
     return {};
 }
 
+std::shared_ptr<Stmt> Parser::parse_continue_statement()
+{
+    auto cont_tok = peek();
+    assert(cont_tok.type() == TokenType::Continue);
+    advance();
+
+    if (!is_loop_context()) {
+        error("'continue' outside loop", cont_tok.text());
+        return {};
+    }
+
+    if (auto [res, end] = finish_statement(); res)
+        return std::make_shared<ContinueStmt>(end.empty() ? cont_tok.text() :
+            merge_texts(cont_tok.text(), end));
+    return {};
+}
+
 std::shared_ptr<Stmt> Parser::parse_statement()
 {
     if (auto& token = peek(); token.type() == TokenType::Var)
@@ -396,6 +413,8 @@ std::shared_ptr<Stmt> Parser::parse_statement()
         return parse_while_statement();
     else if (token.type() == TokenType::Break)
         return parse_break_statement();
+    else if (token.type() == TokenType::Continue)
+        return parse_continue_statement();
 
     auto expr = parse_expression();
     if (!expr)

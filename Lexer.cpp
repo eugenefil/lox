@@ -91,6 +91,7 @@ static const std::unordered_map<std::string_view, TokenType> keywords = {
     { "and", TokenType::And },
     { "break", TokenType::Break },
     { "class", TokenType::Class },
+    { "continue", TokenType::Continue },
     { "else", TokenType::Else },
     { "false", TokenType::False },
     { "fun", TokenType::Fun },

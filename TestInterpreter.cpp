@@ -303,17 +303,39 @@ TEST(Interpreter, ExecuteWhileStatements)
 
 TEST(Interpreter, ExecuteBreakStatements)
 {
+    // check that break:
+    // 1. does not let the rest of the loop body execute
+    // 2. can be nested into other statements
+    // 3. only affects inner loop
     assert_env(R"(
         var x = 5;
         var y = 0;
         while y < 3 {
             while true {
                 if true { break; }
-                x = 7;
+                x = 100;
             }
             y = y + 1;
         })", {
         { "x", Lox::make_number(5) },
+        { "y", Lox::make_number(3) },
+    });
+}
+
+TEST(Interpreter, ExecuteContinueStatements)
+{
+    assert_env(R"(
+        var x = 0;
+        var y = 0;
+        while y < 3 {
+            while x < 2 {
+                x = x + 1;
+                if true { continue; }
+                x = 100;
+            }
+            y = y + 1;
+        })", {
+        { "x", Lox::make_number(2) },
         { "y", Lox::make_number(3) },
     });
 }

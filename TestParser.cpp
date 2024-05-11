@@ -361,3 +361,17 @@ TEST(Parser, BreakStatement)
     assert_error("while true {} break;", "break");
     assert_error("while true { break }", "}"); // expected ';'
 }
+
+TEST(Parser, ContinueStatement)
+{
+    assert_stmt("while true { continue; }", R"(
+(while
+  true
+  (block
+    (continue)))
+    )");
+
+    assert_error("continue;", "continue"); // continue outside loop
+    assert_error("while true {} continue;", "continue");
+    assert_error("while true { continue }", "}"); // expected ';'
+}

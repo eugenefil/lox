@@ -164,11 +164,19 @@ public:
         m_break = on;
     }
 
+    bool is_continue() const { return m_continue; }
+    void set_continue(bool on)
+    {
+        assert(m_continue != on);
+        m_continue = on;
+    }
+
 private:
     std::vector<Error> m_errors;
     std::list<EnvType> m_env_stack { 1 };
     bool m_repl_mode { false };
     bool m_break { false };
+    bool m_continue { false };
 };
 
 }

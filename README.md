@@ -14,6 +14,7 @@ statement ->
     | if-statement
     | 'while' expression block
     | 'break' ';'
+    | 'continue' ';'
     | IDENTIFIER '=' expression ';'
     | expression ';'
 

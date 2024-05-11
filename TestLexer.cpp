@@ -125,6 +125,7 @@ TEST(Lexer, Keywords)
     assert_token("and", TokenType::And);
     assert_token("break", TokenType::Break);
     assert_token("class", TokenType::Class);
+    assert_token("continue", TokenType::Continue);
     assert_token("else", TokenType::Else);
     assert_token("false", TokenType::False, false);
     assert_token("fun", TokenType::Fun);

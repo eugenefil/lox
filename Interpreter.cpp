@@ -260,10 +260,15 @@ bool WhileStmt::execute(Interpreter& interp)
             break;
 
         assert(!interp.is_break());
+        assert(!interp.is_continue());
         if (!m_stmt->execute(interp)) {
             if (interp.is_break()) {
                 interp.set_break(false);
                 break;
+            }
+            if (interp.is_continue()) {
+                interp.set_continue(false);
+                continue;
             }
             return false;
         }
@@ -274,6 +279,12 @@ bool WhileStmt::execute(Interpreter& interp)
 bool BreakStmt::execute(Interpreter& interp)
 {
     interp.set_break(true);
+    return false;
+}
+
+bool ContinueStmt::execute(Interpreter& interp)
+{
+    interp.set_continue(true);
     return false;
 }
 

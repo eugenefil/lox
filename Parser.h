@@ -39,6 +39,7 @@ private:
     std::shared_ptr<Stmt> parse_if_statement();
     std::shared_ptr<Stmt> parse_while_statement();
     std::shared_ptr<Stmt> parse_break_statement();
+    std::shared_ptr<Stmt> parse_continue_statement();
     std::shared_ptr<Stmt> parse_statement();
     std::pair<bool, std::string_view> finish_statement();
 
