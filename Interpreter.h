@@ -157,10 +157,18 @@ public:
     bool is_repl_mode() const { return m_repl_mode; }
     void repl_mode(bool on) { m_repl_mode = on; }
 
+    bool is_break() const { return m_break; }
+    void set_break(bool on)
+    {
+        assert(m_break != on);
+        m_break = on;
+    }
+
 private:
     std::vector<Error> m_errors;
     std::list<EnvType> m_env_stack { 1 };
     bool m_repl_mode { false };
+    bool m_break { false };
 };
 
 }

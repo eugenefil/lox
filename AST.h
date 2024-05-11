@@ -317,6 +317,15 @@ private:
     std::shared_ptr<Stmt> m_stmt;
 };
 
+class BreakStmt : public Stmt {
+public:
+    explicit BreakStmt(std::string_view text) : Stmt(text)
+    {}
+
+    std::string dump(std::size_t indent) const override;
+    bool execute(Interpreter&) override;
+};
+
 class Program : public Stmt {
 public:
     explicit Program(std::vector<std::shared_ptr<Stmt>>&& stmts,

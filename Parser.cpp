@@ -355,12 +355,31 @@ std::shared_ptr<Stmt> Parser::parse_while_statement()
     if (!test)
         return {};
 
+    start_loop_context();
     auto stmt = parse_block_statement();
+    end_loop_context();
     if (!stmt)
         return {};
 
     return std::make_shared<WhileStmt>(test, stmt,
         merge_texts(while_tok.text(), stmt->text()));
+}
+
+std::shared_ptr<Stmt> Parser::parse_break_statement()
+{
+    auto break_tok = peek();
+    assert(break_tok.type() == TokenType::Break);
+    advance();
+
+    if (!is_loop_context()) {
+        error("'break' outside loop", break_tok.text());
+        return {};
+    }
+
+    if (auto [res, end] = finish_statement(); res)
+        return std::make_shared<BreakStmt>(end.empty() ? break_tok.text() :
+            merge_texts(break_tok.text(), end));
+    return {};
 }
 
 std::shared_ptr<Stmt> Parser::parse_statement()
@@ -375,6 +394,8 @@ std::shared_ptr<Stmt> Parser::parse_statement()
         return parse_if_statement();
     else if (token.type() == TokenType::While)
         return parse_while_statement();
+    else if (token.type() == TokenType::Break)
+        return parse_break_statement();
 
     auto expr = parse_expression();
     if (!expr)

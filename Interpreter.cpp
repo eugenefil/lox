@@ -259,10 +259,22 @@ bool WhileStmt::execute(Interpreter& interp)
         if (!val->__bool__())
             break;
 
-        if (!m_stmt->execute(interp))
+        assert(!interp.is_break());
+        if (!m_stmt->execute(interp)) {
+            if (interp.is_break()) {
+                interp.set_break(false);
+                break;
+            }
             return false;
+        }
     }
     return true;
+}
+
+bool BreakStmt::execute(Interpreter& interp)
+{
+    interp.set_break(true);
+    return false;
 }
 
 bool Program::execute(Interpreter& interp)

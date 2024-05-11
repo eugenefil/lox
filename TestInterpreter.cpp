@@ -300,3 +300,20 @@ TEST(Interpreter, ExecuteWhileStatements)
         { "x", Lox::make_number(0) },
     });
 }
+
+TEST(Interpreter, ExecuteBreakStatements)
+{
+    assert_env(R"(
+        var x = 5;
+        var y = 0;
+        while y < 3 {
+            while true {
+                if true { break; }
+                x = 7;
+            }
+            y = y + 1;
+        })", {
+        { "x", Lox::make_number(5) },
+        { "y", Lox::make_number(3) },
+    });
+}

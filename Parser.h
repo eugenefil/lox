@@ -38,13 +38,23 @@ private:
     std::shared_ptr<Stmt> parse_block_statement();
     std::shared_ptr<Stmt> parse_if_statement();
     std::shared_ptr<Stmt> parse_while_statement();
+    std::shared_ptr<Stmt> parse_break_statement();
     std::shared_ptr<Stmt> parse_statement();
     std::pair<bool, std::string_view> finish_statement();
+
+    bool is_loop_context() const { return m_loop_context > 0; }
+    void start_loop_context() { ++m_loop_context; }
+    void end_loop_context()
+    {
+        assert(m_loop_context > 0);
+        --m_loop_context;
+    }
 
     std::vector<Token> m_tokens;
     std::size_t m_cur { 0 };
     std::vector<Error> m_errors;
     bool m_implicit_semicolon { false };
+    std::size_t m_loop_context { 0 };
 };
 
 }

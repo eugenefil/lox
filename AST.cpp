@@ -187,6 +187,13 @@ std::string WhileStmt::dump(std::size_t indent) const
     return s;
 }
 
+std::string BreakStmt::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += "(break)";
+    return s;
+}
+
 std::string Program::dump(std::size_t indent) const
 {
     std::string s = make_indent(indent);

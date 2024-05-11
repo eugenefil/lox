@@ -13,6 +13,7 @@ statement ->
     | block
     | if-statement
     | 'while' expression block
+    | 'break' ';'
     | IDENTIFIER '=' expression ';'
     | expression ';'
 
