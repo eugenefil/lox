@@ -114,7 +114,7 @@ TEST(Interpreter, EmptyProgram)
     EXPECT_FALSE(interp.has_errors());
 }
 
-TEST(Interpreter, EvalLiterals)
+TEST(Interpreter, Literals)
 {
     assert_string(R"("foo")", "foo");
     assert_number("5", 5.0);
@@ -123,7 +123,7 @@ TEST(Interpreter, EvalLiterals)
     assert_nil("nil");
 }
 
-TEST(Interpreter, EvalUnaryExpressions)
+TEST(Interpreter, UnaryExpression)
 {
     assert_number("-5", -5.0);
     assert_value_error(R"(-"foo")");
@@ -137,7 +137,7 @@ TEST(Interpreter, EvalUnaryExpressions)
     assert_bool("!nil", true);
 }
 
-TEST(Interpreter, EvalBinaryExpressions)
+TEST(Interpreter, BinaryExpression)
 {
     assert_number("10 / 2", 5.0);
     assert_value_error("10 / nil");
@@ -193,7 +193,7 @@ TEST(Interpreter, EvalBinaryExpressions)
     assert_bool(R"("bbb" >= "ccc")", false);
 }
 
-TEST(Interpreter, EvalIdentifier)
+TEST(Interpreter, Identifier)
 {
     assert_env("var x = 5; var y = x * 2;", {
         { "x", Lox::make_number(5) },
@@ -203,7 +203,7 @@ TEST(Interpreter, EvalIdentifier)
     assert_error("var x = y;", "y");
 }
 
-TEST(Interpreter, ExecuteVarStatements)
+TEST(Interpreter, VarStatement)
 {
     assert_env("var x;", { { "x", Lox::make_nil() } });
 
@@ -216,7 +216,7 @@ TEST(Interpreter, ExecuteVarStatements)
     assert_env("var x = 5; var x = \"foo\";", { { "x", Lox::make_string("foo") } });
 }
 
-TEST(Interpreter, ExecutePrintStatements)
+TEST(Interpreter, PrintStatement)
 {
     assert_error("print -nil;", "-nil");
 }
@@ -229,7 +229,7 @@ TEST(Interpreter, ProgramsShareEnv)
     });
 }
 
-TEST(Interpreter, ExecuteAssignStatements)
+TEST(Interpreter, AssignStatement)
 {
     assert_env("var x = 5; x = x + 7;", { { "x", Lox::make_number(12) } });
 
@@ -237,7 +237,7 @@ TEST(Interpreter, ExecuteAssignStatements)
     assert_error("x = 5;", "x");
 }
 
-TEST(Interpreter, ExecuteBlockStatements)
+TEST(Interpreter, BlockStatement)
 {
     assert_env("var x = 5; { var y = 7; x = x + y; }", {
         { "x", Lox::make_number(12) },
@@ -255,7 +255,7 @@ TEST(Interpreter, EnvIsRestoredAfterError)
         { "foo" });
 }
 
-TEST(Interpreter, ExecuteIfStatements)
+TEST(Interpreter, IfStatement)
 {
     assert_env("var x = 5; if x > 0 { x = 7; }", {
         { "x", Lox::make_number(7) },
@@ -281,7 +281,7 @@ TEST(Interpreter, ExecuteIfStatements)
     assert_error("if false { x; } else { y; }", "y");
 }
 
-TEST(Interpreter, ExecuteWhileStatements)
+TEST(Interpreter, WhileStatement)
 {
     assert_env("var x = 5; while false { x = 7; }", {
         { "x", Lox::make_number(5) },
@@ -304,7 +304,7 @@ TEST(Interpreter, ExecuteWhileStatements)
     });
 }
 
-TEST(Interpreter, ExecuteBreakStatements)
+TEST(Interpreter, BreakStatement)
 {
     // check that break:
     // 1. does not let the rest of the loop body execute
@@ -325,7 +325,7 @@ TEST(Interpreter, ExecuteBreakStatements)
     });
 }
 
-TEST(Interpreter, ExecuteContinueStatements)
+TEST(Interpreter, ContinueStatement)
 {
     assert_env(R"(
         var x = 0;
