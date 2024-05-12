@@ -44,6 +44,16 @@ static std::string_view merge_texts(std::string_view start, std::string_view end
     return std::string_view(start.data(), end.data() - start.data() + end.size());
 }
 
+std::shared_ptr<Identifier> Parser::parse_identifier()
+{
+    if (auto& token = peek(); token.type() == TokenType::Identifier) {
+        advance();
+        return std::make_shared<Identifier>(token.text(), token.text());
+    } else
+        error("expected identifier", token.text());
+    return {};
+}
+
 std::shared_ptr<Expr> Parser::parse_primary()
 {
     if (auto& token = peek(); token.type() == TokenType::String) {
@@ -233,12 +243,9 @@ std::shared_ptr<Stmt> Parser::parse_var_statement()
     assert(var.type() == TokenType::Var);
     advance();
 
-    auto& ident = peek();
-    if (ident.type() != TokenType::Identifier) {
-        error("expected identifier", ident.text());
+    auto ident = parse_identifier();
+    if (!ident)
         return {};
-    }
-    advance();
 
     std::shared_ptr<Expr> init;
     if (auto& token = peek(); token.type() == TokenType::Equal) {
@@ -249,11 +256,9 @@ std::shared_ptr<Stmt> Parser::parse_var_statement()
     }
 
     if (auto [res, end] = finish_statement(); res)
-        return std::make_shared<VarStmt>(
-            std::make_shared<Identifier>(ident.text(), ident.text()),
-            init,
+        return std::make_shared<VarStmt>(ident, init,
             merge_texts(var.text(), end.size() ? end : (
-                init ? init->text() : ident.text())));
+                init ? init->text() : ident->text())));
     return {};
 }
 
@@ -293,7 +298,7 @@ std::shared_ptr<Stmt> Parser::parse_assign_statement(std::shared_ptr<Expr> place
     return {};
 }
 
-std::shared_ptr<Stmt> Parser::parse_block_statement()
+std::shared_ptr<BlockStmt> Parser::parse_block_statement()
 {
     auto& lbrace = peek();
     if (lbrace.type() != TokenType::LeftBrace) {
@@ -368,6 +373,36 @@ std::shared_ptr<Stmt> Parser::parse_while_statement()
         merge_texts(while_tok.text(), stmt->text()));
 }
 
+std::shared_ptr<Stmt> Parser::parse_for_statement()
+{
+    auto for_tok = peek();
+    assert(for_tok.type() == TokenType::For);
+    advance();
+
+    auto ident = parse_identifier();
+    if (!ident)
+        return {};
+
+    if (auto& token = peek(); token.type() != TokenType::In) {
+        error("expected 'in'", token.text());
+        return {};
+    }
+    advance();
+
+    auto expr = parse_expression();
+    if (!expr)
+        return {};
+
+    start_loop_context();
+    auto block = parse_block_statement();
+    end_loop_context();
+    if (!block)
+        return {};
+
+    return std::make_shared<ForStmt>(ident, expr, block,
+        merge_texts(for_tok.text(), block->text()));
+}
+
 std::shared_ptr<Stmt> Parser::parse_break_statement()
 {
     auto break_tok = peek();
@@ -418,6 +453,8 @@ std::shared_ptr<Stmt> Parser::parse_statement()
         return parse_break_statement();
     else if (token.type() == TokenType::Continue)
         return parse_continue_statement();
+    else if (token.type() == TokenType::For)
+        return parse_for_statement();
 
     auto expr = parse_expression();
     if (!expr)

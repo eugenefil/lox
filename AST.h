@@ -270,8 +270,11 @@ public:
 
     std::string dump(std::size_t indent) const override;
     bool execute(Interpreter&) override;
+    void inject_var(std::string_view name, std::shared_ptr<Object> value);
 
 private:
+    std::string_view m_injected_name;
+    std::shared_ptr<Object> m_injected_value;
     std::vector<std::shared_ptr<Stmt>> m_stmts;
 };
 
@@ -316,6 +319,29 @@ public:
 private:
     std::shared_ptr<Expr> m_test;
     std::shared_ptr<Stmt> m_stmt;
+};
+
+class ForStmt : public Stmt {
+public:
+    explicit ForStmt(std::shared_ptr<Identifier> ident, std::shared_ptr<Expr> expr,
+                     std::shared_ptr<BlockStmt> block, std::string_view text)
+        : Stmt(text)
+        , m_ident(ident)
+        , m_expr(expr)
+        , m_block(block)
+    {
+        assert(ident);
+        assert(expr);
+        assert(block);
+    }
+
+    std::string dump(std::size_t indent) const override;
+    bool execute(Interpreter&) override;
+
+private:
+    std::shared_ptr<Identifier> m_ident;
+    std::shared_ptr<Expr> m_expr;
+    std::shared_ptr<BlockStmt> m_block;
 };
 
 class BreakStmt : public Stmt {

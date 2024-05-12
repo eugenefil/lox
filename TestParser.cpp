@@ -340,11 +340,38 @@ TEST(Parser, WhileStatement)
     assert_error("while 1 {_", "_");
 }
 
+TEST(Parser, ForStatement)
+{
+    assert_stmt("for c in \"foo\" { print c; }", R"(
+(for
+  c
+  "foo"
+  (block
+    (print
+      c)))
+    )");
+
+    assert_error("for 5 in", "5"); // expected identifier
+    assert_error("for c _", "_"); // expected 'in'
+    assert_error("for c in /", "/"); // expected expression
+    assert_error("for c in \"foo\" _", "_"); // expected '{'
+}
+
 TEST(Parser, BreakStatement)
 {
+    // check that parser sees break as inside the loop
     assert_stmt("while true { break; }", R"(
 (while
   true
+  (block
+    (break)))
+    )");
+
+    // same for 'for' loop
+    assert_stmt("for c in \"foo\" { break; }", R"(
+(for
+  c
+  "foo"
   (block
     (break)))
     )");
@@ -356,9 +383,19 @@ TEST(Parser, BreakStatement)
 
 TEST(Parser, ContinueStatement)
 {
+    // check that parser sees continue as inside the loop
     assert_stmt("while true { continue; }", R"(
 (while
   true
+  (block
+    (continue)))
+    )");
+
+    // same for 'for' loop
+    assert_stmt("for c in \"foo\" { continue; }", R"(
+(for
+  c
+  "foo"
   (block
     (continue)))
     )");

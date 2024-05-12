@@ -9,6 +9,8 @@
 
 namespace Lox {
 
+class Iterator;
+
 class Object {
 public:
     virtual ~Object() = default;
@@ -31,9 +33,13 @@ public:
     {
         return std::string("<").append(type_name()).append(">");
     }
+
+    virtual bool is_iterable() const { return false; }
+    virtual std::shared_ptr<Iterator> __iter__() const { assert(0); }
 };
 
-class String : public Object {
+class String : public Object
+    , public std::enable_shared_from_this<String> {
 public:
     String(std::string_view value) : m_value(value)
     {}
@@ -42,6 +48,14 @@ public:
 
     std::string_view type_name() const override { return "String"; }
     std::string_view get_string() const override { return m_value; }
+
+    std::size_t size() const { return m_value.size(); }
+    std::string get_char(std::size_t pos) const
+    {
+        assert(pos < m_value.size());
+        return std::string(1, m_value[pos]);
+    }
+
     bool __bool__() const override { return m_value.size() > 0; }
 
     bool __eq__(const Object& rhs) const override
@@ -51,6 +65,9 @@ public:
     }
 
     std::string __str__() const override { return m_value; }
+
+    bool is_iterable() const override { return true; }
+    std::shared_ptr<Iterator> __iter__() const override;
 
 private:
     std::string m_value;

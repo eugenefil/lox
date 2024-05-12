@@ -190,6 +190,19 @@ std::string WhileStmt::dump(std::size_t indent) const
     return s;
 }
 
+std::string ForStmt::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += "(for\n";
+    s += m_ident->dump(indent + 1);
+    s += '\n';
+    s += m_expr->dump(indent + 1);
+    s += '\n';
+    s += m_block->dump(indent + 1);
+    s += ')';
+    return s;
+}
+
 std::string BreakStmt::dump(std::size_t indent) const
 {
     std::string s = make_indent(indent);

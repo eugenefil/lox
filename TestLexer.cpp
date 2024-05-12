@@ -132,6 +132,7 @@ TEST(Lexer, Keywords)
     assert_token("fun", TokenType::Fun);
     assert_token("for", TokenType::For);
     assert_token("if", TokenType::If);
+    assert_token("in", TokenType::In);
     assert_token("nil", TokenType::Nil);
     assert_token("or", TokenType::Or);
     assert_token("print", TokenType::Print);

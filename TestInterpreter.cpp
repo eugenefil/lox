@@ -304,12 +304,60 @@ TEST(Interpreter, WhileStatement)
     });
 }
 
+TEST(Interpreter, ForStatement)
+{
+    // no execution when collection is empty
+    assert_env("var s = \"foo\"; for c in \"\" { s = \"bar\"; }", {
+        { "s", Lox::make_string("foo") },
+    });
+
+    // loop executes as many times as elements in collection
+    assert_env(R"(
+        var s = "foo";
+        var x = 0;
+        for c in "bar" {
+            x = x + 1;
+            s = s + c;
+        })", {
+        { "s", Lox::make_string("foobar") },
+        { "x", Lox::make_number(3) },
+    });
+
+    // loop var is local to the loop
+    assert_error("for c in \"bar\" {} c;", "c");
+
+    // loop var shadows same var in outer scope
+    assert_env("var c = \"foo\"; for c in \"bar\" { c = \"baz\"; }", {
+        { "c", Lox::make_string("foo") },
+    });
+
+    // 2 loops iterating on the same collection at the same time
+    assert_env(R"(
+        var s = "ab";
+        var r = "";
+        for c in s {
+            r = r + c + ":";
+            for c in s { r = r + c; }
+            r = r + "\n";
+        })", {
+        { "s", Lox::make_string("ab") },
+        { "r", Lox::make_string("a:ab\nb:ab\n") },
+    });
+
+    assert_error("for c in x {}", "x"); // expression eval fails
+    assert_error("for c in 5 {}", "5"); // expression value is not iterable
+    // TODO expression is iterable, but iterator request fails
+    // TODO expression is iterable, but fails on some iteration
+    assert_error("for c in \"foo\" { x; }", "x"); // block execution fails
+}
+
 TEST(Interpreter, BreakStatement)
 {
     // check that break:
-    // 1. does not let the rest of the loop body execute
-    // 2. can be nested into other statements
-    // 3. only affects inner loop
+    // - does not let the rest of the loop body execute
+    // - makes current iteration last, i.e. does not function like continue
+    // - can be nested into other statements
+    // - only affects inner loop
     assert_env(R"(
         var x = 5;
         var y = 0;
@@ -323,10 +371,32 @@ TEST(Interpreter, BreakStatement)
         { "x", Lox::make_number(5) },
         { "y", Lox::make_number(3) },
     });
+
+    assert_env(R"(
+        var x = 5;
+        var y = 0;
+        var s = "";
+        for c in "foo" {
+            for c in "bar" {
+                s = c;
+                if true { break; }
+                x = 100;
+            }
+            y = y + 1;
+        })", {
+        { "x", Lox::make_number(5) },
+        { "y", Lox::make_number(3) },
+        { "s", Lox::make_string("b") },
+    });
 }
 
 TEST(Interpreter, ContinueStatement)
 {
+    // check that continue:
+    // - does not let the rest of the loop body execute
+    // - continues the loop, i.e. does not function like break
+    // - can be nested into other statements
+    // - only affects inner loop
     assert_env(R"(
         var x = 0;
         var y = 0;
@@ -339,6 +409,21 @@ TEST(Interpreter, ContinueStatement)
             y = y + 1;
         })", {
         { "x", Lox::make_number(2) },
+        { "y", Lox::make_number(3) },
+    });
+
+    assert_env(R"(
+        var x = 0;
+        var y = 0;
+        for c in "foo" {
+            for c in "bar" {
+                x = x + 1;
+                if true { continue; }
+                x = 100;
+            }
+            y = y + 1;
+        })", {
+        { "x", Lox::make_number(9) },
         { "y", Lox::make_number(3) },
     });
 }

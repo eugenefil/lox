@@ -6,6 +6,45 @@
 
 namespace Lox {
 
+class Iterator {
+public:
+    virtual bool done() const = 0;
+    virtual std::shared_ptr<Object> next() = 0;
+};
+
+class StringIterator : public Iterator {
+public:
+    explicit StringIterator(std::shared_ptr<const String> str) : m_str(str)
+    {
+        assert(str);
+    }
+
+    bool done() const override { return m_pos >= m_str->size(); }
+
+    std::shared_ptr<Object> next() override
+    {
+        assert(!done());
+        return std::make_shared<String>(m_str->get_char(m_pos++));
+    }
+
+private:
+    std::shared_ptr<const String> m_str;
+    std::size_t m_pos { 0 };
+};
+
+std::shared_ptr<Iterator> String::__iter__() const
+{
+    return std::make_shared<StringIterator>(shared_from_this());
+}
+
+std::string Number::__str__() const
+{
+    char buf[32];
+    auto [ptr, ec] = std::to_chars(buf, buf + sizeof(buf), m_value);
+    assert(ec == std::errc()); // longest double is 24 chars long
+    return std::string(buf, ptr - buf);
+}
+
 std::shared_ptr<Object> StringLiteral::eval(Interpreter&) const
 {
     return make_string(m_value);
@@ -161,14 +200,6 @@ std::shared_ptr<Object> BinaryExpr::eval(Interpreter& interp) const
     assert(0);
 }
 
-std::string Number::__str__() const
-{
-    char buf[32];
-    auto [ptr, ec] = std::to_chars(buf, buf + sizeof(buf), m_value);
-    assert(ec == std::errc()); // longest double is 24 chars long
-    return std::string(buf, ptr - buf);
-}
-
 bool ExpressionStmt::execute(Interpreter& interp)
 {
     if (auto val = m_expr->eval(interp)) {
@@ -231,9 +262,22 @@ bool AssignStmt::execute(Interpreter& interp)
     return false;
 }
 
+void BlockStmt::inject_var(std::string_view name, std::shared_ptr<Object> value)
+{
+    assert(name.size());
+    assert(value);
+    m_injected_name = name;
+    m_injected_value = value;
+}
+
 bool BlockStmt::execute(Interpreter& interp)
 {
     interp.push_env();
+    if (!m_injected_name.empty()) {
+        interp.define_var(m_injected_name, std::move(m_injected_value));
+        m_injected_name = {};
+    }
+
     for (auto& stmt : m_stmts) {
         if (!stmt->execute(interp)) {
             interp.pop_env();
@@ -270,6 +314,44 @@ bool WhileStmt::execute(Interpreter& interp)
         assert(!interp.is_break());
         assert(!interp.is_continue());
         if (!m_stmt->execute(interp)) {
+            if (interp.is_break()) {
+                interp.set_break(false);
+                break;
+            }
+            if (interp.is_continue()) {
+                interp.set_continue(false);
+                continue;
+            }
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ForStmt::execute(Interpreter& interp)
+{
+    auto val = m_expr->eval(interp);
+    if (!val)
+        return false;
+
+    if (!val->is_iterable()) {
+        interp.error(std::format("'{}' is not iterable", val->type_name()),
+                     m_expr->text());
+        return false;
+    }
+
+    auto iter = val->__iter__();
+    assert(iter);
+
+    while (!iter->done()) {
+        auto next = iter->next();
+        if (!next)
+            return false;
+
+        m_block->inject_var(m_ident->name(), next);
+        assert(!interp.is_break());
+        assert(!interp.is_continue());
+        if (!m_block->execute(interp)) {
             if (interp.is_break()) {
                 interp.set_break(false);
                 break;

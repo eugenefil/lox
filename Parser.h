@@ -25,6 +25,7 @@ private:
 
     void error(std::string msg, std::string_view span);
 
+    std::shared_ptr<Identifier> parse_identifier();
     std::shared_ptr<Expr> parse_primary();
     std::shared_ptr<Expr> parse_unary();
     std::shared_ptr<Expr> parse_multiply();
@@ -35,9 +36,10 @@ private:
     std::shared_ptr<Stmt> parse_var_statement();
     std::shared_ptr<Stmt> parse_print_statement();
     std::shared_ptr<Stmt> parse_assign_statement(std::shared_ptr<Expr>);
-    std::shared_ptr<Stmt> parse_block_statement();
+    std::shared_ptr<BlockStmt> parse_block_statement();
     std::shared_ptr<Stmt> parse_if_statement();
     std::shared_ptr<Stmt> parse_while_statement();
+    std::shared_ptr<Stmt> parse_for_statement();
     std::shared_ptr<Stmt> parse_break_statement();
     std::shared_ptr<Stmt> parse_continue_statement();
     std::shared_ptr<Stmt> parse_statement();
