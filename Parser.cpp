@@ -335,22 +335,22 @@ std::shared_ptr<Stmt> Parser::parse_if_statement()
     if (!test)
         return {};
 
-    auto then_stmt = parse_block_statement();
-    if (!then_stmt)
+    auto then_block = parse_block_statement();
+    if (!then_block)
         return {};
 
-    std::shared_ptr<Stmt> else_stmt;
+    std::shared_ptr<Stmt> else_block;
     if (match(TokenType::Else)) {
         if (peek().type() == TokenType::If)
-            else_stmt = parse_if_statement();
+            else_block = parse_if_statement();
         else
-            else_stmt = parse_block_statement();
-        if (!else_stmt)
+            else_block = parse_block_statement();
+        if (!else_block)
             return {};
     }
-    return std::make_shared<IfStmt>(test, then_stmt, else_stmt,
+    return std::make_shared<IfStmt>(test, then_block, else_block,
         merge_texts(if_tok.text(),
-            else_stmt ? else_stmt->text() : then_stmt->text()));
+            else_block ? else_block->text() : then_block->text()));
 }
 
 std::shared_ptr<Stmt> Parser::parse_while_statement()
@@ -364,13 +364,13 @@ std::shared_ptr<Stmt> Parser::parse_while_statement()
         return {};
 
     start_loop_context();
-    auto stmt = parse_block_statement();
+    auto block = parse_block_statement();
     end_loop_context();
-    if (!stmt)
+    if (!block)
         return {};
 
-    return std::make_shared<WhileStmt>(test, stmt,
-        merge_texts(while_tok.text(), stmt->text()));
+    return std::make_shared<WhileStmt>(test, block,
+        merge_texts(while_tok.text(), block->text()));
 }
 
 std::shared_ptr<Stmt> Parser::parse_for_statement()

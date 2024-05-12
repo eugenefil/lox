@@ -170,10 +170,10 @@ std::string IfStmt::dump(std::size_t indent) const
     s += "(if\n";
     s += m_test->dump(indent + 1);
     s += '\n';
-    s += m_then_stmt->dump(indent + 1);
-    if (m_else_stmt) {
+    s += m_then_block->dump(indent + 1);
+    if (m_else_block) {
         s += '\n';
-        s += m_else_stmt->dump(indent + 1);
+        s += m_else_block->dump(indent + 1);
     }
     s += ')';
     return s;
@@ -185,7 +185,7 @@ std::string WhileStmt::dump(std::size_t indent) const
     s += "(while\n";
     s += m_test->dump(indent + 1);
     s += '\n';
-    s += m_stmt->dump(indent + 1);
+    s += m_block->dump(indent + 1);
     s += ')';
     return s;
 }

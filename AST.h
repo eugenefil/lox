@@ -280,16 +280,16 @@ private:
 
 class IfStmt : public Stmt {
 public:
-    explicit IfStmt(std::shared_ptr<Expr> test, std::shared_ptr<Stmt> then_stmt,
-                    std::shared_ptr<Stmt> else_stmt, std::string_view text)
+    explicit IfStmt(std::shared_ptr<Expr> test, std::shared_ptr<Stmt> then_block,
+                    std::shared_ptr<Stmt> else_block, std::string_view text)
         : Stmt(text)
         , m_test(test)
-        , m_then_stmt(then_stmt)
-        , m_else_stmt(else_stmt)
+        , m_then_block(then_block)
+        , m_else_block(else_block)
     {
         assert(test);
-        assert(then_stmt);
-        // else statement can be null
+        assert(then_block);
+        // 'else' block can be null
     }
 
     std::string dump(std::size_t indent) const override;
@@ -297,20 +297,20 @@ public:
 
 private:
     std::shared_ptr<Expr> m_test;
-    std::shared_ptr<Stmt> m_then_stmt;
-    std::shared_ptr<Stmt> m_else_stmt;
+    std::shared_ptr<Stmt> m_then_block;
+    std::shared_ptr<Stmt> m_else_block;
 };
 
 class WhileStmt : public Stmt {
 public:
-    explicit WhileStmt(std::shared_ptr<Expr> test, std::shared_ptr<Stmt> stmt,
+    explicit WhileStmt(std::shared_ptr<Expr> test, std::shared_ptr<Stmt> block,
                        std::string_view text)
         : Stmt(text)
         , m_test(test)
-        , m_stmt(stmt)
+        , m_block(block)
     {
         assert(test);
-        assert(stmt);
+        assert(block);
     }
 
     std::string dump(std::size_t indent) const override;
@@ -318,7 +318,7 @@ public:
 
 private:
     std::shared_ptr<Expr> m_test;
-    std::shared_ptr<Stmt> m_stmt;
+    std::shared_ptr<Stmt> m_block;
 };
 
 class ForStmt : public Stmt {

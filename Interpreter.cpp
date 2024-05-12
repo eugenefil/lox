@@ -295,9 +295,9 @@ bool IfStmt::execute(Interpreter& interp)
         return false;
 
     if (val->__bool__())
-        return m_then_stmt->execute(interp);
-    if (m_else_stmt)
-        return m_else_stmt->execute(interp);
+        return m_then_block->execute(interp);
+    if (m_else_block)
+        return m_else_block->execute(interp);
     return true;
 }
 
@@ -313,7 +313,7 @@ bool WhileStmt::execute(Interpreter& interp)
 
         assert(!interp.is_break());
         assert(!interp.is_continue());
-        if (!m_stmt->execute(interp)) {
+        if (!m_block->execute(interp)) {
             if (interp.is_break()) {
                 interp.set_break(false);
                 break;
