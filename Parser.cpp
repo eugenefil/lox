@@ -327,7 +327,7 @@ std::shared_ptr<BlockStmt> Parser::parse_block_statement()
 
 std::shared_ptr<Stmt> Parser::parse_if_statement()
 {
-    auto if_tok = peek();
+    auto& if_tok = peek();
     assert(if_tok.type() == TokenType::If);
     advance();
 
@@ -355,7 +355,7 @@ std::shared_ptr<Stmt> Parser::parse_if_statement()
 
 std::shared_ptr<Stmt> Parser::parse_while_statement()
 {
-    auto while_tok = peek();
+    auto& while_tok = peek();
     assert(while_tok.type() == TokenType::While);
     advance();
 
@@ -375,7 +375,7 @@ std::shared_ptr<Stmt> Parser::parse_while_statement()
 
 std::shared_ptr<Stmt> Parser::parse_for_statement()
 {
-    auto for_tok = peek();
+    auto& for_tok = peek();
     assert(for_tok.type() == TokenType::For);
     advance();
 
@@ -405,7 +405,7 @@ std::shared_ptr<Stmt> Parser::parse_for_statement()
 
 std::shared_ptr<Stmt> Parser::parse_break_statement()
 {
-    auto break_tok = peek();
+    auto& break_tok = peek();
     assert(break_tok.type() == TokenType::Break);
     advance();
 
@@ -422,7 +422,7 @@ std::shared_ptr<Stmt> Parser::parse_break_statement()
 
 std::shared_ptr<Stmt> Parser::parse_continue_statement()
 {
-    auto cont_tok = peek();
+    auto& cont_tok = peek();
     assert(cont_tok.type() == TokenType::Continue);
     advance();
 
