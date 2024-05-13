@@ -153,6 +153,7 @@ static void repl()
 {
     Lox::Interpreter interp;
     interp.repl_mode(true);
+    rl_outstream = stderr;
     for (char* line = NULL; (line = readline(">>> ")); free(line)) {
         if (*line) {
             eval(line, "<stdin>", interp, true);
