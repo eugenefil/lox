@@ -8,6 +8,8 @@
 #include <cmath>
 #include <cstring>
 #include <unistd.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 namespace fs = std::filesystem;
 
@@ -151,14 +153,11 @@ static void repl()
 {
     Lox::Interpreter interp;
     interp.repl_mode(true);
-    for (;;) {
-        std::cerr << ">>> ";
-        std::string line;
-        if (!std::getline(std::cin, line)) {
-            std::cerr << '\n';
-            break;
+    for (char* line = NULL; (line = readline(">>> ")); free(line)) {
+        if (*line) {
+            eval(line, "<stdin>", interp, true);
+            add_history(line);
         }
-        eval(line, "<stdin>", interp, true);
     }
 }
 
