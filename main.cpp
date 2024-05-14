@@ -62,6 +62,18 @@ private:
 
 static Formatter fmt;
 
+static void die_with_perror(std::string_view text)
+{
+    std::cerr << fmt.strerror(text);
+    exit(1);
+}
+
+static void die(std::string_view msg)
+{
+    std::cerr << fmt.error(msg);
+    exit(1);
+}
+
 [[noreturn]] static void errusage() { usage(true); }
 
 static void print_errors(const std::vector<Lox::Error>& errors,
@@ -158,10 +170,8 @@ static void setup_signals()
 {
     struct sigaction sa = {};
     sa.sa_handler = sigint_handler;
-    if (sigaction(SIGINT, &sa, NULL)) {
-        std::cerr << fmt.strerror("sigaction");
-        abort();
-    }
+    if (sigaction(SIGINT, &sa, NULL))
+        die_with_perror("sigaction");
 }
 
 static std::unique_ptr<Lox::Interpreter> repl_interp;
@@ -199,10 +209,8 @@ static int repl()
         pfd.fd = STDIN_FILENO;
         pfd.events = POLLIN;
         if (poll(&pfd, 1, -1) < 0) {
-            if (errno != EINTR) {
-                std::cerr << fmt.strerror("poll");
-                return 1;
-            }
+            if (errno != EINTR)
+                die_with_perror("poll");
             std::cerr << "\ninterrupt\n";
             // clean up incremental search state
             rl_callback_sigcleanup();
@@ -223,7 +231,7 @@ static int repl()
             if (pfd.revents & POLLIN)
                 rl_callback_read_char();
             else
-                return 1;
+                die("terminal error");
         }
     }
     return 0;
@@ -236,22 +244,16 @@ static int run(std::string path)
         path = "<stdin>";
         while (buf << std::cin.rdbuf())
             ;
-        if (buf.bad()) {
-            std::cerr << fmt.strerror("cannot read from '" + path + "'");
-            return 1;
-        }
+        if (buf.bad())
+            die_with_perror("cannot read from '" + path + "'");
     } else {
         std::ifstream fin(path);
-        if (!fin.is_open()) {
-            std::cerr << fmt.strerror("cannot open '" + path + "'");
-            return 1;
-        }
+        if (!fin.is_open())
+            die_with_perror("cannot open '" + path + "'");
         while (buf << fin.rdbuf())
             ;
-        if (buf.bad()) {
-            std::cerr << fmt.strerror("cannot read from '" + path + "'");
-            return 1;
-        }
+        if (buf.bad())
+            die_with_perror("cannot read from '" + path + "'");
         fin.close();
     }
 
