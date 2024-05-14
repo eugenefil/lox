@@ -8,6 +8,8 @@
 #include <cmath>
 #include <cstring>
 #include <unistd.h>
+#include <signal.h>
+#include <poll.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -28,8 +30,7 @@ static std::string argv0;
 
 class Formatter {
 public:
-    Formatter(bool has_color) : m_has_color(has_color)
-    {}
+    void set_color(bool on) { m_has_color = on; }
 
     std::string colorize(std::string_view color, std::string_view text)
     {
@@ -59,13 +60,14 @@ private:
     bool m_has_color { false };
 };
 
+static Formatter fmt;
+
 [[noreturn]] static void errusage() { usage(true); }
 
 static void print_errors(const std::vector<Lox::Error>& errors,
                          std::string_view source, std::string_view filename)
 {
     Lox::SourceMap smap(source);
-    Formatter fmt(isatty(STDERR_FILENO));
     for (auto& error : errors) {
         auto [start, end] = smap.span_to_range(error.span);
         assert(start.line_num == end.line_num);
@@ -149,23 +151,87 @@ static bool eval(std::string_view source, std::string_view path,
     return true;
 }
 
-static void repl()
+static void sigint_handler(int)
+{}
+
+static void setup_signals()
 {
-    Lox::Interpreter interp;
-    interp.repl_mode(true);
-    rl_outstream = stderr;
-    for (char* line = NULL; (line = readline(">>> ")); free(line)) {
+    struct sigaction sa = {};
+    sa.sa_handler = sigint_handler;
+    if (sigaction(SIGINT, &sa, NULL)) {
+        std::cerr << fmt.strerror("sigaction");
+        abort();
+    }
+}
+
+static std::unique_ptr<Lox::Interpreter> repl_interp;
+static bool repl_done;
+
+static void line_handler(char* line)
+{
+    if (line) {
         if (*line) {
-            eval(line, "<stdin>", interp, true);
+            assert(repl_interp);
+            eval(line, "<stdin>", *repl_interp, true);
             add_history(line);
         }
+    } else {
+        rl_callback_handler_remove();
+        repl_done = true;
     }
+    free(line);
+}
+
+static int repl()
+{
+    setup_signals();
+
+    repl_interp = std::make_unique<Lox::Interpreter>();
+    repl_interp->repl_mode(true);
+
+    const char* prompt = ">>> ";
+    rl_outstream = stderr;
+    // this call disables terminal line-buffering,
+    // so poll(2) receives POLLIN on every input char
+    rl_callback_handler_install(prompt, line_handler);
+    while (!repl_done) {
+        struct pollfd pfd = {};
+        pfd.fd = STDIN_FILENO;
+        pfd.events = POLLIN;
+        if (poll(&pfd, 1, -1) < 0) {
+            if (errno != EINTR) {
+                std::cerr << fmt.strerror("poll");
+                return 1;
+            }
+            std::cerr << "\ninterrupt\n";
+            // clean up incremental search state
+            rl_callback_sigcleanup();
+            // if ^C was hit during *successfull* incremental search, then
+            // the result of the search will be drawn after the new prompt
+            // below, even though the line buffer is empty at that point
+            // rl_clear_visible_line call fixes that
+            rl_clear_visible_line();
+            // there may be a better way to make readline draw empty prompt
+            // after ^C, but after trying its numerous api functions, settled
+            // on reinstalling line handler, which reinits readline
+            rl_callback_handler_remove();
+            rl_callback_handler_install(prompt, line_handler);
+            continue;
+        }
+
+        if (pfd.revents) {
+            if (pfd.revents & POLLIN)
+                rl_callback_read_char();
+            else
+                return 1;
+        }
+    }
+    return 0;
 }
 
 static int run(std::string path)
 {
     std::ostringstream buf;
-    Formatter fmt(isatty(STDERR_FILENO));
     if (path == "-") {
         path = "<stdin>";
         while (buf << std::cin.rdbuf())
@@ -199,14 +265,11 @@ int main(int argc, char* argv[])
 {
     using namespace std::string_view_literals;
     argv0 = fs::path(argv[0]).filename();
+    fmt.set_color(isatty(STDERR_FILENO));
 
-    if (argc == 1) {
-        if (isatty(STDIN_FILENO)) {
-            repl();
-            return 0;
-        } else
-            return run("-");
-    } else if (argc != 2)
+    if (argc == 1)
+        return isatty(STDIN_FILENO) ? repl() : run("-");
+    else if (argc != 2)
         errusage();
     else if (argv[1] == "-h"sv || argv[1] == "--help"sv)
         usage();
