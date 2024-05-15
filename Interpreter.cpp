@@ -462,6 +462,9 @@ bool Interpreter::check_interrupt()
     if (g_interrupt) {
         g_interrupt = 0;
         std::cerr << "interrupt\n";
+        // when infinite loop does output to tty std::cout and SIGINT is
+        // issued to stop that, failbit and badbit get set; clear those
+        std::cout.clear();
         return true;
     }
     return false;
