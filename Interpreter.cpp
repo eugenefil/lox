@@ -304,6 +304,9 @@ bool IfStmt::execute(Interpreter& interp)
 bool WhileStmt::execute(Interpreter& interp)
 {
     for (;;) {
+        if (interp.check_interrupt())
+            return false;
+
         auto val = m_test->eval(interp);
         if (!val)
             return false;
@@ -381,6 +384,8 @@ bool ContinueStmt::execute(Interpreter& interp)
 bool Program::execute(Interpreter& interp)
 {
     for (auto& stmt : m_stmts) {
+        if (interp.check_interrupt())
+            return false;
         if (!stmt->execute(interp))
             return false;
     }
@@ -448,6 +453,18 @@ void Interpreter::interpret(std::shared_ptr<Program> program)
     assert(m_env_stack.size() == 1);
     program->execute(*this);
     assert(m_env_stack.size() == 1);
+}
+
+volatile std::sig_atomic_t g_interrupt;
+
+bool Interpreter::check_interrupt()
+{
+    if (g_interrupt) {
+        g_interrupt = 0;
+        std::cerr << "interrupt\n";
+        return true;
+    }
+    return false;
 }
 
 }

@@ -427,3 +427,13 @@ TEST(Interpreter, ContinueStatement)
         { "y", Lox::make_number(3) },
     });
 }
+
+TEST(Interpreter, Interrupt)
+{
+    Lox::g_interrupt = 1;
+    assert_env("while true {}", {});
+    // TODO for loop with infinite iterator
+
+    Lox::g_interrupt = 1;
+    assert_env("var x = 5;", {});
+}

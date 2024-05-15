@@ -164,7 +164,9 @@ static bool eval(std::string_view source, std::string_view path,
 }
 
 static void sigint_handler(int)
-{}
+{
+    Lox::g_interrupt = 1; // checked by interpreter
+}
 
 static void setup_signals()
 {
@@ -176,14 +178,15 @@ static void setup_signals()
 
 static std::unique_ptr<Lox::Interpreter> repl_interp;
 static bool repl_done;
+static const char* repl_prompt = ">>> ";
 
 static void line_handler(char* line)
 {
     if (line) {
         if (*line) {
+            add_history(line);
             assert(repl_interp);
             eval(line, "<stdin>", *repl_interp, true);
-            add_history(line);
         }
     } else {
         rl_callback_handler_remove();
@@ -192,38 +195,52 @@ static void line_handler(char* line)
     free(line);
 }
 
+static void handle_interrupt()
+{
+    Lox::g_interrupt = 0;
+    std::cerr << "\ninterrupt\n";
+    // clean up incremental search state
+    rl_callback_sigcleanup();
+    // if ^C was hit during *successfull* incremental search, then
+    // the result of the search will be drawn after the new prompt
+    // below, even though the line buffer is empty at that point
+    // rl_clear_visible_line call fixes that
+    rl_clear_visible_line();
+    // there may be a better way to make readline draw empty prompt
+    // after ^C, but after trying its numerous api functions, settled
+    // on reinstalling line handler, which reinits readline
+    rl_callback_handler_remove();
+    rl_callback_handler_install(repl_prompt, line_handler);
+}
+
 static int repl()
 {
     setup_signals();
-
     repl_interp = std::make_unique<Lox::Interpreter>();
     repl_interp->repl_mode(true);
 
-    const char* prompt = ">>> ";
     rl_outstream = stderr;
     // this call disables terminal line-buffering,
     // so poll(2) receives POLLIN on every input char
-    rl_callback_handler_install(prompt, line_handler);
+    rl_callback_handler_install(repl_prompt, line_handler);
     while (!repl_done) {
+        // there are 4 time windows wrt handling SIGINT:
+        // - during polling for input (handled as EINTR poll error below)
+        // - during input execution (handled by interpreter)
+        // - after interpreter exits, but before next polling begins
+        // - in-between pollings that just build up input line, but
+        //   don't start the interpreter
+        // handle the last 2 cases here
+        if (Lox::g_interrupt)
+            handle_interrupt();
+
         struct pollfd pfd = {};
         pfd.fd = STDIN_FILENO;
         pfd.events = POLLIN;
         if (poll(&pfd, 1, -1) < 0) {
             if (errno != EINTR)
                 die_with_perror("poll");
-            std::cerr << "\ninterrupt\n";
-            // clean up incremental search state
-            rl_callback_sigcleanup();
-            // if ^C was hit during *successfull* incremental search, then
-            // the result of the search will be drawn after the new prompt
-            // below, even though the line buffer is empty at that point
-            // rl_clear_visible_line call fixes that
-            rl_clear_visible_line();
-            // there may be a better way to make readline draw empty prompt
-            // after ^C, but after trying its numerous api functions, settled
-            // on reinstalling line handler, which reinits readline
-            rl_callback_handler_remove();
-            rl_callback_handler_install(prompt, line_handler);
+            handle_interrupt();
             continue;
         }
 

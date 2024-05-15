@@ -6,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <list>
+#include <csignal>
 
 namespace Lox {
 
@@ -188,6 +189,8 @@ public:
         m_continue = on;
     }
 
+    bool check_interrupt();
+
 private:
     std::vector<Error> m_errors;
     std::list<EnvType> m_env_stack { 1 };
@@ -195,5 +198,7 @@ private:
     bool m_break { false };
     bool m_continue { false };
 };
+
+extern volatile std::sig_atomic_t g_interrupt;
 
 }
