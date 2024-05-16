@@ -200,6 +200,41 @@ std::shared_ptr<Object> BinaryExpr::eval(Interpreter& interp) const
     assert(0);
 }
 
+std::shared_ptr<Object> LogicalExpr::eval(Interpreter& interp) const
+{
+    auto left = m_left->eval(interp);
+    if (!left)
+        return {};
+    if (!left->is_bool()) {
+        interp.error(std::format("expected 'Bool', got '{}'", left->type_name()),
+            m_left->text());
+        return {};
+    }
+
+    switch (m_op) {
+    case LogicalOp::And:
+        if (!left->get_bool())
+            return make_bool(false);
+        break;
+    case LogicalOp::Or:
+        if (left->get_bool())
+            return make_bool(true);
+        break;
+    default:
+        assert(0);
+    }
+
+    auto right = m_right->eval(interp);
+    if (!right)
+        return {};
+    if (!right->is_bool()) {
+        interp.error(std::format("expected 'Bool', got '{}'", right->type_name()),
+            m_right->text());
+        return {};
+    }
+    return make_bool(right->get_bool());
+}
+
 bool ExpressionStmt::execute(Interpreter& interp)
 {
     if (auto val = m_expr->eval(interp)) {

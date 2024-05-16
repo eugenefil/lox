@@ -31,6 +31,8 @@ private:
     std::shared_ptr<Expr> parse_multiply();
     std::shared_ptr<Expr> parse_add();
     std::shared_ptr<Expr> parse_compare();
+    std::shared_ptr<Expr> parse_logical_and();
+    std::shared_ptr<Expr> parse_logical_or();
     std::shared_ptr<Expr> parse_expression();
 
     std::shared_ptr<Stmt> parse_var_statement();

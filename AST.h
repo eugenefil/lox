@@ -178,6 +178,33 @@ private:
     std::shared_ptr<Expr> m_right;
 };
 
+enum class LogicalOp {
+    And,
+    Or,
+};
+
+class LogicalExpr : public Expr {
+public:
+    LogicalExpr(LogicalOp op, std::shared_ptr<Expr> left,
+                std::shared_ptr<Expr> right, std::string_view text)
+        : Expr(text)
+        , m_op(op)
+        , m_left(left)
+        , m_right(right)
+    {
+        assert(left);
+        assert(right);
+    }
+
+    std::string dump(std::size_t indent) const override;
+    std::shared_ptr<Object> eval(Interpreter&) const override;
+
+private:
+    const LogicalOp m_op;
+    std::shared_ptr<Expr> m_left;
+    std::shared_ptr<Expr> m_right;
+};
+
 class Stmt : public ASTNode {
 public:
     explicit Stmt(std::string_view text) : ASTNode(text)

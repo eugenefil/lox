@@ -48,6 +48,12 @@ add ->
 compare ->
       add (('==' | '!=' | '<' | '>' | '<=' | '>=') add)?
 
+logical_and ->
+      compare ('and' compare)*
+
+logical_or ->
+      logical_and ('or' logical_and)*
+
 expression ->
-      compare
+      logical_or
 ```

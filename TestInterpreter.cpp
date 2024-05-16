@@ -101,9 +101,12 @@ static void assert_error(std::string_view input, std::string_view error_span)
     ASSERT_EQ(errs[0].span, error_span);
 }
 
-static void assert_value_error(std::string_view input)
+static void assert_value_error(std::string_view input,
+                               std::string_view error_span = {})
 {
-    assert_error(std::string("var x = ").append(input) + ';', input);
+    if (error_span.empty())
+        error_span = input;
+    assert_error(std::string("var x = ").append(input) + ';', error_span);
 }
 
 TEST(Interpreter, EmptyProgram)
@@ -191,6 +194,22 @@ TEST(Interpreter, BinaryExpression)
     assert_bool(R"("bbb" >= "aaa")", true);
     assert_bool(R"("bbb" >= "bbb")", true);
     assert_bool(R"("bbb" >= "ccc")", false);
+
+    assert_bool("false and false", false);
+    assert_bool("false and true", false);
+    assert_bool("true and false", false);
+    assert_bool("true and true", true);
+    assert_value_error("1 and 2", "1"); // not boolean
+    assert_value_error("true and 2", "2"); // not boolean
+    assert_bool("false and 2", false); // short-circuit
+
+    assert_bool("false or false", false);
+    assert_bool("false or true", true);
+    assert_bool("true or false", true);
+    assert_bool("true or true", true);
+    assert_value_error("1 or 2", "1"); // not boolean
+    assert_value_error("false or 2", "2"); // not boolean
+    assert_bool("true or 2", true); // short-circuit
 }
 
 TEST(Interpreter, Identifier)

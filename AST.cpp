@@ -111,6 +111,28 @@ std::string BinaryExpr::dump(std::size_t indent) const
     return s;
 }
 
+std::string LogicalExpr::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += '(';
+    switch (m_op) {
+    case LogicalOp::And:
+        s += "and";
+        break;
+    case LogicalOp::Or:
+        s += "or";
+        break;
+    default:
+        assert(0);
+    }
+    s += '\n';
+    s += m_left->dump(indent + 1);
+    s += '\n';
+    s += m_right->dump(indent + 1);
+    s += ')';
+    return s;
+}
+
 std::string ExpressionStmt::dump(std::size_t indent) const
 {
     return m_expr->dump(indent);

@@ -220,9 +220,41 @@ std::shared_ptr<Expr> Parser::parse_compare()
     return left;
 }
 
+std::shared_ptr<Expr> Parser::parse_logical_and()
+{
+    auto left = parse_compare();
+    if (!left)
+        return {};
+
+    while (match(TokenType::And)) {
+        auto right = parse_compare();
+        if (!right)
+            return {};
+        left = std::make_shared<LogicalExpr>(LogicalOp::And, left, right,
+            merge_texts(left->text(), right->text()));
+    }
+    return left;
+}
+
+std::shared_ptr<Expr> Parser::parse_logical_or()
+{
+    auto left = parse_logical_and();
+    if (!left)
+        return {};
+
+    while (match(TokenType::Or)) {
+        auto right = parse_logical_and();
+        if (!right)
+            return {};
+        left = std::make_shared<LogicalExpr>(LogicalOp::Or, left, right,
+            merge_texts(left->text(), right->text()));
+    }
+    return left;
+}
+
 std::shared_ptr<Expr> Parser::parse_expression()
 {
-    return parse_compare();
+    return parse_logical_or();
 }
 
 std::pair<bool, std::string_view> Parser::finish_statement()
