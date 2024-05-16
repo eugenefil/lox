@@ -27,7 +27,6 @@ public:
     virtual double get_number() const { assert(0); }
     virtual bool get_bool() const { assert(0); }
 
-    virtual bool __bool__() const { return true; }
     virtual bool __eq__(const Object&) const { return false; }
 
     virtual std::string __str__() const
@@ -57,8 +56,6 @@ public:
         return std::string(1, m_value[pos]);
     }
 
-    bool __bool__() const override { return m_value.size() > 0; }
-
     bool __eq__(const Object& rhs) const override
     {
         assert(rhs.is_string());
@@ -86,7 +83,6 @@ public:
 
     std::string_view type_name() const override { return "Number"; }
     double get_number() const override { return m_value; }
-    bool __bool__() const override { return m_value != 0.0; }
 
     bool __eq__(const Object& rhs) const override
     {
@@ -112,7 +108,6 @@ public:
 
     std::string_view type_name() const override { return "Bool"; }
     bool get_bool() const override { return m_value; }
-    bool __bool__() const override { return m_value; }
 
     bool __eq__(const Object& rhs) const override
     {
@@ -134,7 +129,6 @@ inline std::shared_ptr<Bool> make_bool(bool val)
 class NilType : public Object {
 public:
     std::string_view type_name() const override { return "NilType"; }
-    bool __bool__() const override { return false; }
 
     bool __eq__(const Object& rhs) const override
     {

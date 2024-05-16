@@ -89,7 +89,12 @@ std::shared_ptr<Object> UnaryExpr::eval(Interpreter& interp) const
         return make_number(-obj->get_number());
 
     case UnaryOp::Not:
-        return make_bool(!obj->__bool__());
+        if (!obj->is_bool()) {
+            interp.error(std::format("cannot apply unary operator '!' to type '{}'",
+                obj->type_name()), m_text);
+            return {};
+        }
+        return make_bool(!obj->get_bool());
     }
     assert(0);
 }
@@ -328,8 +333,13 @@ bool IfStmt::execute(Interpreter& interp)
     auto val = m_test->eval(interp);
     if (!val)
         return false;
+    if (!val->is_bool()) {
+        interp.error(std::format("expected 'Bool', got '{}'", val->type_name()),
+            m_test->text());
+        return false;
+    }
 
-    if (val->__bool__())
+    if (val->get_bool())
         return m_then_block->execute(interp);
     if (m_else_block)
         return m_else_block->execute(interp);
@@ -345,8 +355,12 @@ bool WhileStmt::execute(Interpreter& interp)
         auto val = m_test->eval(interp);
         if (!val)
             return false;
-
-        if (!val->__bool__())
+        if (!val->is_bool()) {
+            interp.error(std::format("expected 'Bool', got '{}'",
+                val->type_name()), m_test->text());
+            return false;
+        }
+        if (!val->get_bool())
             break;
 
         assert(!interp.is_break());

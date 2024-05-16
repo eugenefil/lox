@@ -129,15 +129,15 @@ TEST(Interpreter, Literals)
 TEST(Interpreter, UnaryExpression)
 {
     assert_number("-5", -5.0);
+    assert_number("--5", 5.0);
     assert_value_error(R"(-"foo")");
 
-    assert_bool(R"(!"foo")", false);
-    assert_bool(R"(!"")", true);
-    assert_bool("!5", false);
-    assert_bool("!0", true);
     assert_bool("!true", false);
     assert_bool("!false", true);
-    assert_bool("!nil", true);
+    assert_bool("!!false", false);
+    assert_value_error("!nil");
+    assert_value_error("!0");
+    assert_value_error(R"(!"")");
 }
 
 TEST(Interpreter, BinaryExpression)
@@ -295,9 +295,10 @@ TEST(Interpreter, IfStatement)
         { "x", Lox::make_number(0) },
     });
 
-    assert_error("if x { y; }", "x");
-    assert_error("if true { x; } else { y; }", "x");
-    assert_error("if false { x; } else { y; }", "y");
+    assert_error("if x { y; }", "x"); // test eval error
+    assert_error("if 1 { y; }", "1"); // expected boolean
+    assert_error("if true { x; } else { y; }", "x"); // 'then' block fails
+    assert_error("if false { x; } else { y; }", "y"); // 'else' block fails
 }
 
 TEST(Interpreter, WhileStatement)
@@ -310,14 +311,15 @@ TEST(Interpreter, WhileStatement)
         { "y", Lox::make_number(3) },
     });
 
-    assert_error("while x { y; }", "x");
-    assert_error("while true { y; }", "y");
-    // test loop is executed before error happens
+    assert_error("while x { y; }", "x"); // test eval error
+    assert_error("while 1 { y; }", "1"); // expected boolean
+    assert_error("while true { y; }", "y"); // block fails
+    // loop is executed before error happens
     assert_env_and_error("var x = 0; while true { x = x + 1; if x == 3 { y; } }",
         { { "x", Lox::make_number(3) } },
         "y"
     );
-    // test loop finishes normally if error is not triggered
+    // loop finishes normally if error is not triggered
     assert_env("var x = 3; while x > 0 { x = x - 1; if x == 5 { y; } }", {
         { "x", Lox::make_number(0) },
     });
