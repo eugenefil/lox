@@ -1,3 +1,33 @@
+Build:
+
+```sh
+ make
+
+ # or specify number of parallel jobs to cmake
+ CMAKE_BUILD_PARALLEL_LEVEL=2 make
+```
+
+Run tests:
+
+```sh
+make test
+```
+
+Run interpreter:
+
+```sh
+ make run
+
+ # or directly
+ ./build/lox
+```
+
+Remove build files:
+
+```sh
+make clean
+```
+
 ## Statement grammar
 
 ```
