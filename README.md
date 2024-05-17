@@ -1,31 +1,79 @@
-Build:
+## Building and running
 
-```sh
- make
+Here are the build instructions for Linux.
 
- # or specify number of parallel jobs to cmake
- CMAKE_BUILD_PARALLEL_LEVEL=2 make
+### Get the source
+
+```
+git clone https://github.com/eugenefil/lox
 ```
 
-Run tests:
+### Install dependencies
 
-```sh
+Use your package manager to install the following packages:
+
+- gcc
+- cmake
+- make
+- ninja
+- gtest
+- readline
+
+### Build
+
+Underneath, the build system is CMake, but the easiest way to build is
+to use the lightweight Makefile wrapper:
+
+```
+ make
+```
+
+By default, ninja will use all available cores. To limit the number of
+parallel jobs to, say, 2:
+
+```
+CMAKE_BUILD_PARALLEL_LEVEL=2 make
+```
+
+### Run tests
+
+```
 make test
 ```
 
-Run interpreter:
+### Run the built interpreter
 
-```sh
- make run
-
- # or directly
- ./build/lox
+```
+./build/lox
 ```
 
-Remove build files:
+### Remove build files
+
+```
+make clean
+```
+
+### Using CMake directly
+
+The above could be done with CMake directly:
 
 ```sh
-make clean
+ # generate the build system
+ cmake -B build -G Ninja
+
+ # build the interpreter
+ cmake --build build
+ # ...and set the number of parallel jobs
+ cmake --build build -j2
+
+ # run the tests
+ ctest --test-dir build
+
+ # run the interpreter
+ ./build/lox
+
+ # remove build files
+ rm -r build
 ```
 
 ## Statement grammar
