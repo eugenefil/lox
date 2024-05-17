@@ -29,7 +29,7 @@ to use the lightweight Makefile wrapper:
 ```
 
 By default, ninja will use all available cores. To limit the number of
-parallel jobs to, say, 2:
+parallel build jobs to, say, 2:
 
 ```
 CMAKE_BUILD_PARALLEL_LEVEL=2 make
@@ -55,8 +55,6 @@ make clean
 
 ### Using CMake directly
 
-The above could be done with CMake directly:
-
 ```sh
  # generate the build system
  cmake -B build -G Ninja
@@ -76,7 +74,9 @@ The above could be done with CMake directly:
  rm -r build
 ```
 
-## Statement grammar
+## Language grammar
+
+### Statement grammar
 
 ```
 block ->
@@ -101,7 +101,7 @@ program ->
       statement*
 ```
 
-## Expression grammar
+### Expression grammar
 
 ```
 primary ->
