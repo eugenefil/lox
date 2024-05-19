@@ -491,11 +491,8 @@ std::shared_ptr<Stmt> Parser::parse_statement()
     if (!expr)
         return {};
 
-    if (auto& token = peek(); expr->is_identifier() &&
-        token.type() == TokenType::Equal) {
-        advance();
+    if (expr->is_identifier() && match(TokenType::Equal))
         return parse_assign_statement(expr);
-    }
 
     if (auto [res, end] = finish_statement(); res)
         return std::make_shared<ExpressionStmt>(expr,
