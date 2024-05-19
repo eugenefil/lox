@@ -280,8 +280,7 @@ std::shared_ptr<Stmt> Parser::parse_var_statement()
         return {};
 
     std::shared_ptr<Expr> init;
-    if (auto& token = peek(); token.type() == TokenType::Equal) {
-        advance();
+    if (match(TokenType::Equal)) {
         init = parse_expression();
         if (!init)
             return {};
