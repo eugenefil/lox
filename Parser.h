@@ -9,9 +9,12 @@ namespace Lox {
 
 class Parser {
 public:
-    explicit Parser(std::vector<Token>&& tokens)
+    explicit Parser(std::vector<Token>&& tokens, std::string_view source)
     : m_tokens(std::move(tokens))
-    {}
+    , m_source(source)
+    {
+        assert(source.data());
+    }
 
     std::shared_ptr<Program> parse();
     bool has_errors() const { return m_errors.size() > 0; }
@@ -58,6 +61,7 @@ private:
     }
 
     std::vector<Token> m_tokens;
+    std::string_view m_source;
     std::size_t m_cur { 0 };
     std::vector<Error> m_errors;
     bool m_implicit_semicolon { false };

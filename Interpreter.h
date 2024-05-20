@@ -209,6 +209,7 @@ private:
     bool m_repl_mode { false };
     bool m_break { false };
     bool m_continue { false };
+    std::string_view m_source;
 };
 
 extern volatile std::sig_atomic_t g_interrupt;

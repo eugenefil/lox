@@ -3,16 +3,16 @@
 
 using Lox::TokenType;
 
-static void assert_program(std::string_view input, std::string_view sexp)
+static void assert_program(std::string_view source, std::string_view sexp)
 {
-    Lox::Lexer lexer(input);
+    Lox::Lexer lexer(source);
     auto tokens = lexer.lex();
     ASSERT_FALSE(lexer.has_errors());
-    Lox::Parser parser(std::move(tokens));
+    Lox::Parser parser(std::move(tokens), source);
     auto program = parser.parse();
     EXPECT_FALSE(parser.has_errors());
     ASSERT_TRUE(program);
-    EXPECT_EQ(program->text(), input);
+    EXPECT_EQ(program->text(), source);
 
     auto indented_sexp = std::string(sexp);
     for (std::size_t i = indented_sexp.find('\n'); i != indented_sexp.npos;) {
@@ -37,31 +37,32 @@ static std::string_view strip_sexp(std::string_view sexp)
     return sexp;
 }
 
-static void assert_expr(std::string_view input, std::string_view sexp)
+static void assert_expr(std::string_view source, std::string_view sexp)
 {
-    assert_program(std::string(input) + ';', strip_sexp(sexp));
+    assert_program(std::string(source) + ';', strip_sexp(sexp));
 }
 
-static void assert_literal(std::string_view input, std::string_view sexp)
+static void assert_literal(std::string_view source, std::string_view sexp)
 {
-    assert_program(std::string(input) + ';', sexp);
+    assert_program(std::string(source) + ';', sexp);
 }
 
-static void assert_stmt(std::string_view input, std::string_view sexp)
+static void assert_stmt(std::string_view source, std::string_view sexp)
 {
-    assert_program(input, strip_sexp(sexp));
+    assert_program(source, strip_sexp(sexp));
 }
 
-static void assert_error(std::string_view input, std::string_view error_span)
+static void assert_error(std::string_view source, std::string_view error_span)
 {
-    Lox::Lexer lexer(input);
+    Lox::Lexer lexer(source);
     auto tokens = lexer.lex();
     ASSERT_FALSE(lexer.has_errors());
-    Lox::Parser parser(std::move(tokens));
+    Lox::Parser parser(std::move(tokens), source);
     auto program = parser.parse();
     EXPECT_FALSE(program);
     auto& errs = parser.errors();
     ASSERT_EQ(errs.size(), 1);
+    EXPECT_EQ(errs[0].source, source);
     EXPECT_EQ(errs[0].span, error_span);
 }
 

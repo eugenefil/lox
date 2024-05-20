@@ -66,7 +66,7 @@ std::shared_ptr<Object> Identifier::eval(Interpreter& interp) const
 {
     if (auto val = interp.get_var(m_name))
         return val;
-    interp.error(std::format("variable '{}' is not defined", m_name), m_text);
+    interp.error(std::format("identifier '{}' is not defined", m_name), m_text);
     return {};
 }
 
@@ -517,13 +517,15 @@ bool Interpreter::set_var(std::string_view name, std::shared_ptr<Object> value)
 
 void Interpreter::error(std::string msg, std::string_view span)
 {
-    m_errors.push_back({ std::move(msg), span });
+    m_errors.push_back({ std::move(msg), m_source, span });
 }
 
 void Interpreter::interpret(std::shared_ptr<Program> program)
 {
-    m_errors.clear();
     assert(program);
+
+    m_errors.clear();
+    m_source = program->text();
     assert(m_env_stack.size() == 1);
     program->execute(*this);
     assert(m_env_stack.size() == 1);

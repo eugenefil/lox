@@ -27,14 +27,14 @@ bool Parser::match(TokenType next, std::string_view err_msg)
 void Parser::error(std::string msg, std::string_view span)
 {
     if (!span.empty()) {
-        m_errors.push_back({ std::move(msg), span });
+        m_errors.push_back({ std::move(msg), m_source, span });
         return;
     }
 
     assert(peek().type() == TokenType::Eof);
     // w/out tokens there can't be errors, so there must be at least one token
     assert(m_tokens.size() > 0);
-    m_errors.push_back({ std::move(msg), m_tokens.back().text() });
+    m_errors.push_back({ std::move(msg), m_source, m_tokens.back().text() });
 }
 
 static std::string_view merge_texts(std::string_view start, std::string_view end)
@@ -572,14 +572,7 @@ std::shared_ptr<Program> Parser::parse()
             return {};
         stmts.push_back(stmt);
     }
-
-    std::string_view text;
-    if (stmts.size() > 0) {
-        text = stmts[0]->text();
-        if (stmts.size() > 1)
-            text = merge_texts(text, stmts.back()->text());
-    }
-    return std::make_shared<Program>(std::move(stmts), text);
+    return std::make_shared<Program>(std::move(stmts), m_source);
 }
 
 }

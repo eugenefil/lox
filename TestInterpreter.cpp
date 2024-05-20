@@ -20,21 +20,21 @@ private:
     std::string_view m_dump;
 };
 
-static void assert_env_multi_program(std::vector<std::string_view> inputs,
+static void assert_env_multi_program(std::vector<std::string_view> sources,
                                      const Lox::Interpreter::EnvType& env,
                                      std::vector<std::string_view> error_spans = {})
 {
     if (error_spans.size() > 0) {
-        ASSERT_EQ(error_spans.size(), inputs.size());
+        ASSERT_EQ(error_spans.size(), sources.size());
     }
 
     Lox::Interpreter interp;
-    for (std::size_t i = 0; i < inputs.size(); ++i) {
-        Lox::Lexer lexer(inputs[i]);
+    for (std::size_t i = 0; i < sources.size(); ++i) {
+        Lox::Lexer lexer(sources[i]);
         auto tokens = lexer.lex();
         ASSERT_FALSE(lexer.has_errors());
 
-        Lox::Parser parser(std::move(tokens));
+        Lox::Parser parser(std::move(tokens), sources[i]);
         auto program = parser.parse();
         ASSERT_FALSE(parser.has_errors());
         ASSERT_TRUE(program);
@@ -45,6 +45,7 @@ static void assert_env_multi_program(std::vector<std::string_view> inputs,
         else {
             auto& errs = interp.errors();
             ASSERT_EQ(errs.size(), 1);
+            ASSERT_EQ(errs[0].source, sources[i]);
             ASSERT_EQ(errs[0].span, error_spans[i]);
         }
     }
@@ -66,53 +67,53 @@ static void assert_env_multi_program(std::vector<std::string_view> inputs,
     }
 }
 
-static void assert_env(std::string_view input,
+static void assert_env(std::string_view source,
                        const Lox::Interpreter::EnvType& env)
 {
-    assert_env_multi_program({ input }, env);
+    assert_env_multi_program({ source }, env);
 }
 
-static void assert_env_and_error(std::string_view input,
+static void assert_env_and_error(std::string_view source,
                                  const Lox::Interpreter::EnvType& env,
                                  std::string_view error_span)
 {
-    assert_env_multi_program({ input }, env, { error_span });
+    assert_env_multi_program({ source }, env, { error_span });
 }
 
-static void assert_value(std::string_view input,
+static void assert_value(std::string_view source,
                          std::shared_ptr<Lox::Object> value)
 {
-    assert_env(std::string("var x = ").append(input) + ';',
+    assert_env(std::string("var x = ").append(source) + ';',
                { { "x", value } });
 }
 
-static void assert_string(std::string_view input, std::string_view value)
+static void assert_string(std::string_view source, std::string_view value)
 {
-    assert_value(input, Lox::make_string(value));
+    assert_value(source, Lox::make_string(value));
 }
 
-static void assert_number(std::string_view input, double value)
+static void assert_number(std::string_view source, double value)
 {
-    assert_value(input, Lox::make_number(value));
+    assert_value(source, Lox::make_number(value));
 }
 
-static void assert_bool(std::string_view input, bool value)
+static void assert_bool(std::string_view source, bool value)
 {
-    assert_value(input, Lox::make_bool(value));
+    assert_value(source, Lox::make_bool(value));
 }
 
-static void assert_nil(std::string_view input)
+static void assert_nil(std::string_view source)
 {
-    assert_value(input, Lox::make_nil());
+    assert_value(source, Lox::make_nil());
 }
 
-static void assert_error(std::string_view input, std::string_view error_span)
+static void assert_error(std::string_view source, std::string_view error_span)
 {
-    Lox::Lexer lexer(input);
+    Lox::Lexer lexer(source);
     auto tokens = lexer.lex();
     ASSERT_FALSE(lexer.has_errors());
 
-    Lox::Parser parser(std::move(tokens));
+    Lox::Parser parser(std::move(tokens), source);
     auto program = parser.parse();
     ASSERT_FALSE(parser.has_errors());
     ASSERT_TRUE(program);
@@ -121,15 +122,16 @@ static void assert_error(std::string_view input, std::string_view error_span)
     interp.interpret(program);
     auto& errs = interp.errors();
     ASSERT_EQ(errs.size(), 1);
+    ASSERT_EQ(errs[0].source, source);
     ASSERT_EQ(errs[0].span, error_span);
 }
 
-static void assert_value_error(std::string_view input,
+static void assert_value_error(std::string_view source,
                                std::string_view error_span = {})
 {
     if (error_span.empty())
-        error_span = input;
-    assert_error(std::string("var x = ").append(input) + ';', error_span);
+        error_span = source;
+    assert_error(std::string("var x = ").append(source) + ';', error_span);
 }
 
 TEST(Interpreter, EmptyProgram)

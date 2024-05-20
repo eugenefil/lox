@@ -4,6 +4,7 @@
 #include <variant>
 #include <vector>
 #include <string>
+#include <cassert>
 
 namespace Lox {
 
@@ -54,8 +55,10 @@ private:
 
 class Lexer {
 public:
-    Lexer(std::string_view input) : m_input(input)
-    {}
+    Lexer(std::string_view source) : m_source(source)
+    {
+        assert(source.data());
+    }
 
     std::vector<Token> lex();
     bool has_errors() const { return m_errors.size() > 0; }
@@ -64,8 +67,8 @@ public:
 private:
     void advance() { ++m_end; }
     void consume() { m_start = m_end; }
-    bool more() const { return m_end < m_input.size(); }
-    char next() const { return m_input[m_end]; } // unsafe, guard with more()
+    bool more() const { return m_end < m_source.size(); }
+    char next() const { return m_source[m_end]; } // unsafe, guard with more()
     char peek() const { return more() ? next() : 0; }
     bool match(char next);
 
@@ -73,7 +76,7 @@ private:
     bool unescape(std::string&);
     void error(std::string msg, std::string_view span = {});
 
-    std::string_view m_input;
+    std::string_view m_source;
     std::size_t m_start { 0 };
     std::size_t m_end { 0 };
     std::vector<Error> m_errors;

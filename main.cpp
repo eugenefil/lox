@@ -84,10 +84,10 @@ static void die(std::string_view msg)
 [[noreturn]] static void errusage() { usage(true); }
 
 static void print_errors(const std::vector<Lox::Error>& errors,
-                         std::string_view source, std::string_view filename)
+                         std::string_view filename)
 {
-    Lox::SourceMap smap(source);
     for (auto& error : errors) {
+        Lox::SourceMap smap(error.source);
         auto [start, end] = smap.span_to_range(error.span);
         assert(start.line_num == end.line_num);
         auto num_len = static_cast<std::size_t>(std::log10(end.line_num)) + 1;
@@ -149,21 +149,21 @@ static bool eval(std::string_view source, std::string_view path,
     Lox::Lexer lexer(source);
     auto tokens = lexer.lex();
     if (lexer.has_errors()) {
-        print_errors(lexer.errors(), source, path);
+        print_errors(lexer.errors(), path);
         return false;
     }
 
-    Lox::Parser parser(std::move(tokens));
+    Lox::Parser parser(std::move(tokens), source);
     parser.repl_mode(repl_mode);
     auto program = parser.parse();
     if (parser.has_errors()) {
-        print_errors(parser.errors(), source, path);
+        print_errors(parser.errors(), path);
         return false;
     }
 
     interp.interpret(program);
     if (interp.has_errors()) {
-        print_errors(interp.errors(), source, path);
+        print_errors(interp.errors(), path);
         return false;
     }
 

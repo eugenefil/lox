@@ -17,7 +17,7 @@ bool Lexer::match(char next)
 std::string_view Lexer::token_text() const
 {
     assert(m_end > m_start);
-    return m_input.substr(m_start, m_end - m_start);
+    return m_source.substr(m_start, m_end - m_start);
 }
 
 constexpr bool is_ascii_alpha(char ch)
@@ -44,7 +44,7 @@ void Lexer::error(std::string msg, std::string_view span)
 {
     if (span.empty())
         span = token_text();
-    m_errors.push_back({ std::move(msg), span });
+    m_errors.push_back({ std::move(msg), m_source, span });
 }
 
 bool Lexer::unescape(std::string& s)
@@ -77,8 +77,8 @@ bool Lexer::unescape(std::string& s)
             // m_start + 1 -- start of string value after opening quote
             // i - 1 -- index of backslash inside string value
             auto backslash_pos = (m_start + 1) + (i - 1);
-            assert(backslash_pos < m_input.size());
-            error("unknown escape sequence", m_input.substr(backslash_pos, 2));
+            assert(backslash_pos < m_source.size());
+            error("unknown escape sequence", m_source.substr(backslash_pos, 2));
             return false;
         }
         s[last++] = sub;
@@ -123,7 +123,7 @@ std::vector<Token> Lexer::lex()
             consume();
     };
 
-    while (m_start < m_input.size()) {
+    while (m_start < m_source.size()) {
         assert(m_start == m_end);
         auto ch = next();
         advance();
@@ -204,7 +204,7 @@ std::vector<Token> Lexer::lex()
             }
             advance();
             assert(m_end >= m_start + 2);
-            auto substr = m_input.substr(m_start + 1, m_end - m_start - 2);
+            auto substr = m_source.substr(m_start + 1, m_end - m_start - 2);
             auto value = std::string(substr);
             if (num_escapes > 0 && !unescape(value))
                 return {};
@@ -231,12 +231,12 @@ std::vector<Token> Lexer::lex()
                     add_token(TokenType::Identifier);
             } else if (is_ascii_digit(ch)) {
                 double num = 0;
-                auto ptr_start = m_input.data() + m_start;
-                auto [ptr_end, ec] = std::from_chars(ptr_start, m_input.end(), num);
+                auto ptr_start = m_source.data() + m_start;
+                auto [ptr_end, ec] = std::from_chars(ptr_start, m_source.end(), num);
                 assert(ec != std::errc::invalid_argument); // we have at least one digit
                 assert(ptr_end > ptr_start);
                 m_end = m_start + (ptr_end - ptr_start);
-                assert(m_end <= m_input.size());
+                assert(m_end <= m_source.size());
                 if (ec == std::errc())
                     add_token(TokenType::Number, num);
                 else if (ec == std::errc::result_out_of_range) {

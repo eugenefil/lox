@@ -3,11 +3,11 @@
 
 using Lox::TokenType;
 
-static void assert_tokens(std::string_view input,
+static void assert_tokens(std::string_view source,
                           std::vector<Lox::Token> tokens,
                           std::string_view error_span = {})
 {
-    Lox::Lexer lexer(input);
+    Lox::Lexer lexer(source);
     auto output = lexer.lex();
     ASSERT_EQ(output.size(), tokens.size());
     for (std::size_t i = 0; i < output.size(); ++i) {
@@ -23,24 +23,25 @@ static void assert_tokens(std::string_view input,
     else {
         auto& errs = lexer.errors();
         ASSERT_EQ(errs.size(), 1);
+        EXPECT_EQ(errs[0].source, source);
         EXPECT_EQ(errs[0].span, error_span);
     }
 }
 
-static void assert_token(std::string_view input, TokenType type,
+static void assert_token(std::string_view source, TokenType type,
                          Lox::Token::ValueType value = Lox::Token::DefaultValueType())
 {
-    assert_tokens(input, { { type, input, std::move(value) } });
+    assert_tokens(source, { { type, source, std::move(value) } });
 }
 
-static void assert_error(std::string_view input, std::string_view error_span = {})
+static void assert_error(std::string_view source, std::string_view error_span = {})
 {
     if (error_span.empty())
-        error_span = input;
-    assert_tokens(input, {}, error_span);
+        error_span = source;
+    assert_tokens(source, {}, error_span);
 }
 
-TEST(Lexer, EmptyInputReturnsNoTokens)
+TEST(Lexer, EmptySourceReturnsNoTokens)
 {
     assert_tokens("", {});
 }
