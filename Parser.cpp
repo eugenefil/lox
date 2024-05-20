@@ -444,11 +444,8 @@ std::shared_ptr<Stmt> Parser::parse_for_statement()
     if (!ident)
         return {};
 
-    if (auto& token = peek(); token.type() != TokenType::In) {
-        error("expected 'in'", token.text());
+    if (!match(TokenType::In, "expected 'in'"))
         return {};
-    }
-    advance();
 
     auto expr = parse_expression();
     if (!expr)
