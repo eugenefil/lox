@@ -166,7 +166,7 @@ class Interpreter {
 public:
     void interpret(std::shared_ptr<Program> program);
 
-    using EnvType = std::unordered_map<std::string, std::shared_ptr<Object>>;
+    using EnvType = std::unordered_map<std::string_view, std::shared_ptr<Object>>;
 
     const EnvType& env() const
     {

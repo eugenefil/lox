@@ -485,7 +485,7 @@ void Interpreter::define_var(std::string_view name, std::shared_ptr<Object> valu
     assert(!name.empty());
     assert(value);
     assert(!m_env_stack.empty());
-    m_env_stack.front()[std::string(name)] = value;
+    m_env_stack.front()[name] = value;
 }
 
 std::shared_ptr<Object> Interpreter::get_var(std::string_view name) const
@@ -493,9 +493,8 @@ std::shared_ptr<Object> Interpreter::get_var(std::string_view name) const
     assert(!name.empty());
     assert(!m_env_stack.empty());
 
-    std::string strname(name);
     for (auto& env : m_env_stack) {
-        if (auto pair = env.find(strname); pair != env.end())
+        if (auto pair = env.find(name); pair != env.end())
             return pair->second;
     }
     return {};
@@ -507,9 +506,8 @@ bool Interpreter::set_var(std::string_view name, std::shared_ptr<Object> value)
     assert(value);
     assert(!m_env_stack.empty());
 
-    std::string strname(name);
     for (auto& env : m_env_stack) {
-        if (auto pair = env.find(strname); pair != env.end()) {
+        if (auto pair = env.find(name); pair != env.end()) {
             pair->second = value;
             return true;
         }

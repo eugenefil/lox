@@ -17,6 +17,13 @@ namespace fs = std::filesystem;
 
 static std::string argv0;
 
+static std::unique_ptr<Lox::Interpreter> repl_interp;
+static bool repl_done;
+static const char* repl_prompt = ">>> ";
+// use list instead of vector to store repl source strings, b/c the latter
+// invalidates string views pointing at its contents on reallocation
+static std::list<std::string> repl_sources;
+
 [[noreturn]] static void usage(bool error = false)
 {
     (error ? std::cerr : std::cout) <<
@@ -176,17 +183,17 @@ static void setup_signals()
         die_with_perror("sigaction");
 }
 
-static std::unique_ptr<Lox::Interpreter> repl_interp;
-static bool repl_done;
-static const char* repl_prompt = ">>> ";
-
 static void line_handler(char* line)
 {
     if (line) {
         if (*line) {
             add_history(line);
+            // identifier names, function ast nodes, etc contain string views
+            // pointing into original source code; make a copy of the source,
+            // so those string views don't get invalidated
+            repl_sources.push_back(line);
             assert(repl_interp);
-            eval(line, "<stdin>", *repl_interp, true);
+            eval(repl_sources.back(), "<stdin>", *repl_interp, true);
         }
     } else {
         rl_callback_handler_remove();
