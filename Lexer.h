@@ -23,7 +23,7 @@ enum class TokenType {
     Identifier, String, Number,
 
     // keywords
-    And, Break, Class, Continue, Else, False, Fun, For, If, In, Nil, Or,
+    And, Break, Class, Continue, Else, False, Fn, For, If, In, Nil, Or,
     Percent, Print, Return, Super, This, True, Var, While,
 
     Eof,

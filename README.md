@@ -85,6 +85,9 @@ block ->
 if-statement ->
       'if' expression block ('else' (block | if-statement))?
 
+parameters ->
+      IDENTIFIER (',' IDENTIFIER)*
+
 statement ->
       'print' expression? ';'
     | 'var' IDENTIFIER ('=' expression)? ';'
@@ -95,6 +98,7 @@ statement ->
     | 'break' ';'
     | 'continue' ';'
     | IDENTIFIER '=' expression ';'
+    | 'fn' IDENTIFIER '(' parameters? ')' block
     | expression ';'
 
 program ->
@@ -107,15 +111,21 @@ program ->
 primary ->
       STRING
     | NUMBER
-    | IDENTIFIER
     | 'true'
     | 'false'
     | 'nil'
+    | IDENTIFIER
     | '(' expression ')'
+
+arguments ->
+      expression (',' expression)*
+
+call ->
+      primary ('(' arguments? ')')*
 
 unary ->
       ('-' | '!') unary
-    | primary
+    | call
 
 multiply ->
       unary (('/' | '*' | '%') unary)*

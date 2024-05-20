@@ -12,12 +12,15 @@ const Token& Parser::peek() const
     return EOF_TOKEN;
 }
 
-bool Parser::match(TokenType next)
+bool Parser::match(TokenType next, std::string_view err_msg)
 {
-    if (peek().type() == next) {
+    auto& token = peek();
+    if (token.type() == next) {
         advance();
         return true;
     }
+    if (!err_msg.empty())
+        error(std::string(err_msg), token.text());
     return false;
 }
 
@@ -91,6 +94,33 @@ std::shared_ptr<Expr> Parser::parse_primary()
     return {};
 }
 
+std::shared_ptr<Expr> Parser::parse_call()
+{
+    auto expr = parse_primary();
+    if (!expr)
+        return {};
+
+    while (match(TokenType::LeftParen)) {
+        auto end = peek().text();
+        std::vector<std::shared_ptr<Expr>> args;
+        if (!match(TokenType::RightParen)) {
+            do {
+                auto arg = parse_expression();
+                if (!arg)
+                    return {};
+                args.push_back(arg);
+            } while (match(TokenType::Comma));
+
+            end = peek().text();
+            if (!match(TokenType::RightParen, "expected ')'"))
+                return {};
+        }
+        expr = std::make_shared<CallExpr>(expr, std::move(args),
+            merge_texts(expr->text(), end));
+    }
+    return expr;
+}
+
 std::shared_ptr<Expr> Parser::parse_unary()
 {
     if (auto& token = peek(); token.type() == TokenType::Minus ||
@@ -112,7 +142,7 @@ std::shared_ptr<Expr> Parser::parse_unary()
         }
         return {};
     }
-    return parse_primary();
+    return parse_call();
 }
 
 std::shared_ptr<Expr> Parser::parse_multiply()
@@ -468,6 +498,40 @@ std::shared_ptr<Stmt> Parser::parse_continue_statement()
     return {};
 }
 
+std::shared_ptr<Stmt> Parser::parse_function_declaration()
+{
+    auto& fn_tok = peek();
+    assert(fn_tok.type() == TokenType::Fn);
+    advance();
+
+    auto name = parse_identifier();
+    if (!name)
+        return {};
+
+    if (!match(TokenType::LeftParen, "expected '('"))
+        return {};
+
+    std::vector<std::shared_ptr<Identifier>> params;
+    if (!match(TokenType::RightParen)) {
+        do {
+            auto ident = parse_identifier();
+            if (!ident)
+                return {};
+            params.push_back(ident);
+        } while (match(TokenType::Comma));
+
+        if (!match(TokenType::RightParen, "expected ')'"))
+            return {};
+    }
+
+    auto block = parse_block_statement();
+    if (!block)
+        return {};
+
+    return std::make_shared<FunctionDeclaration>(name, std::move(params), block,
+        merge_texts(fn_tok.text(), block->text()));
+}
+
 std::shared_ptr<Stmt> Parser::parse_statement()
 {
     if (auto& token = peek(); token.type() == TokenType::Var)
@@ -480,12 +544,14 @@ std::shared_ptr<Stmt> Parser::parse_statement()
         return parse_if_statement();
     else if (token.type() == TokenType::While)
         return parse_while_statement();
+    else if (token.type() == TokenType::For)
+        return parse_for_statement();
     else if (token.type() == TokenType::Break)
         return parse_break_statement();
     else if (token.type() == TokenType::Continue)
         return parse_continue_statement();
-    else if (token.type() == TokenType::For)
-        return parse_for_statement();
+    else if (token.type() == TokenType::Fn)
+        return parse_function_declaration();
 
     auto expr = parse_expression();
     if (!expr)

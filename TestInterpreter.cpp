@@ -3,6 +3,23 @@
 #include "Parser.h"
 #include <gtest/gtest.h>
 
+class DummyFunction : public Lox::Object {
+public:
+    explicit DummyFunction(std::string_view dump) : m_dump(dump)
+    {
+        while (!m_dump.starts_with('(')) {
+            assert(!m_dump.empty());
+            m_dump.remove_prefix(1);
+        }
+    }
+
+    std::string_view type_name() const override { return "DummyFunction"; }
+    std::string dump() const { return std::string(m_dump); }
+
+private:
+    std::string_view m_dump;
+};
+
 static void assert_env_multi_program(std::vector<std::string_view> inputs,
                                      const Lox::Interpreter::EnvType& env,
                                      std::vector<std::string_view> error_spans = {})
@@ -39,7 +56,13 @@ static void assert_env_multi_program(std::vector<std::string_view> inputs,
         auto& obj = e.at(name);
         ASSERT_TRUE(obj);
         ASSERT_TRUE(value);
-        EXPECT_TRUE(obj->__eq__(*value));
+        if (value->type_name() == "DummyFunction") {
+            ASSERT_TRUE(obj->is_function());
+            auto& dummy = static_cast<DummyFunction&>(*value);
+            auto& func = static_cast<Lox::Function&>(*obj);
+            EXPECT_EQ(func.decl()->dump(0), dummy.dump());
+        } else
+            EXPECT_TRUE(value->__eq__(*obj));
     }
 }
 
@@ -457,4 +480,35 @@ TEST(Interpreter, Interrupt)
 
     Lox::g_interrupt = 1;
     assert_env("var x = 5;", {});
+}
+
+TEST(Interpreter, CallExpression)
+{
+    // no call - no side effects
+    assert_env("var x = 1; fn f() { x = 2; }", {
+        { "x", Lox::make_number(1) },
+        { "f", std::make_shared<DummyFunction>(R"(
+(fn
+  f
+  (params)
+  (block
+    (=
+      x
+      2))))") },
+    });
+
+    // call for side effects
+    assert_env("fn f() { x = 2; } var x = 1; f();", {
+        { "x", Lox::make_number(2) },
+        { "f", std::make_shared<DummyFunction>(R"(
+(fn
+  f
+  (params)
+  (block
+    (=
+      x
+      2))))") },
+    });
+
+    assert_error("5();", "5"); // not callable
 }

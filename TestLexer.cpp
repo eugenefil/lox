@@ -129,7 +129,7 @@ TEST(Lexer, Keywords)
     assert_token("continue", TokenType::Continue);
     assert_token("else", TokenType::Else);
     assert_token("false", TokenType::False, false);
-    assert_token("fun", TokenType::Fun);
+    assert_token("fn", TokenType::Fn);
     assert_token("for", TokenType::For);
     assert_token("if", TokenType::If);
     assert_token("in", TokenType::In);

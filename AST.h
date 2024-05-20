@@ -205,6 +205,25 @@ private:
     std::shared_ptr<Expr> m_right;
 };
 
+class CallExpr : public Expr {
+public:
+    explicit CallExpr(std::shared_ptr<Expr> callee,
+        std::vector<std::shared_ptr<Expr>>&& args, std::string_view text)
+        : Expr(text)
+        , m_callee(callee)
+        , m_args(std::move(args))
+    {
+        assert(callee);
+    }
+
+    std::string dump(std::size_t indent) const override;
+    std::shared_ptr<Object> eval(Interpreter&) const override;
+
+private:
+    std::shared_ptr<Expr> m_callee;
+    std::vector<std::shared_ptr<Expr>> m_args;
+};
+
 class Stmt : public ASTNode {
 public:
     explicit Stmt(std::string_view text) : ASTNode(text)
@@ -289,7 +308,7 @@ public:
     explicit BlockStmt(std::vector<std::shared_ptr<Stmt>>&& stmts,
                        std::string_view text)
         : Stmt(text)
-        , m_stmts(stmts)
+        , m_stmts(std::move(stmts))
     {
         for (auto& stmt : stmts)
             assert(stmt);
@@ -389,12 +408,38 @@ public:
     bool execute(Interpreter&) override;
 };
 
+class FunctionDeclaration: public Stmt
+    , public std::enable_shared_from_this<FunctionDeclaration> {
+public:
+    explicit FunctionDeclaration(std::shared_ptr<Identifier> name,
+        std::vector<std::shared_ptr<Identifier>>&& params,
+        std::shared_ptr<BlockStmt> block, std::string_view text)
+        : Stmt(text)
+        , m_name(name)
+        , m_params(std::move(params))
+        , m_block(block)
+    {
+        assert(name);
+        assert(block);
+    }
+
+    std::string dump(std::size_t indent) const override;
+    bool execute(Interpreter&) override;
+
+    BlockStmt& block() { return *m_block; }
+
+private:
+    std::shared_ptr<Identifier> m_name;
+    std::vector<std::shared_ptr<Identifier>> m_params;
+    std::shared_ptr<BlockStmt> m_block;
+};
+
 class Program : public Stmt {
 public:
     explicit Program(std::vector<std::shared_ptr<Stmt>>&& stmts,
                      std::string_view text)
         : Stmt(text)
-        , m_stmts(stmts)
+        , m_stmts(std::move(stmts))
     {
         for (auto& stmt : stmts)
             assert(stmt);

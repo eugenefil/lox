@@ -10,6 +10,7 @@
 
 namespace Lox {
 
+class Interpreter;
 class Iterator;
 
 class Object {
@@ -22,12 +23,14 @@ public:
     bool is_number() const { return type_name() == "Number"; }
     bool is_bool() const { return type_name() == "Bool"; }
     bool is_niltype() const { return type_name() == "NilType"; }
+    bool is_function() const { return type_name() == "Function"; }
 
     virtual std::string_view get_string() const { assert(0); }
     virtual double get_number() const { assert(0); }
     virtual bool get_bool() const { assert(0); }
 
     virtual bool __eq__(const Object&) const { return false; }
+    virtual std::shared_ptr<Object> __call__(Interpreter&) { assert(0); }
 
     virtual std::string __str__() const
     {
@@ -143,6 +146,21 @@ inline std::shared_ptr<NilType> make_nil()
 {
     return std::make_shared<NilType>();
 }
+
+class Function : public Object {
+public:
+    explicit Function(std::shared_ptr<FunctionDeclaration> decl) : m_decl(decl)
+    {
+        assert(decl);
+    }
+
+    std::string_view type_name() const override { return "Function"; }
+    std::shared_ptr<FunctionDeclaration> decl() const { return m_decl; }
+    std::shared_ptr<Object> __call__(Interpreter&) override;
+
+private:
+    std::shared_ptr<FunctionDeclaration> m_decl;
+};
 
 class Interpreter {
 public:

@@ -94,7 +94,7 @@ static const std::unordered_map<std::string_view, TokenType> keywords = {
     { "continue", TokenType::Continue },
     { "else", TokenType::Else },
     { "false", TokenType::False },
-    { "fun", TokenType::Fun },
+    { "fn", TokenType::Fn },
     { "for", TokenType::For },
     { "if", TokenType::If },
     { "in", TokenType::In },

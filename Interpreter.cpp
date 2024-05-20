@@ -45,6 +45,13 @@ std::string Number::__str__() const
     return std::string(buf, ptr - buf);
 }
 
+std::shared_ptr<Object> Function::__call__(Interpreter& interp)
+{
+    if (!m_decl->block().execute(interp))
+        return {};
+    return {};
+}
+
 std::shared_ptr<Object> StringLiteral::eval(Interpreter&) const
 {
     return make_string(m_value);
@@ -240,6 +247,19 @@ std::shared_ptr<Object> LogicalExpr::eval(Interpreter& interp) const
     return make_bool(right->get_bool());
 }
 
+std::shared_ptr<Object> CallExpr::eval(Interpreter& interp) const
+{
+    auto val = m_callee->eval(interp);
+    if (!val)
+        return {};
+    if (!val->is_function()) {
+        interp.error(std::format("'{}' object is not callable", val->type_name()),
+            m_callee->text());
+        return {};
+    }
+    return val->__call__(interp);
+}
+
 bool ExpressionStmt::execute(Interpreter& interp)
 {
     if (auto val = m_expr->eval(interp)) {
@@ -428,6 +448,13 @@ bool ContinueStmt::execute(Interpreter& interp)
 {
     interp.set_continue(true);
     return false;
+}
+
+bool FunctionDeclaration::execute(Interpreter& interp)
+{
+    interp.define_var(m_name->name(),
+                      std::make_shared<Function>(shared_from_this()));
+    return true;
 }
 
 bool Program::execute(Interpreter& interp)

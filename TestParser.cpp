@@ -447,3 +447,95 @@ TEST(Parser, ContinueStatement)
     assert_error("while true {} continue;", "continue");
     assert_error("while true { continue }", "}"); // expected ';'
 }
+
+TEST(Parser, FunctionDeclaration)
+{
+    assert_stmt("fn f() {}", R"(
+(fn
+  f
+  (params)
+  (block))
+    )");
+    assert_stmt("fn f(x) {}", R"(
+(fn
+  f
+  (params
+    x)
+  (block))
+    )");
+    assert_stmt("fn f(x, y, z) { x = 1; }", R"(
+(fn
+  f
+  (params
+    x
+    y
+    z)
+  (block
+    (=
+      x
+      1)))
+    )");
+
+    assert_error("fn 5()", "5"); // identifier expected
+    assert_error("fn f _()", "_"); // expected '('
+    assert_error("fn f(5)", "5"); // identifier expected
+    assert_error("fn f(x, 5)", "5"); // identifier expected
+    assert_error("fn f(x {}", "{"); // expected ')'
+    assert_error("fn f(x) _", "_"); // expected '{'
+}
+
+TEST(Parser, CallExpression)
+{
+    assert_expr("f()", R"(
+(call
+  f
+  (args))
+    )");
+    assert_expr("f(5)", R"(
+(call
+  f
+  (args
+    5))
+    )");
+    assert_expr("f(5, 7, 9)", R"(
+(call
+  f
+  (args
+    5
+    7
+    9))
+    )");
+    assert_expr("f(5, 7, 9)(\"foo\")(true)", R"(
+(call
+  (call
+    (call
+      f
+      (args
+        5
+        7
+        9))
+    (args
+      "foo"))
+  (args
+    true))
+    )");
+
+    assert_expr("(f)()", R"(
+(call
+  (group
+    f)
+  (args))
+    )");
+
+    // unary binds lower than call
+    assert_expr("-f()", R"(
+(-
+  (call
+    f
+    (args)))
+    )");
+
+    assert_error("f(/)", "/"); // expected expression
+    assert_error("f(5,)", ")"); // expected expression
+    assert_error("f(5 _", "_"); // expected ')'
+}
