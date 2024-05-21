@@ -4,8 +4,12 @@
 #include <gtest/gtest.h>
 #include <optional>
 
+// dummy function that can be compared with the real function object
+// by comparing ast dumps, assuming non-empty dump is used for construction
+// if empty dump is used for construction, dummy is considered equal
 class DummyFunction : public Lox::Object {
 public:
+    DummyFunction() = default;
     explicit DummyFunction(std::string_view dump) : m_dump(dump)
     {
         while (!m_dump.starts_with('(')) {
@@ -15,11 +19,16 @@ public:
     }
 
     std::string_view type_name() const override { return "DummyFunction"; }
-    std::string dump() const { return std::string(m_dump); }
+    std::string_view dump() const { return m_dump; }
 
 private:
     std::string_view m_dump;
 };
+
+static std::shared_ptr<DummyFunction> make_dummy_function()
+{
+    return std::make_shared<DummyFunction>();
+}
 
 static void assert_env_multi_program(std::vector<std::string_view> sources,
     const Lox::Interpreter::EnvType& env,
@@ -61,8 +70,10 @@ static void assert_env_multi_program(std::vector<std::string_view> sources,
         if (value->type_name() == "DummyFunction") {
             ASSERT_TRUE(obj->is_function());
             auto& dummy = static_cast<DummyFunction&>(*value);
-            auto& func = static_cast<Lox::Function&>(*obj);
-            EXPECT_EQ(func.decl()->dump(0), dummy.dump());
+            if (!dummy.dump().empty()) {
+                auto& func = static_cast<Lox::Function&>(*obj);
+                EXPECT_EQ(func.decl()->dump(0), dummy.dump());
+            }
         } else
             EXPECT_TRUE(value->__eq__(*obj));
     }
@@ -492,32 +503,34 @@ TEST(Interpreter, Interrupt)
     assert_env("var x = 5;", {});
 }
 
+TEST(Interpreter, FunctionDeclaration)
+{
+    assert_env("fn f(x, y) { x + y; }", {
+        { "f", std::make_shared<DummyFunction>(R"(
+(fn
+  f
+  (params
+    x
+    y)
+  (block
+    (+
+      x
+      y))))") },
+    });
+}
+
 TEST(Interpreter, CallExpression)
 {
     // no call - no side effects
     assert_env("var x = 1; fn f() { x = 2; }", {
         { "x", Lox::make_number(1) },
-        { "f", std::make_shared<DummyFunction>(R"(
-(fn
-  f
-  (params)
-  (block
-    (=
-      x
-      2))))") },
+        { "f", make_dummy_function() },
     });
 
     // call for side effects
     assert_env("fn f() { x = 2; } var x = 1; f();", {
         { "x", Lox::make_number(2) },
-        { "f", std::make_shared<DummyFunction>(R"(
-(fn
-  f
-  (params)
-  (block
-    (=
-      x
-      2))))") },
+        { "f", make_dummy_function() },
     });
 
     assert_error("5();", "5"); // not callable
