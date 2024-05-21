@@ -149,9 +149,13 @@ inline std::shared_ptr<NilType> make_nil()
 
 class Function : public Object {
 public:
-    explicit Function(std::shared_ptr<FunctionDeclaration> decl) : m_decl(decl)
+    explicit Function(std::shared_ptr<FunctionDeclaration> decl,
+                      std::string_view program_source)
+        : m_decl(decl)
+        , m_program_source(program_source)
     {
         assert(decl);
+        assert(!program_source.empty());
     }
 
     std::string_view type_name() const override { return "Function"; }
@@ -160,6 +164,8 @@ public:
 
 private:
     std::shared_ptr<FunctionDeclaration> m_decl;
+    // source of the program where function was defined, for error reporting
+    std::string_view m_program_source;
 };
 
 class Interpreter {
@@ -179,6 +185,12 @@ public:
     void define_var(std::string_view name, std::shared_ptr<Object> value);
     std::shared_ptr<Object> get_var(std::string_view name) const;
     bool set_var(std::string_view name, std::shared_ptr<Object> value);
+
+    std::string_view source() const { return m_source; }
+    TemporaryChange<std::string_view> push_source(std::string_view source)
+    {
+        return { m_source, source };
+    }
 
     void error(std::string msg, std::string_view span);
     bool has_errors() const { return m_errors.size() > 0; }

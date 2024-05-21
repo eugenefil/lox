@@ -47,6 +47,13 @@ std::string Number::__str__() const
 
 std::shared_ptr<Object> Function::__call__(Interpreter& interp)
 {
+    // in a repl, function could be defined by some previous code chunk,
+    // that is different from the one currently executed; temporarily set
+    // that chunk's program source as interpreter's current source, so that
+    // if error happens, error's source field points to the correct source
+    // TemporaryChange object will restore original source on destruction
+    auto source_change = interp.push_source(m_program_source);
+
     if (!m_decl->block().execute(interp))
         return {};
     return {};
@@ -453,7 +460,8 @@ bool ContinueStmt::execute(Interpreter& interp)
 bool FunctionDeclaration::execute(Interpreter& interp)
 {
     interp.define_var(m_name->name(),
-                      std::make_shared<Function>(shared_from_this()));
+                      std::make_shared<Function>(shared_from_this(),
+                                                 interp.source()));
     return true;
 }
 

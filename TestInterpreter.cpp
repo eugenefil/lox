@@ -2,6 +2,7 @@
 #include "Lexer.h"
 #include "Parser.h"
 #include <gtest/gtest.h>
+#include <optional>
 
 class DummyFunction : public Lox::Object {
 public:
@@ -21,11 +22,11 @@ private:
 };
 
 static void assert_env_multi_program(std::vector<std::string_view> sources,
-                                     const Lox::Interpreter::EnvType& env,
-                                     std::vector<std::string_view> error_spans = {})
+    const Lox::Interpreter::EnvType& env,
+    std::vector<std::optional<Lox::Error>> errors = {})
 {
-    if (error_spans.size() > 0) {
-        ASSERT_EQ(error_spans.size(), sources.size());
+    if (errors.size() > 0) {
+        ASSERT_EQ(errors.size(), sources.size());
     }
 
     Lox::Interpreter interp;
@@ -40,13 +41,13 @@ static void assert_env_multi_program(std::vector<std::string_view> sources,
         ASSERT_TRUE(program);
 
         interp.interpret(program);
-        if (error_spans.empty() || error_spans[i].empty())
+        if (errors.empty() || !errors[i].has_value())
             ASSERT_FALSE(interp.has_errors());
         else {
             auto& errs = interp.errors();
             ASSERT_EQ(errs.size(), 1);
-            ASSERT_EQ(errs[0].source, sources[i]);
-            ASSERT_EQ(errs[0].span, error_spans[i]);
+            EXPECT_EQ(errs[0].source, errors[i]->source);
+            EXPECT_EQ(errs[0].span, errors[i]->span);
         }
     }
 
@@ -77,7 +78,8 @@ static void assert_env_and_error(std::string_view source,
                                  const Lox::Interpreter::EnvType& env,
                                  std::string_view error_span)
 {
-    assert_env_multi_program({ source }, env, { error_span });
+    assert_env_multi_program({ source }, env,
+                             { Lox::Error { "", source, error_span } });
 }
 
 static void assert_value(std::string_view source,
@@ -294,9 +296,15 @@ TEST(Interpreter, BlockStatement)
 
 TEST(Interpreter, EnvIsRestoredAfterError)
 {
-    assert_env_multi_program({ "var x; { var y; foo; }" },
-        { { "x", Lox::make_nil() } },
-        { "foo" });
+    // test that when error happens in the inner block, the env stack
+    // correctly unwinds and does not get stuck on the env that was
+    // current at the point of error
+    // below, error happens where y is defined, but on the exit from
+    // interpreter the global env must be current - where only x is defined
+    assert_env_and_error("var x = 1; { var y; foo; }",
+        { { "x", Lox::make_number(1) } },
+        "foo"
+    );
 }
 
 TEST(Interpreter, IfStatement)
@@ -513,4 +521,24 @@ TEST(Interpreter, CallExpression)
     });
 
     assert_error("5();", "5"); // not callable
+}
+
+TEST(Interpreter, FunctionErrorHasFunctionSource)
+{
+    // in a repl a function can be defined while evaluating one source line
+    // and called later while evaluating another; ensure that when an error
+    // inside the function happens, it points to the function's original
+    // definition source code and not the one of the function call site
+    std::string_view definition = "fn f() { x; }";
+    std::string_view call = "f();";
+    assert_env_multi_program({ definition, call }, {
+        { "f", std::make_shared<DummyFunction>(R"(
+(fn
+  f
+  (params)
+  (block
+    x)))") } }, {
+        {},
+        Lox::Error { "", definition, "x" },
+    });
 }

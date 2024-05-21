@@ -51,4 +51,21 @@ struct Error {
 
 std::string escape(std::string s);
 
+template <typename T>
+class TemporaryChange {
+public:
+    TemporaryChange(T& var, T value)
+        : m_var(var)
+        , m_old_value(var)
+    {
+        m_var = value;
+    }
+
+    ~TemporaryChange() { m_var = m_old_value; }
+
+private:
+    T& m_var;
+    T m_old_value;
+};
+
 }
