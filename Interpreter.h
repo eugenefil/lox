@@ -149,7 +149,7 @@ inline std::shared_ptr<NilType> make_nil()
 
 class Function : public Object {
 public:
-    explicit Function(std::shared_ptr<FunctionDeclaration> decl,
+    explicit Function(std::shared_ptr<const FunctionDeclaration> decl,
                       std::string_view program_source)
         : m_decl(decl)
         , m_program_source(program_source)
@@ -159,11 +159,11 @@ public:
     }
 
     std::string_view type_name() const override { return "Function"; }
-    std::shared_ptr<FunctionDeclaration> decl() const { return m_decl; }
+    std::shared_ptr<const FunctionDeclaration> decl() const { return m_decl; }
     std::shared_ptr<Object> __call__(Interpreter&) override;
 
 private:
-    std::shared_ptr<FunctionDeclaration> m_decl;
+    std::shared_ptr<const FunctionDeclaration> m_decl;
     // source of the program where function was defined, for error reporting
     std::string_view m_program_source;
 };

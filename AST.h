@@ -229,7 +229,7 @@ public:
     explicit Stmt(std::string_view text) : ASTNode(text)
     {}
 
-    virtual bool execute(Interpreter&) = 0;
+    virtual bool execute(Interpreter&) const = 0;
 };
 
 class ExpressionStmt : public Stmt {
@@ -242,7 +242,7 @@ public:
     }
 
     std::string dump(std::size_t indent) const override;
-    bool execute(Interpreter&) override;
+    bool execute(Interpreter&) const override;
 
 private:
     std::shared_ptr<Expr> m_expr;
@@ -261,7 +261,7 @@ public:
     }
 
     std::string dump(std::size_t indent) const override;
-    bool execute(Interpreter&) override;
+    bool execute(Interpreter&) const override;
 
 private:
     std::shared_ptr<Identifier> m_ident;
@@ -276,7 +276,7 @@ public:
     {}
 
     std::string dump(std::size_t indent) const override;
-    bool execute(Interpreter&) override;
+    bool execute(Interpreter&) const override;
 
 private:
     std::shared_ptr<Expr> m_expr;
@@ -296,7 +296,7 @@ public:
     }
 
     std::string dump(std::size_t indent) const override;
-    bool execute(Interpreter&) override;
+    bool execute(Interpreter&) const override;
 
 private:
     std::shared_ptr<Expr> m_place;
@@ -315,7 +315,7 @@ public:
     }
 
     std::string dump(std::size_t indent) const override;
-    bool execute(Interpreter&) override;
+    bool execute(Interpreter&) const override;
 
     const std::vector<std::shared_ptr<Stmt>>& statements() const { return m_stmts;}
 
@@ -338,7 +338,7 @@ public:
     }
 
     std::string dump(std::size_t indent) const override;
-    bool execute(Interpreter&) override;
+    bool execute(Interpreter&) const override;
 
 private:
     std::shared_ptr<Expr> m_test;
@@ -359,7 +359,7 @@ public:
     }
 
     std::string dump(std::size_t indent) const override;
-    bool execute(Interpreter&) override;
+    bool execute(Interpreter&) const override;
 
 private:
     std::shared_ptr<Expr> m_test;
@@ -381,7 +381,7 @@ public:
     }
 
     std::string dump(std::size_t indent) const override;
-    bool execute(Interpreter&) override;
+    bool execute(Interpreter&) const override;
 
 private:
     std::shared_ptr<Identifier> m_ident;
@@ -395,7 +395,7 @@ public:
     {}
 
     std::string dump(std::size_t indent) const override;
-    bool execute(Interpreter&) override;
+    bool execute(Interpreter&) const override;
 };
 
 class ContinueStmt : public Stmt {
@@ -404,7 +404,7 @@ public:
     {}
 
     std::string dump(std::size_t indent) const override;
-    bool execute(Interpreter&) override;
+    bool execute(Interpreter&) const override;
 };
 
 class FunctionDeclaration: public Stmt
@@ -423,9 +423,9 @@ public:
     }
 
     std::string dump(std::size_t indent) const override;
-    bool execute(Interpreter&) override;
+    bool execute(Interpreter&) const override;
 
-    BlockStmt& block() { return *m_block; }
+    const BlockStmt& block() const { return *m_block; }
 
 private:
     std::shared_ptr<Identifier> m_name;
@@ -445,7 +445,7 @@ public:
     }
 
     std::string dump(std::size_t indent) const override;
-    bool execute(Interpreter&) override;
+    bool execute(Interpreter&) const override;
 
 private:
     std::vector<std::shared_ptr<Stmt>> m_stmts;

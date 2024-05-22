@@ -267,7 +267,7 @@ std::shared_ptr<Object> CallExpr::eval(Interpreter& interp) const
     return val->__call__(interp);
 }
 
-bool ExpressionStmt::execute(Interpreter& interp)
+bool ExpressionStmt::execute(Interpreter& interp) const
 {
     if (auto val = m_expr->eval(interp)) {
         if (interp.is_repl_mode()) {
@@ -281,7 +281,7 @@ bool ExpressionStmt::execute(Interpreter& interp)
     return false;
 }
 
-bool VarStmt::execute(Interpreter& interp)
+bool VarStmt::execute(Interpreter& interp) const
 {
     std::shared_ptr<Object> val;
     if (m_init) {
@@ -295,7 +295,7 @@ bool VarStmt::execute(Interpreter& interp)
     return true;
 }
 
-bool PrintStmt::execute(Interpreter& interp)
+bool PrintStmt::execute(Interpreter& interp) const
 {
     if (m_expr) {
         auto val = m_expr->eval(interp);
@@ -307,7 +307,7 @@ bool PrintStmt::execute(Interpreter& interp)
     return true;
 }
 
-bool AssignStmt::execute(Interpreter& interp)
+bool AssignStmt::execute(Interpreter& interp) const
 {
     auto val = m_value->eval(interp);
     if (!val)
@@ -339,7 +339,7 @@ static bool execute_statements(const std::vector<std::shared_ptr<Stmt>>& stmts,
     return true;
 }
 
-bool BlockStmt::execute(Interpreter& interp)
+bool BlockStmt::execute(Interpreter& interp) const
 {
     interp.push_env();
     auto res = execute_statements(m_stmts, interp);
@@ -347,7 +347,7 @@ bool BlockStmt::execute(Interpreter& interp)
     return res;
 }
 
-bool IfStmt::execute(Interpreter& interp)
+bool IfStmt::execute(Interpreter& interp) const
 {
     auto val = m_test->eval(interp);
     if (!val)
@@ -365,7 +365,7 @@ bool IfStmt::execute(Interpreter& interp)
     return true;
 }
 
-bool WhileStmt::execute(Interpreter& interp)
+bool WhileStmt::execute(Interpreter& interp) const
 {
     for (;;) {
         if (interp.check_interrupt())
@@ -399,7 +399,7 @@ bool WhileStmt::execute(Interpreter& interp)
     return true;
 }
 
-bool ForStmt::execute(Interpreter& interp)
+bool ForStmt::execute(Interpreter& interp) const
 {
     auto val = m_expr->eval(interp);
     if (!val)
@@ -442,19 +442,19 @@ bool ForStmt::execute(Interpreter& interp)
     return true;
 }
 
-bool BreakStmt::execute(Interpreter& interp)
+bool BreakStmt::execute(Interpreter& interp) const
 {
     interp.set_break(true);
     return false;
 }
 
-bool ContinueStmt::execute(Interpreter& interp)
+bool ContinueStmt::execute(Interpreter& interp) const
 {
     interp.set_continue(true);
     return false;
 }
 
-bool FunctionDeclaration::execute(Interpreter& interp)
+bool FunctionDeclaration::execute(Interpreter& interp) const
 {
     interp.define_var(m_name->name(),
                       std::make_shared<Function>(shared_from_this(),
@@ -462,7 +462,7 @@ bool FunctionDeclaration::execute(Interpreter& interp)
     return true;
 }
 
-bool Program::execute(Interpreter& interp)
+bool Program::execute(Interpreter& interp) const
 {
     for (auto& stmt : m_stmts) {
         if (interp.check_interrupt())
