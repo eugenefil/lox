@@ -214,6 +214,8 @@ public:
         , m_args(std::move(args))
     {
         assert(callee);
+        for (auto& arg : args)
+            assert(arg);
     }
 
     std::string dump(std::size_t indent) const override;
@@ -419,6 +421,8 @@ public:
         , m_block(block)
     {
         assert(name);
+        for (auto& param : params)
+            assert(param);
         assert(block);
     }
 
@@ -426,6 +430,10 @@ public:
     bool execute(Interpreter&) const override;
 
     const BlockStmt& block() const { return *m_block; }
+    const std::vector<std::shared_ptr<Identifier>>& params() const
+    {
+        return m_params;
+    }
 
 private:
     std::shared_ptr<Identifier> m_name;

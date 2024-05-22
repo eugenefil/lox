@@ -533,7 +533,21 @@ TEST(Interpreter, CallExpression)
         { "f", make_dummy_function() },
     });
 
+    // arguments work and are local to the function
+    assert_env("fn f(y) { x = y; } var x = 1; f(5);", {
+        { "x", Lox::make_number(5) },
+        { "f", make_dummy_function() },
+    });
+
+    // default return value is nil
+    assert_env("var x = 1; { fn f() {} x = f(); }", { { "x", Lox::make_nil() } });
+
+    assert_error("f();", "f"); // callee eval error
     assert_error("5();", "5"); // not callable
+    assert_error("fn f() {} f(1);", "f(1)"); // args and params don't match
+    assert_error("fn f(x) {} f();", "f()"); // same
+    assert_error("fn f(x) {} f(y);", "y"); // arg eval error
+    assert_error("fn f() { x; } f();", "x"); // call error
 }
 
 TEST(Interpreter, FunctionErrorHasFunctionSource)

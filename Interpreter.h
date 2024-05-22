@@ -30,12 +30,14 @@ public:
     virtual bool get_bool() const { assert(0); }
 
     virtual bool __eq__(const Object&) const { return false; }
-    virtual std::shared_ptr<Object> __call__(Interpreter&) { assert(0); }
-
     virtual std::string __str__() const
     {
         return std::string("<").append(type_name()).append(">");
     }
+
+    virtual std::shared_ptr<Object> __call__(
+        const std::vector<std::shared_ptr<Object>>&, Interpreter&) { assert(0); }
+    virtual std::size_t arity() const { assert(0); }
 
     virtual bool is_iterable() const { return false; }
     virtual std::shared_ptr<Iterator> __iter__() const { assert(0); }
@@ -160,7 +162,10 @@ public:
 
     std::string_view type_name() const override { return "Function"; }
     std::shared_ptr<const FunctionDeclaration> decl() const { return m_decl; }
-    std::shared_ptr<Object> __call__(Interpreter&) override;
+
+    std::shared_ptr<Object> __call__(
+        const std::vector<std::shared_ptr<Object>>&, Interpreter&) override;
+    std::size_t arity() const override { return m_decl->params().size(); }
 
 private:
     std::shared_ptr<const FunctionDeclaration> m_decl;

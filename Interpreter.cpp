@@ -45,7 +45,19 @@ std::string Number::__str__() const
     return std::string(buf, ptr - buf);
 }
 
-std::shared_ptr<Object> Function::__call__(Interpreter& interp)
+static bool execute_statements(const std::vector<std::shared_ptr<Stmt>>& stmts,
+                               Interpreter& interp)
+{
+    for (auto& stmt : stmts) {
+        if (!stmt->execute(interp))
+            return false;
+    }
+    return true;
+}
+
+std::shared_ptr<Object> Function::__call__(
+    const std::vector<std::shared_ptr<Object>>& args,
+    Interpreter& interp)
 {
     // in a repl, function could be defined by some previous code chunk,
     // that is different from the one currently executed; temporarily set
@@ -54,9 +66,17 @@ std::shared_ptr<Object> Function::__call__(Interpreter& interp)
     // TemporaryChange object will restore original source on destruction
     auto source_change = interp.push_source(m_program_source);
 
-    if (!m_decl->block().execute(interp))
+    interp.push_env();
+    auto& params = m_decl->params();
+    assert(params.size() == args.size());
+    for (std::size_t i = 0; i < args.size(); ++i)
+        interp.define_var(params[i]->name(), args[i]);
+    auto res = execute_statements(m_decl->block().statements(), interp);
+    interp.pop_env();
+
+    if (!res)
         return {};
-    return {};
+    return make_nil();
 }
 
 std::shared_ptr<Object> StringLiteral::eval(Interpreter&) const
@@ -256,15 +276,41 @@ std::shared_ptr<Object> LogicalExpr::eval(Interpreter& interp) const
 
 std::shared_ptr<Object> CallExpr::eval(Interpreter& interp) const
 {
-    auto val = m_callee->eval(interp);
-    if (!val)
+    auto callee = m_callee->eval(interp);
+    if (!callee)
         return {};
-    if (!val->is_function()) {
-        interp.error(std::format("'{}' object is not callable", val->type_name()),
-            m_callee->text());
+    if (!callee->is_function()) {
+        interp.error(std::format("'{}' object is not callable",
+            callee->type_name()), m_callee->text());
         return {};
     }
-    return val->__call__(interp);
+
+    // if arity were to be checked before eval'ing the args, then an arity
+    // error message with the invalid arguments supplied would look like the
+    // interpreter has validated the arguments and went on to check arity:
+    //
+    // >>> fn f() {}
+    // >>> f(1 + "foo") // arg would eval to error
+    // error: expected 0 arguments, got 1
+    //
+    // above message kinda suggests the intepreter got 1 valid argument,
+    // so 1) eval args, and only then 2) check arity; python does the same
+    // rust shows both errors, but invalid args first, arity error second
+
+    std::vector<std::shared_ptr<Object>> arg_vals; 
+    for (auto& arg : m_args) {
+        auto arg_val = arg->eval(interp);
+        if (!arg_val)
+            return {};
+        arg_vals.push_back(arg_val);
+    }
+
+    if (callee->arity() != m_args.size()) {
+        interp.error(std::format("expected {} arguments, got {}",
+            callee->arity(), m_args.size()), m_text);
+        return {};
+    }
+    return callee->__call__(arg_vals, interp);
 }
 
 bool ExpressionStmt::execute(Interpreter& interp) const
@@ -327,16 +373,6 @@ bool AssignStmt::execute(Interpreter& interp) const
     else
         assert(0);
     return false;
-}
-
-static bool execute_statements(const std::vector<std::shared_ptr<Stmt>>& stmts,
-                               Interpreter& interp)
-{
-    for (auto& stmt : stmts) {
-        if (!stmt->execute(interp))
-            return false;
-    }
-    return true;
 }
 
 bool BlockStmt::execute(Interpreter& interp) const
