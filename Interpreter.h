@@ -218,6 +218,19 @@ public:
         m_continue = on;
     }
 
+    bool is_return() const { return m_return_value != nullptr; }
+    void set_return_value(const std::shared_ptr<Object>& value)
+    {
+        assert(value);
+        assert(!m_return_value);
+        m_return_value = value;
+    }
+    std::shared_ptr<Object>&& pop_return_value()
+    {
+        assert(m_return_value);
+        return std::move(m_return_value);
+    }
+
     bool check_interrupt();
 
 private:
@@ -226,6 +239,7 @@ private:
     bool m_repl_mode { false };
     bool m_break { false };
     bool m_continue { false };
+    std::shared_ptr<Object> m_return_value;
     std::string_view m_source;
 };
 

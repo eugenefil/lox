@@ -66,6 +66,8 @@ std::shared_ptr<Object> Function::__call__(
     // TemporaryChange object will restore original source on destruction
     auto source_change = interp.push_source(m_program_source);
 
+    assert(!interp.is_return());
+
     interp.push_env();
     auto& params = m_decl->params();
     assert(params.size() == args.size());
@@ -74,9 +76,12 @@ std::shared_ptr<Object> Function::__call__(
     auto res = execute_statements(m_decl->block().statements(), interp);
     interp.pop_env();
 
-    if (!res)
+    if (!res) {
+        if (interp.is_return())
+            return interp.pop_return_value();
         return {};
-    return make_nil();
+    }
+    return make_nil(); // implicit return
 }
 
 std::shared_ptr<Object> StringLiteral::eval(Interpreter&) const
@@ -481,13 +486,13 @@ bool ForStmt::execute(Interpreter& interp) const
 bool BreakStmt::execute(Interpreter& interp) const
 {
     interp.set_break(true);
-    return false;
+    return false; // "unwind" the stack until for/while loop code catches 'break'
 }
 
 bool ContinueStmt::execute(Interpreter& interp) const
 {
     interp.set_continue(true);
-    return false;
+    return false; // "unwind" the stack until for/while loop code catches 'continue'
 }
 
 bool FunctionDeclaration::execute(Interpreter& interp) const
@@ -496,6 +501,21 @@ bool FunctionDeclaration::execute(Interpreter& interp) const
                       std::make_shared<Function>(shared_from_this(),
                                                  interp.source()));
     return true;
+}
+
+bool ReturnStmt::execute(Interpreter& interp) const
+{
+    std::shared_ptr<Object> val;
+    if (m_expr) {
+        val = m_expr->eval(interp);
+        if (!val)
+            return false;
+    } else
+        val = make_nil();
+    assert(val);
+
+    interp.set_return_value(val);
+    return false; // "unwind" the stack until function call code catches 'return'
 }
 
 bool Program::execute(Interpreter& interp) const

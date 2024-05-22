@@ -287,14 +287,14 @@ std::shared_ptr<Expr> Parser::parse_expression()
     return parse_logical_or();
 }
 
-std::pair<bool, std::string_view> Parser::finish_statement()
+std::pair<bool, std::string_view> Parser::finish_statement(bool fail_on_error)
 {
     if (auto& token = peek(); token.type() == TokenType::Semicolon) {
         advance();
         return { true, token.text() };
     } else if (token.type() == TokenType::Eof && m_implicit_semicolon)
         return { true, {} };
-    else
+    else if (fail_on_error)
         error("expected ';'", token.text());
     return { false, {} };
 }
@@ -521,12 +521,39 @@ std::shared_ptr<Stmt> Parser::parse_function_declaration()
             return {};
     }
 
+    start_function_context();
     auto block = parse_block_statement();
+    end_function_context();
     if (!block)
         return {};
 
     return std::make_shared<FunctionDeclaration>(name, std::move(params), block,
         merge_texts(fn_tok.text(), block->text()));
+}
+
+std::shared_ptr<Stmt> Parser::parse_return_statement()
+{
+    auto& ret_tok = peek();
+    assert(ret_tok.type() == TokenType::Return);
+    advance();
+
+    if (!is_function_context()) {
+        error("'return' outside function", ret_tok.text());
+        return {};
+    }
+
+    if (auto [res, end] = finish_statement(false); res)
+        return std::make_shared<ReturnStmt>(std::shared_ptr<Expr>(),
+            end.size() ? merge_texts(ret_tok.text(), end) : ret_tok.text());
+
+    auto expr = parse_expression();
+    if (!expr)
+        return {};
+
+    if (auto [res, end] = finish_statement(); res)
+        return std::make_shared<ReturnStmt>(expr,
+            merge_texts(ret_tok.text(), end.size() ? end : expr->text()));
+    return {};
 }
 
 std::shared_ptr<Stmt> Parser::parse_statement()
@@ -549,6 +576,8 @@ std::shared_ptr<Stmt> Parser::parse_statement()
         return parse_continue_statement();
     else if (token.type() == TokenType::Fn)
         return parse_function_declaration();
+    else if (token.type() == TokenType::Return)
+        return parse_return_statement();
 
     auto expr = parse_expression();
     if (!expr)

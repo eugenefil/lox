@@ -273,6 +273,18 @@ std::string FunctionDeclaration::dump(std::size_t indent) const
     return s;
 }
 
+std::string ReturnStmt::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += "(return";
+    if (m_expr) {
+        s += '\n';
+        s += m_expr->dump(indent + 1);
+    }
+    s += ')';
+    return s;
+}
+
 std::string Program::dump(std::size_t indent) const
 {
     std::string s = make_indent(indent);

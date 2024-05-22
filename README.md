@@ -99,6 +99,7 @@ statement ->
     | 'continue' ';'
     | IDENTIFIER '=' expression ';'
     | 'fn' IDENTIFIER '(' parameters? ')' block
+    | return expression? ';'
     | expression ';'
 
 program ->

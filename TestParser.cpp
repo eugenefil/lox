@@ -540,3 +540,30 @@ TEST(Parser, CallExpression)
     assert_error("f(5,)", ")"); // expected expression
     assert_error("f(5 _", "_"); // expected ')'
 }
+
+TEST(Parser, ReturnStatement)
+{
+    assert_stmt("fn f() { return; }", R"(
+(fn
+  f
+  (params)
+  (block
+    (return)))
+    )");
+
+    assert_stmt("fn f() { return x + y; }", R"(
+(fn
+  f
+  (params)
+  (block
+    (return
+      (+
+        x
+        y))))
+    )");
+
+    assert_error("return;", "return"); // return outside function
+    assert_error("fn f() {} return;", "return"); // same
+    assert_error("fn f() { return /; }", "/"); // expected expression
+    assert_error("fn f() { return 5 _ }", "_"); // expected ';'
+}

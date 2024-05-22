@@ -521,26 +521,17 @@ TEST(Interpreter, FunctionDeclaration)
 
 TEST(Interpreter, CallExpression)
 {
-    // no call - no side effects
-    assert_env("var x = 1; fn f() { x = 2; }", {
-        { "x", Lox::make_number(1) },
-        { "f", make_dummy_function() },
-    });
-
-    // call for side effects
-    assert_env("fn f() { x = 2; } var x = 1; f();", {
-        { "x", Lox::make_number(2) },
-        { "f", make_dummy_function() },
-    });
-
     // arguments work and are local to the function
-    assert_env("fn f(y) { x = y; } var x = 1; f(5);", {
-        { "x", Lox::make_number(5) },
+    assert_env("fn f(x, y) { z = x + y; } var z = 1; f(2, 3);", {
+        { "z", Lox::make_number(5) },
         { "f", make_dummy_function() },
     });
 
-    // default return value is nil
-    assert_env("var x = 1; { fn f() {} x = f(); }", { { "x", Lox::make_nil() } });
+    // implicit return value is nil
+    assert_env("var x = 1; fn f() {} x = f();", {
+        { "x", Lox::make_nil() },
+        { "f", make_dummy_function() },
+    });
 
     assert_error("f();", "f"); // callee eval error
     assert_error("5();", "5"); // not callable
@@ -568,4 +559,51 @@ TEST(Interpreter, FunctionErrorHasFunctionSource)
         {},
         Lox::Error { "", definition, "x" },
     });
+}
+
+TEST(Interpreter, ReturnStatement)
+{
+    // default return value is nil
+    assert_env("var x = 1; fn f() { return; } x = f();", {
+        { "x", Lox::make_nil() },
+        { "f", make_dummy_function() },
+    });
+
+    // non-default return value
+    assert_env("fn f(x, y) { return x + y; } var z = f(2, 3);", {
+        { "z", Lox::make_number(5) },
+        { "f", make_dummy_function() },
+    });
+
+    // test that return:
+    // - does not let the rest of the function body execute
+    // - works when nested into control flow statements
+    // - only affects nearest surrounding function
+    assert_env(R"(
+        var x = 1;
+        var y = 1;
+        fn f() {
+            fn g() {
+                while true {
+                    for c in "foobar" {
+                        if true {
+                            return 42;
+                            x = 3;
+                        }
+                        x = c;
+                    }
+                    x = 7;
+                }
+                x = 9;
+            }
+            g();
+            y = 5;
+        }
+        f();)", {
+        { "x", Lox::make_number(1) },
+        { "y", Lox::make_number(5) },
+        { "f", make_dummy_function() },
+    });
+
+    assert_error("fn f() { return x; } f();", "x"); // eval error
 }

@@ -441,6 +441,20 @@ private:
     std::shared_ptr<BlockStmt> m_block;
 };
 
+class ReturnStmt: public Stmt {
+public:
+    explicit ReturnStmt(std::shared_ptr<Expr> expr, std::string_view text)
+        : Stmt(text)
+        , m_expr(expr)
+    {}
+
+    std::string dump(std::size_t indent) const override;
+    bool execute(Interpreter&) const override;
+
+private:
+    std::shared_ptr<Expr> m_expr; // can be null
+};
+
 class Program : public Stmt {
 public:
     explicit Program(std::vector<std::shared_ptr<Stmt>>&& stmts,

@@ -49,8 +49,10 @@ private:
     std::shared_ptr<Stmt> parse_break_statement();
     std::shared_ptr<Stmt> parse_continue_statement();
     std::shared_ptr<Stmt> parse_function_declaration();
+    std::shared_ptr<Stmt> parse_return_statement();
     std::shared_ptr<Stmt> parse_statement();
-    std::pair<bool, std::string_view> finish_statement();
+
+    std::pair<bool, std::string_view> finish_statement(bool fail_on_error = true);
 
     bool is_loop_context() const { return m_loop_context > 0; }
     void start_loop_context() { ++m_loop_context; }
@@ -60,12 +62,21 @@ private:
         --m_loop_context;
     }
 
+    bool is_function_context() const { return m_function_context > 0; }
+    void start_function_context() { ++m_function_context; }
+    void end_function_context()
+    {
+        assert(m_function_context > 0);
+        --m_function_context;
+    }
+
     std::vector<Token> m_tokens;
     std::string_view m_source;
     std::size_t m_cur { 0 };
     std::vector<Error> m_errors;
     bool m_implicit_semicolon { false };
     std::size_t m_loop_context { 0 };
+    std::size_t m_function_context { 0 };
 };
 
 }
