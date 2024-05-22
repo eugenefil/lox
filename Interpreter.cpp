@@ -329,30 +329,22 @@ bool AssignStmt::execute(Interpreter& interp)
     return false;
 }
 
-void BlockStmt::inject_var(std::string_view name, std::shared_ptr<Object> value)
+static bool execute_statements(const std::vector<std::shared_ptr<Stmt>>& stmts,
+                               Interpreter& interp)
 {
-    assert(name.size());
-    assert(value);
-    m_injected_name = name;
-    m_injected_value = value;
+    for (auto& stmt : stmts) {
+        if (!stmt->execute(interp))
+            return false;
+    }
+    return true;
 }
 
 bool BlockStmt::execute(Interpreter& interp)
 {
     interp.push_env();
-    if (!m_injected_name.empty()) {
-        interp.define_var(m_injected_name, std::move(m_injected_value));
-        m_injected_name = {};
-    }
-
-    for (auto& stmt : m_stmts) {
-        if (!stmt->execute(interp)) {
-            interp.pop_env();
-            return false;
-        }
-    }
+    auto res = execute_statements(m_stmts, interp);
     interp.pop_env();
-    return true;
+    return res;
 }
 
 bool IfStmt::execute(Interpreter& interp)
@@ -427,10 +419,15 @@ bool ForStmt::execute(Interpreter& interp)
         if (!next)
             return false;
 
-        m_block->inject_var(m_ident->name(), next);
         assert(!interp.is_break());
         assert(!interp.is_continue());
-        if (!m_block->execute(interp)) {
+
+        interp.push_env();
+        interp.define_var(m_ident->name(), next);
+        auto res = execute_statements(m_block->statements(), interp);
+        interp.pop_env();
+
+        if (!res) {
             if (interp.is_break()) {
                 interp.set_break(false);
                 break;

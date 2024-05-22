@@ -316,11 +316,10 @@ public:
 
     std::string dump(std::size_t indent) const override;
     bool execute(Interpreter&) override;
-    void inject_var(std::string_view name, std::shared_ptr<Object> value);
+
+    const std::vector<std::shared_ptr<Stmt>>& statements() const { return m_stmts;}
 
 private:
-    std::string_view m_injected_name;
-    std::shared_ptr<Object> m_injected_value;
     std::vector<std::shared_ptr<Stmt>> m_stmts;
 };
 
