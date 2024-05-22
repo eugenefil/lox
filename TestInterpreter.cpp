@@ -541,6 +541,21 @@ TEST(Interpreter, CallExpression)
     assert_error("fn f() { x; } f();", "x"); // call error
 }
 
+TEST(Interpreter, FunctionShadowsOuterVariables)
+{
+    // args shadow outer vars
+    assert_env("var x = 1; fn f(x) { x = x + 7; } f(5);", {
+        { "x", Lox::make_number(1) },
+        { "f", make_dummy_function() },
+    });
+
+    // local vars shadow outer vars
+    assert_env("var x = 1; fn f() { var x = 5; x = 7; } f();", {
+        { "x", Lox::make_number(1) },
+        { "f", make_dummy_function() },
+    });
+}
+
 TEST(Interpreter, FunctionErrorHasFunctionSource)
 {
     // in a repl a function can be defined while evaluating one source line
