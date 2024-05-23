@@ -483,6 +483,20 @@ TEST(Parser, FunctionDeclaration)
     assert_error("fn f(x, 5)", "5"); // identifier expected
     assert_error("fn f(x {}", "{"); // expected ')'
     assert_error("fn f(x) _", "_"); // expected '{'
+
+    // local vars cannot shadow params
+    assert_error("fn f(x) { var x; }", "var x;");
+    // but in a block it's fine
+    assert_stmt("fn f(x) { { var x; } }", R"(
+(fn
+  f
+  (params
+    x)
+  (block
+    (block
+      (var
+        x))))
+    )");
 }
 
 TEST(Parser, CallExpression)

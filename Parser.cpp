@@ -1,5 +1,6 @@
 #include "Parser.h"
 #include <cassert>
+#include <format>
 
 namespace Lox {
 
@@ -526,6 +527,23 @@ std::shared_ptr<Stmt> Parser::parse_function_declaration()
     end_function_context();
     if (!block)
         return {};
+
+    // local var cannot shadow a param - this effectively disables the param
+    // c++ and js do the same, rust warns if param was unused before being shadowed
+    if (!params.empty()) {
+        for (auto& stmt : block->statements()) {
+            if (stmt->is_var_statement()) {
+                auto varname = static_cast<VarStmt&>(*stmt).identifier().name();
+                for (auto& param : params) {
+                    if (varname == param->name()) {
+                        error(std::format("variable '{}' shadows function parameter of the same name",
+                            varname), stmt->text());
+                        return {};
+                    }
+                }
+            }
+        }
+    }
 
     return std::make_shared<FunctionDeclaration>(name, std::move(params), block,
         merge_texts(fn_tok.text(), block->text()));

@@ -232,6 +232,7 @@ public:
     {}
 
     virtual bool execute(Interpreter&) const = 0;
+    virtual bool is_var_statement() const { return false; }
 };
 
 class ExpressionStmt : public Stmt {
@@ -264,6 +265,8 @@ public:
 
     std::string dump(std::size_t indent) const override;
     bool execute(Interpreter&) const override;
+    bool is_var_statement() const override { return true; }
+    const Identifier& identifier() const { return *m_ident; }
 
 private:
     std::shared_ptr<Identifier> m_ident;
