@@ -31,7 +31,7 @@ static std::shared_ptr<DummyFunction> make_dummy_function()
 }
 
 static void assert_scope_multi_program(std::vector<std::string_view> sources,
-    const Lox::Interpreter::ScopeType& scope,
+    const Lox::Scope::MapType& scope_vars,
     std::vector<std::optional<Lox::Error>> errors = {})
 {
     if (errors.size() > 0) {
@@ -60,11 +60,11 @@ static void assert_scope_multi_program(std::vector<std::string_view> sources,
         }
     }
 
-    auto& sc = interp.scope();
-    EXPECT_EQ(sc.size(), scope.size());
-    for (auto& [name, value] : scope) {
-        ASSERT_TRUE(sc.contains(name));
-        auto& obj = sc.at(name);
+    auto& vars = interp.scope().vars();
+    EXPECT_EQ(vars.size(), scope_vars.size());
+    for (auto& [name, value] : scope_vars) {
+        ASSERT_TRUE(vars.contains(name));
+        auto& obj = vars.at(name);
         ASSERT_TRUE(obj);
         ASSERT_TRUE(value);
         if (value->type_name() == "DummyFunction") {
@@ -80,16 +80,16 @@ static void assert_scope_multi_program(std::vector<std::string_view> sources,
 }
 
 static void assert_scope(std::string_view source,
-                         const Lox::Interpreter::ScopeType& scope)
+                         const Lox::Scope::MapType& scope_vars)
 {
-    assert_scope_multi_program({ source }, scope);
+    assert_scope_multi_program({ source }, scope_vars);
 }
 
 static void assert_scope_and_error(std::string_view source,
-                                   const Lox::Interpreter::ScopeType& scope,
+                                   const Lox::Scope::MapType& scope_vars,
                                    std::string_view error_span)
 {
-    assert_scope_multi_program({ source }, scope,
+    assert_scope_multi_program({ source }, scope_vars,
                              { Lox::Error { "", source, error_span } });
 }
 

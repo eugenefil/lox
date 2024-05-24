@@ -5,7 +5,6 @@
 #include <cassert>
 #include <vector>
 #include <unordered_map>
-#include <list>
 #include <csignal>
 
 namespace Lox {
@@ -173,23 +172,40 @@ private:
     std::string_view m_program_source;
 };
 
-class Interpreter {
+class Scope {
 public:
-    void interpret(std::shared_ptr<Program> program);
+    using MapType = std::unordered_map<std::string_view, std::shared_ptr<Object>>;
 
-    using ScopeType = std::unordered_map<std::string_view, std::shared_ptr<Object>>;
-
-    const ScopeType& scope() const
+    Scope() = default;
+    explicit Scope(std::shared_ptr<Scope> parent) : m_parent(parent)
     {
-        assert(!m_scope_stack.empty());
-        return m_scope_stack.front();
+        assert(parent);
     }
 
-    void push_scope();
-    void pop_scope();
+    bool is_top() const { return m_parent == nullptr; }
     void define_var(std::string_view name, std::shared_ptr<Object> value);
     std::shared_ptr<Object> get_var(std::string_view name) const;
     bool set_var(std::string_view name, std::shared_ptr<Object> value);
+
+    const MapType& vars() const { return m_vars; }
+
+private:
+    std::shared_ptr<Scope> m_parent;
+    MapType m_vars;
+};
+
+class Interpreter {
+public:
+    Interpreter() : m_scope(std::make_shared<Scope>())
+    {}
+
+    void interpret(std::shared_ptr<Program> program);
+
+    Scope& scope() { return *m_scope; }
+    TemporaryChange<std::shared_ptr<Scope>> push_scope()
+    {
+        return { m_scope, std::make_shared<Scope>(m_scope) };
+    }
 
     std::string_view source() const { return m_source; }
     TemporaryChange<std::string_view> push_source(std::string_view source)
@@ -235,7 +251,7 @@ public:
 
 private:
     std::vector<Error> m_errors;
-    std::list<ScopeType> m_scope_stack { 1 };
+    std::shared_ptr<Scope> m_scope;
     bool m_repl_mode { false };
     bool m_break { false };
     bool m_continue { false };

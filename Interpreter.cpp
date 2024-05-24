@@ -68,13 +68,12 @@ std::shared_ptr<Object> Function::__call__(
 
     assert(!interp.is_return());
 
-    interp.push_scope();
+    auto scope_change = interp.push_scope();
     auto& params = m_decl->params();
     assert(params.size() == args.size());
     for (std::size_t i = 0; i < args.size(); ++i)
-        interp.define_var(params[i]->name(), args[i]);
+        interp.scope().define_var(params[i]->name(), args[i]);
     auto res = execute_statements(m_decl->block().statements(), interp);
-    interp.pop_scope();
 
     if (!res) {
         if (interp.is_return())
@@ -96,7 +95,7 @@ std::shared_ptr<Object> NumberLiteral::eval(Interpreter&) const
 
 std::shared_ptr<Object> Identifier::eval(Interpreter& interp) const
 {
-    if (auto val = interp.get_var(m_name))
+    if (auto val = interp.scope().get_var(m_name))
         return val;
     interp.error(std::format("identifier '{}' is not defined", m_name), m_text);
     return {};
@@ -342,7 +341,7 @@ bool VarStmt::execute(Interpreter& interp) const
     } else
         val = make_nil();
     assert(val);
-    interp.define_var(m_ident->name(), val);
+    interp.scope().define_var(m_ident->name(), val);
     return true;
 }
 
@@ -369,7 +368,7 @@ bool AssignStmt::execute(Interpreter& interp) const
         name = std::static_pointer_cast<Identifier>(m_place)->name();
     assert(!name.empty());
 
-    if (interp.set_var(name, val))
+    if (interp.scope().set_var(name, val))
         return true;
 
     if (m_place->is_identifier())
@@ -382,9 +381,8 @@ bool AssignStmt::execute(Interpreter& interp) const
 
 bool BlockStmt::execute(Interpreter& interp) const
 {
-    interp.push_scope();
+    auto scope_change = interp.push_scope();
     auto res = execute_statements(m_stmts, interp);
-    interp.pop_scope();
     return res;
 }
 
@@ -463,10 +461,9 @@ bool ForStmt::execute(Interpreter& interp) const
         assert(!interp.is_break());
         assert(!interp.is_continue());
 
-        interp.push_scope();
-        interp.define_var(m_ident->name(), next);
+        auto scope_change = interp.push_scope();
+        interp.scope().define_var(m_ident->name(), next);
         auto res = execute_statements(m_block->statements(), interp);
-        interp.pop_scope();
 
         if (!res) {
             if (interp.is_break()) {
@@ -497,9 +494,9 @@ bool ContinueStmt::execute(Interpreter& interp) const
 
 bool FunctionDeclaration::execute(Interpreter& interp) const
 {
-    interp.define_var(m_name->name(),
-                      std::make_shared<Function>(shared_from_this(),
-                                                 interp.source()));
+    interp.scope().define_var(m_name->name(),
+                              std::make_shared<Function>(shared_from_this(),
+                                                         interp.source()));
     return true;
 }
 
@@ -529,46 +526,29 @@ bool Program::execute(Interpreter& interp) const
     return true;
 }
 
-void Interpreter::push_scope()
-{
-    m_scope_stack.emplace_front();
-}
-
-void Interpreter::pop_scope()
-{
-    assert(!m_scope_stack.empty());
-    m_scope_stack.pop_front();
-    assert(!m_scope_stack.empty()); // global scope must always exist
-}
-
-void Interpreter::define_var(std::string_view name, std::shared_ptr<Object> value)
+void Scope::define_var(std::string_view name, std::shared_ptr<Object> value)
 {
     assert(!name.empty());
     assert(value);
-    assert(!m_scope_stack.empty());
-    m_scope_stack.front()[name] = value;
+    m_vars[name] = value;
 }
 
-std::shared_ptr<Object> Interpreter::get_var(std::string_view name) const
+std::shared_ptr<Object> Scope::get_var(std::string_view name) const
 {
     assert(!name.empty());
-    assert(!m_scope_stack.empty());
-
-    for (auto& scope : m_scope_stack) {
-        if (auto pair = scope.find(name); pair != scope.end())
+    for (auto scope = this; scope != nullptr; scope = scope->m_parent.get()) {
+        if (auto pair = scope->m_vars.find(name); pair != scope->m_vars.end())
             return pair->second;
     }
     return {};
 }
 
-bool Interpreter::set_var(std::string_view name, std::shared_ptr<Object> value)
+bool Scope::set_var(std::string_view name, std::shared_ptr<Object> value)
 {
     assert(!name.empty());
     assert(value);
-    assert(!m_scope_stack.empty());
-
-    for (auto& scope : m_scope_stack) {
-        if (auto pair = scope.find(name); pair != scope.end()) {
+    for (auto scope = this; scope != nullptr; scope = scope->m_parent.get()) {
+        if (auto pair = scope->m_vars.find(name); pair != scope->m_vars.end()) {
             pair->second = value;
             return true;
         }
@@ -587,9 +567,9 @@ void Interpreter::interpret(std::shared_ptr<Program> program)
 
     m_errors.clear();
     m_source = program->text();
-    assert(m_scope_stack.size() == 1);
+    assert(m_scope->is_top());
     program->execute(*this);
-    assert(m_scope_stack.size() == 1);
+    assert(m_scope->is_top());
 }
 
 volatile std::sig_atomic_t g_interrupt;
