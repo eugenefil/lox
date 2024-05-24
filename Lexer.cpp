@@ -165,7 +165,7 @@ std::vector<Token> Lexer::lex()
             if (match('/')) {
                 while (more() && next() != '\n')
                     advance();
-                add_token(TokenType::Comment);
+                consume();
             } else
                 add_token(TokenType::Slash);
             break;

@@ -149,12 +149,10 @@ TEST(Lexer, Comments)
 {
     assert_tokens(R"(// commented line
         f(); // comment after code)", {
-        { TokenType::Comment, "// commented line" },
         { TokenType::Identifier, "f" },
         { TokenType::LeftParen, "(" },
         { TokenType::RightParen, ")" },
         { TokenType::Semicolon, ";" },
-        { TokenType::Comment, "// comment after code" },
     });
 }
 
