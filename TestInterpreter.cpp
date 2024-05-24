@@ -75,7 +75,10 @@ static void assert_scope_multi_program(std::vector<std::string_view> sources,
                 EXPECT_EQ(func.decl()->dump(0), dummy.dump());
             }
         } else
-            EXPECT_TRUE(value->__eq__(*obj));
+            EXPECT_TRUE(value->__eq__(*obj)) << '\n' <<
+                "Variable: " << name << '\n' <<
+                "  Actual: " << obj->__str__() << '\n' <<
+                "Expected: " << value->__str__() << '\n';
     }
 }
 
@@ -623,4 +626,50 @@ TEST(Interpreter, ReturnStatement)
     });
 
     assert_error("fn f() { return x; } f();", "x"); // eval error
+}
+
+TEST(Interpreter, LexicalScope)
+{
+    // function's parent scope is determined by its source placement
+    // rather than call sequence
+    assert_scope(R"(
+        var x = 5;
+        fn g() { return x; }
+        fn f() {
+            var x = 7;
+            return g();
+        }
+        var y = f();
+        )", {
+        { "x", Lox::make_number(5) },
+        { "g", make_dummy_function() },
+        { "f", make_dummy_function() },
+        // with dynamic scope the parent scope of g() would be f()'s and
+        // y would be 7; with static (lexical) scope the parent scope of
+        // g() is global scope and y would be 5
+        { "y", Lox::make_number(5) },
+    });
+}
+
+TEST(Interpreter, Closure)
+{
+    // closure records all surrounding scopes during definition, can
+    // access and modify their variables
+    assert_scope(R"(
+        fn f() {
+            fn g(z) {
+                x = x + z;
+                y = y + z;
+                return y;
+            }
+            var y = 7; // like with globals, var can be defined after function
+            return g;
+        }
+        var x = 5; // global var can be defined after function that uses it
+        var new_y = f()(10);
+        )", {
+        { "f", make_dummy_function() },
+        { "x", Lox::make_number(15) },
+        { "new_y", Lox::make_number(17) },
+    });
 }

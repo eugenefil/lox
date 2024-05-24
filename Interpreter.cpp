@@ -68,7 +68,7 @@ std::shared_ptr<Object> Function::__call__(
 
     assert(!interp.is_return());
 
-    auto scope_change = interp.push_scope();
+    auto scope_change = interp.new_scope(m_parent_scope);
     auto& params = m_decl->params();
     assert(params.size() == args.size());
     for (std::size_t i = 0; i < args.size(); ++i)
@@ -496,6 +496,7 @@ bool FunctionDeclaration::execute(Interpreter& interp) const
 {
     interp.scope().define_var(m_name->name(),
                               std::make_shared<Function>(shared_from_this(),
+                                                         interp.scope_ptr(),
                                                          interp.source()));
     return true;
 }
