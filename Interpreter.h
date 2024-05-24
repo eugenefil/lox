@@ -177,16 +177,16 @@ class Interpreter {
 public:
     void interpret(std::shared_ptr<Program> program);
 
-    using EnvType = std::unordered_map<std::string_view, std::shared_ptr<Object>>;
+    using ScopeType = std::unordered_map<std::string_view, std::shared_ptr<Object>>;
 
-    const EnvType& env() const
+    const ScopeType& scope() const
     {
-        assert(!m_env_stack.empty());
-        return m_env_stack.front();
+        assert(!m_scope_stack.empty());
+        return m_scope_stack.front();
     }
 
-    void push_env();
-    void pop_env();
+    void push_scope();
+    void pop_scope();
     void define_var(std::string_view name, std::shared_ptr<Object> value);
     std::shared_ptr<Object> get_var(std::string_view name) const;
     bool set_var(std::string_view name, std::shared_ptr<Object> value);
@@ -235,7 +235,7 @@ public:
 
 private:
     std::vector<Error> m_errors;
-    std::list<EnvType> m_env_stack { 1 };
+    std::list<ScopeType> m_scope_stack { 1 };
     bool m_repl_mode { false };
     bool m_break { false };
     bool m_continue { false };

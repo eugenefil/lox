@@ -30,8 +30,8 @@ static std::shared_ptr<DummyFunction> make_dummy_function()
     return std::make_shared<DummyFunction>();
 }
 
-static void assert_env_multi_program(std::vector<std::string_view> sources,
-    const Lox::Interpreter::EnvType& env,
+static void assert_scope_multi_program(std::vector<std::string_view> sources,
+    const Lox::Interpreter::ScopeType& scope,
     std::vector<std::optional<Lox::Error>> errors = {})
 {
     if (errors.size() > 0) {
@@ -60,11 +60,11 @@ static void assert_env_multi_program(std::vector<std::string_view> sources,
         }
     }
 
-    auto& e = interp.env();
-    EXPECT_EQ(e.size(), env.size());
-    for (auto& [name, value] : env) {
-        ASSERT_TRUE(e.contains(name));
-        auto& obj = e.at(name);
+    auto& sc = interp.scope();
+    EXPECT_EQ(sc.size(), scope.size());
+    for (auto& [name, value] : scope) {
+        ASSERT_TRUE(sc.contains(name));
+        auto& obj = sc.at(name);
         ASSERT_TRUE(obj);
         ASSERT_TRUE(value);
         if (value->type_name() == "DummyFunction") {
@@ -79,24 +79,24 @@ static void assert_env_multi_program(std::vector<std::string_view> sources,
     }
 }
 
-static void assert_env(std::string_view source,
-                       const Lox::Interpreter::EnvType& env)
+static void assert_scope(std::string_view source,
+                         const Lox::Interpreter::ScopeType& scope)
 {
-    assert_env_multi_program({ source }, env);
+    assert_scope_multi_program({ source }, scope);
 }
 
-static void assert_env_and_error(std::string_view source,
-                                 const Lox::Interpreter::EnvType& env,
-                                 std::string_view error_span)
+static void assert_scope_and_error(std::string_view source,
+                                   const Lox::Interpreter::ScopeType& scope,
+                                   std::string_view error_span)
 {
-    assert_env_multi_program({ source }, env,
+    assert_scope_multi_program({ source }, scope,
                              { Lox::Error { "", source, error_span } });
 }
 
 static void assert_value(std::string_view source,
                          std::shared_ptr<Lox::Object> value)
 {
-    assert_env(std::string("var x = ").append(source) + ';',
+    assert_scope(std::string("var x = ").append(source) + ';',
                { { "x", value } });
 }
 
@@ -252,7 +252,7 @@ TEST(Interpreter, BinaryExpression)
 
 TEST(Interpreter, Identifier)
 {
-    assert_env("var x = 5; var y = x * 2;", {
+    assert_scope("var x = 5; var y = x * 2;", {
         { "x", Lox::make_number(5) },
         { "y", Lox::make_number(10) },
     });
@@ -262,15 +262,17 @@ TEST(Interpreter, Identifier)
 
 TEST(Interpreter, VarStatement)
 {
-    assert_env("var x;", { { "x", Lox::make_nil() } });
+    assert_scope("var x;", { { "x", Lox::make_nil() } });
 
-    assert_env("var x = 5; var s = \"foo\"; var b = true;", {
+    assert_scope("var x = 5; var s = \"foo\"; var b = true;", {
         { "x", Lox::make_number(5) },
         { "s", Lox::make_string("foo") },
         { "b", Lox::make_bool(true) },
     });
 
-    assert_env("var x = 5; var x = \"foo\";", { { "x", Lox::make_string("foo") } });
+    assert_scope("var x = 5; var x = \"foo\";", {
+        { "x", Lox::make_string("foo") },
+    });
 }
 
 TEST(Interpreter, PrintStatement)
@@ -278,9 +280,9 @@ TEST(Interpreter, PrintStatement)
     assert_error("print -nil;", "-nil");
 }
 
-TEST(Interpreter, ProgramsShareEnv)
+TEST(Interpreter, ProgramsShareGlobalScope)
 {
-    assert_env_multi_program({ "var x = 5;", "var y = x * 2;" }, {
+    assert_scope_multi_program({ "var x = 5;", "var y = x * 2;" }, {
         { "x", Lox::make_number(5) },
         { "y", Lox::make_number(10) },
     });
@@ -288,7 +290,7 @@ TEST(Interpreter, ProgramsShareEnv)
 
 TEST(Interpreter, AssignStatement)
 {
-    assert_env("var x = 5; x = x + 7;", { { "x", Lox::make_number(12) } });
+    assert_scope("var x = 5; x = x + 7;", { { "x", Lox::make_number(12) } });
 
     assert_error("x = foo;", "foo");
     assert_error("x = 5;", "x");
@@ -296,23 +298,23 @@ TEST(Interpreter, AssignStatement)
 
 TEST(Interpreter, BlockStatement)
 {
-    assert_env("var x = 5; { var y = 7; x = x + y; }", {
+    assert_scope("var x = 5; { var y = 7; x = x + y; }", {
         { "x", Lox::make_number(12) },
     });
-    assert_env("var x = 5; var y = 7; { var x = x + 10; y = x; }", {
+    assert_scope("var x = 5; var y = 7; { var x = x + 10; y = x; }", {
         { "x", Lox::make_number(5) },
         { "y", Lox::make_number(15) },
     });
 }
 
-TEST(Interpreter, EnvIsRestoredAfterError)
+TEST(Interpreter, GlobalScopeIsCurrentAfterError)
 {
-    // test that when error happens in the inner block, the env stack
-    // correctly unwinds and does not get stuck on the env that was
+    // test that when error happens in the inner block, the scope stack
+    // correctly "unwinds" and does not get stuck on the scope that was
     // current at the point of error
-    // below, error happens where y is defined, but on the exit from
-    // interpreter the global env must be current - where only x is defined
-    assert_env_and_error("var x = 1; { var y; foo; }",
+    // below, error happens where y is defined, but on exit from the
+    // interpreter the global scope must be current - where only x is defined
+    assert_scope_and_error("var x = 1; { var y; foo; }",
         { { "x", Lox::make_number(1) } },
         "foo"
     );
@@ -320,22 +322,22 @@ TEST(Interpreter, EnvIsRestoredAfterError)
 
 TEST(Interpreter, IfStatement)
 {
-    assert_env("var x = 5; if x > 0 { x = 7; }", {
+    assert_scope("var x = 5; if x > 0 { x = 7; }", {
         { "x", Lox::make_number(7) },
     });
-    assert_env("var x = -1; if x > 0 { x = 7; }", {
+    assert_scope("var x = -1; if x > 0 { x = 7; }", {
         { "x", Lox::make_number(-1) },
     });
-    assert_env("var x = 5; if x > 0 { x = 7; } else { x = 3; }", {
+    assert_scope("var x = 5; if x > 0 { x = 7; } else { x = 3; }", {
         { "x", Lox::make_number(7) },
     });
-    assert_env("var x = -1; if x > 0 { x = 7; } else { x = 3; }", {
+    assert_scope("var x = -1; if x > 0 { x = 7; } else { x = 3; }", {
         { "x", Lox::make_number(3) },
     });
-    assert_env("var x = -1; if x > 0 { x = 7; } else if x < 0 { x = 3; }", {
+    assert_scope("var x = -1; if x > 0 { x = 7; } else if x < 0 { x = 3; }", {
         { "x", Lox::make_number(3) },
     });
-    assert_env("var x = 0; if x > 0 { x = 7; } else if x < 0 { x = 3; }", {
+    assert_scope("var x = 0; if x > 0 { x = 7; } else if x < 0 { x = 3; }", {
         { "x", Lox::make_number(0) },
     });
 
@@ -347,10 +349,10 @@ TEST(Interpreter, IfStatement)
 
 TEST(Interpreter, WhileStatement)
 {
-    assert_env("var x = 5; while false { x = 7; }", {
+    assert_scope("var x = 5; while false { x = 7; }", {
         { "x", Lox::make_number(5) },
     });
-    assert_env("var x = 3; var y = 0; while x > 0 { x = x - 1; y = y + 1; }", {
+    assert_scope("var x = 3; var y = 0; while x > 0 { x = x - 1; y = y + 1; }", {
         { "x", Lox::make_number(0) },
         { "y", Lox::make_number(3) },
     });
@@ -359,12 +361,12 @@ TEST(Interpreter, WhileStatement)
     assert_error("while 1 { y; }", "1"); // expected boolean
     assert_error("while true { y; }", "y"); // block fails
     // loop is executed before error happens
-    assert_env_and_error("var x = 0; while true { x = x + 1; if x == 3 { y; } }",
+    assert_scope_and_error("var x = 0; while true { x = x + 1; if x == 3 { y; } }",
         { { "x", Lox::make_number(3) } },
         "y"
     );
     // loop finishes normally if error is not triggered
-    assert_env("var x = 3; while x > 0 { x = x - 1; if x == 5 { y; } }", {
+    assert_scope("var x = 3; while x > 0 { x = x - 1; if x == 5 { y; } }", {
         { "x", Lox::make_number(0) },
     });
 }
@@ -372,12 +374,12 @@ TEST(Interpreter, WhileStatement)
 TEST(Interpreter, ForStatement)
 {
     // no execution when collection is empty
-    assert_env("var s = \"foo\"; for c in \"\" { s = \"bar\"; }", {
+    assert_scope("var s = \"foo\"; for c in \"\" { s = \"bar\"; }", {
         { "s", Lox::make_string("foo") },
     });
 
     // loop executes as many times as elements in collection
-    assert_env(R"(
+    assert_scope(R"(
         var s = "foo";
         var x = 0;
         for c in "bar" {
@@ -392,12 +394,12 @@ TEST(Interpreter, ForStatement)
     assert_error("for c in \"bar\" {} c;", "c");
 
     // loop var shadows same var in outer scope
-    assert_env("var c = \"foo\"; for c in \"bar\" { c = \"baz\"; }", {
+    assert_scope("var c = \"foo\"; for c in \"bar\" { c = \"baz\"; }", {
         { "c", Lox::make_string("foo") },
     });
 
     // 2 loops iterating on the same collection at the same time
-    assert_env(R"(
+    assert_scope(R"(
         var s = "ab";
         var r = "";
         for c in s {
@@ -423,7 +425,7 @@ TEST(Interpreter, BreakStatement)
     // - makes current iteration last, i.e. does not function like continue
     // - can be nested into other statements
     // - only affects inner loop
-    assert_env(R"(
+    assert_scope(R"(
         var x = 5;
         var y = 0;
         while y < 3 {
@@ -437,7 +439,7 @@ TEST(Interpreter, BreakStatement)
         { "y", Lox::make_number(3) },
     });
 
-    assert_env(R"(
+    assert_scope(R"(
         var x = 5;
         var y = 0;
         var s = "";
@@ -462,7 +464,7 @@ TEST(Interpreter, ContinueStatement)
     // - continues the loop, i.e. does not function like break
     // - can be nested into other statements
     // - only affects inner loop
-    assert_env(R"(
+    assert_scope(R"(
         var x = 0;
         var y = 0;
         while y < 3 {
@@ -477,7 +479,7 @@ TEST(Interpreter, ContinueStatement)
         { "y", Lox::make_number(3) },
     });
 
-    assert_env(R"(
+    assert_scope(R"(
         var x = 0;
         var y = 0;
         for c in "foo" {
@@ -496,16 +498,16 @@ TEST(Interpreter, ContinueStatement)
 TEST(Interpreter, Interrupt)
 {
     Lox::g_interrupt = 1;
-    assert_env("while true {}", {});
+    assert_scope("while true {}", {});
     // TODO for loop with infinite iterator
 
     Lox::g_interrupt = 1;
-    assert_env("var x = 5;", {});
+    assert_scope("var x = 5;", {});
 }
 
 TEST(Interpreter, FunctionDeclaration)
 {
-    assert_env("fn f(x, y) { x + y; }", {
+    assert_scope("fn f(x, y) { x + y; }", {
         { "f", std::make_shared<DummyFunction>(R"(
 (fn
   f
@@ -522,13 +524,13 @@ TEST(Interpreter, FunctionDeclaration)
 TEST(Interpreter, CallExpression)
 {
     // arguments work and are local to the function
-    assert_env("fn f(x, y) { z = x + y; } var z = 1; f(2, 3);", {
+    assert_scope("fn f(x, y) { z = x + y; } var z = 1; f(2, 3);", {
         { "z", Lox::make_number(5) },
         { "f", make_dummy_function() },
     });
 
     // implicit return value is nil
-    assert_env("var x = 1; fn f() {} x = f();", {
+    assert_scope("var x = 1; fn f() {} x = f();", {
         { "x", Lox::make_nil() },
         { "f", make_dummy_function() },
     });
@@ -544,13 +546,13 @@ TEST(Interpreter, CallExpression)
 TEST(Interpreter, FunctionShadowsOuterVariables)
 {
     // args shadow outer vars
-    assert_env("var x = 1; fn f(x) { x = x + 7; } f(5);", {
+    assert_scope("var x = 1; fn f(x) { x = x + 7; } f(5);", {
         { "x", Lox::make_number(1) },
         { "f", make_dummy_function() },
     });
 
     // local vars shadow outer vars
-    assert_env("var x = 1; fn f() { var x = 5; x = 7; } f();", {
+    assert_scope("var x = 1; fn f() { var x = 5; x = 7; } f();", {
         { "x", Lox::make_number(1) },
         { "f", make_dummy_function() },
     });
@@ -564,7 +566,7 @@ TEST(Interpreter, FunctionErrorHasFunctionSource)
     // definition source code and not the one of the function call site
     std::string_view definition = "fn f() { x; }";
     std::string_view call = "f();";
-    assert_env_multi_program({ definition, call }, {
+    assert_scope_multi_program({ definition, call }, {
         { "f", std::make_shared<DummyFunction>(R"(
 (fn
   f
@@ -579,13 +581,13 @@ TEST(Interpreter, FunctionErrorHasFunctionSource)
 TEST(Interpreter, ReturnStatement)
 {
     // default return value is nil
-    assert_env("var x = 1; fn f() { return; } x = f();", {
+    assert_scope("var x = 1; fn f() { return; } x = f();", {
         { "x", Lox::make_nil() },
         { "f", make_dummy_function() },
     });
 
     // non-default return value
-    assert_env("fn f(x, y) { return x + y; } var z = f(2, 3);", {
+    assert_scope("fn f(x, y) { return x + y; } var z = f(2, 3);", {
         { "z", Lox::make_number(5) },
         { "f", make_dummy_function() },
     });
@@ -594,7 +596,7 @@ TEST(Interpreter, ReturnStatement)
     // - does not let the rest of the function body execute
     // - works when nested into control flow statements
     // - only affects nearest surrounding function
-    assert_env(R"(
+    assert_scope(R"(
         var x = 1;
         var y = 1;
         fn f() {

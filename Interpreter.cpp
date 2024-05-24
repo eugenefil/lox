@@ -68,13 +68,13 @@ std::shared_ptr<Object> Function::__call__(
 
     assert(!interp.is_return());
 
-    interp.push_env();
+    interp.push_scope();
     auto& params = m_decl->params();
     assert(params.size() == args.size());
     for (std::size_t i = 0; i < args.size(); ++i)
         interp.define_var(params[i]->name(), args[i]);
     auto res = execute_statements(m_decl->block().statements(), interp);
-    interp.pop_env();
+    interp.pop_scope();
 
     if (!res) {
         if (interp.is_return())
@@ -382,9 +382,9 @@ bool AssignStmt::execute(Interpreter& interp) const
 
 bool BlockStmt::execute(Interpreter& interp) const
 {
-    interp.push_env();
+    interp.push_scope();
     auto res = execute_statements(m_stmts, interp);
-    interp.pop_env();
+    interp.pop_scope();
     return res;
 }
 
@@ -463,10 +463,10 @@ bool ForStmt::execute(Interpreter& interp) const
         assert(!interp.is_break());
         assert(!interp.is_continue());
 
-        interp.push_env();
+        interp.push_scope();
         interp.define_var(m_ident->name(), next);
         auto res = execute_statements(m_block->statements(), interp);
-        interp.pop_env();
+        interp.pop_scope();
 
         if (!res) {
             if (interp.is_break()) {
@@ -529,33 +529,33 @@ bool Program::execute(Interpreter& interp) const
     return true;
 }
 
-void Interpreter::push_env()
+void Interpreter::push_scope()
 {
-    m_env_stack.emplace_front();
+    m_scope_stack.emplace_front();
 }
 
-void Interpreter::pop_env()
+void Interpreter::pop_scope()
 {
-    assert(!m_env_stack.empty());
-    m_env_stack.pop_front();
-    assert(!m_env_stack.empty()); // global env must always exist
+    assert(!m_scope_stack.empty());
+    m_scope_stack.pop_front();
+    assert(!m_scope_stack.empty()); // global scope must always exist
 }
 
 void Interpreter::define_var(std::string_view name, std::shared_ptr<Object> value)
 {
     assert(!name.empty());
     assert(value);
-    assert(!m_env_stack.empty());
-    m_env_stack.front()[name] = value;
+    assert(!m_scope_stack.empty());
+    m_scope_stack.front()[name] = value;
 }
 
 std::shared_ptr<Object> Interpreter::get_var(std::string_view name) const
 {
     assert(!name.empty());
-    assert(!m_env_stack.empty());
+    assert(!m_scope_stack.empty());
 
-    for (auto& env : m_env_stack) {
-        if (auto pair = env.find(name); pair != env.end())
+    for (auto& scope : m_scope_stack) {
+        if (auto pair = scope.find(name); pair != scope.end())
             return pair->second;
     }
     return {};
@@ -565,10 +565,10 @@ bool Interpreter::set_var(std::string_view name, std::shared_ptr<Object> value)
 {
     assert(!name.empty());
     assert(value);
-    assert(!m_env_stack.empty());
+    assert(!m_scope_stack.empty());
 
-    for (auto& env : m_env_stack) {
-        if (auto pair = env.find(name); pair != env.end()) {
+    for (auto& scope : m_scope_stack) {
+        if (auto pair = scope.find(name); pair != scope.end()) {
             pair->second = value;
             return true;
         }
@@ -587,9 +587,9 @@ void Interpreter::interpret(std::shared_ptr<Program> program)
 
     m_errors.clear();
     m_source = program->text();
-    assert(m_env_stack.size() == 1);
+    assert(m_scope_stack.size() == 1);
     program->execute(*this);
-    assert(m_env_stack.size() == 1);
+    assert(m_scope_stack.size() == 1);
 }
 
 volatile std::sig_atomic_t g_interrupt;
