@@ -69,11 +69,11 @@ std::shared_ptr<Object> Function::__call__(
     assert(!interp.is_return());
 
     auto scope_change = interp.new_scope(m_parent_scope);
-    auto& params = m_decl->params();
+    auto& params = m_func->params();
     assert(params.size() == args.size());
     for (std::size_t i = 0; i < args.size(); ++i)
         interp.scope().define_var(params[i]->name(), args[i]);
-    auto res = execute_statements(m_decl->block().statements(), interp);
+    auto res = execute_statements(m_func->block().statements(), interp);
 
     if (!res) {
         if (interp.is_return())
@@ -317,6 +317,12 @@ std::shared_ptr<Object> CallExpr::eval(Interpreter& interp) const
     return callee->__call__(arg_vals, interp);
 }
 
+std::shared_ptr<Object> FunctionExpr::eval(Interpreter& interp) const
+{
+    return std::make_shared<Function>(shared_from_this(), interp.scope_ptr(),
+                                      interp.source());
+}
+
 bool ExpressionStmt::execute(Interpreter& interp) const
 {
     if (auto val = m_expr->eval(interp)) {
@@ -494,10 +500,10 @@ bool ContinueStmt::execute(Interpreter& interp) const
 
 bool FunctionDeclaration::execute(Interpreter& interp) const
 {
-    interp.scope().define_var(m_name->name(),
-                              std::make_shared<Function>(shared_from_this(),
-                                                         interp.scope_ptr(),
-                                                         interp.source()));
+    auto func = m_func->eval(interp);
+    if (!func)
+        return false;
+    interp.scope().define_var(m_name->name(), func);
     return true;
 }
 

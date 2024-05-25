@@ -13,6 +13,13 @@ const Token& Parser::peek() const
     return EOF_TOKEN;
 }
 
+const Token& Parser::peek2() const
+{
+    if (m_cur + 1 < m_tokens.size())
+        return m_tokens[m_cur + 1];
+    return EOF_TOKEN;
+}
+
 bool Parser::match(TokenType next, std::string_view err_msg)
 {
     auto& token = peek();
@@ -58,6 +65,51 @@ std::shared_ptr<Identifier> Parser::parse_identifier()
     return {};
 }
 
+std::shared_ptr<FunctionExpr> Parser::parse_function(const Token& fn_token)
+{
+    if (!match(TokenType::LeftParen, "expected '('"))
+        return {};
+
+    std::vector<std::shared_ptr<Identifier>> params;
+    if (!match(TokenType::RightParen)) {
+        do {
+            auto ident = parse_identifier();
+            if (!ident)
+                return {};
+            params.push_back(ident);
+        } while (match(TokenType::Comma));
+
+        if (!match(TokenType::RightParen, "expected ')'"))
+            return {};
+    }
+
+    start_function_context();
+    auto block = parse_block_statement();
+    end_function_context();
+    if (!block)
+        return {};
+
+    // local var cannot shadow a param - this effectively disables the param
+    // c++ and js do the same, rust warns if param was unused before being shadowed
+    if (!params.empty()) {
+        for (auto& stmt : block->statements()) {
+            if (stmt->is_var_statement()) {
+                auto varname = static_cast<VarStmt&>(*stmt).identifier().name();
+                for (auto& param : params) {
+                    if (varname == param->name()) {
+                        error(std::format("variable '{}' shadows function parameter of the same name",
+                            varname), stmt->text());
+                        return {};
+                    }
+                }
+            }
+        }
+    }
+
+    return std::make_shared<FunctionExpr>(std::move(params), block,
+        merge_texts(fn_token.text(), block->text()));
+}
+
 std::shared_ptr<Expr> Parser::parse_primary()
 {
     if (auto& token = peek(); token.type() == TokenType::String) {
@@ -90,6 +142,9 @@ std::shared_ptr<Expr> Parser::parse_primary()
                 error("'(' was never closed", token.text());
         }
         return {};
+    } else if (token.type() == TokenType::Fn) {
+        advance();
+        return parse_function(token);
     } else
         error("expected expression", token.text());
     return {};
@@ -506,47 +561,11 @@ std::shared_ptr<Stmt> Parser::parse_function_declaration()
     if (!name)
         return {};
 
-    if (!match(TokenType::LeftParen, "expected '('"))
+    auto func = parse_function(fn_tok);
+    if (!func)
         return {};
 
-    std::vector<std::shared_ptr<Identifier>> params;
-    if (!match(TokenType::RightParen)) {
-        do {
-            auto ident = parse_identifier();
-            if (!ident)
-                return {};
-            params.push_back(ident);
-        } while (match(TokenType::Comma));
-
-        if (!match(TokenType::RightParen, "expected ')'"))
-            return {};
-    }
-
-    start_function_context();
-    auto block = parse_block_statement();
-    end_function_context();
-    if (!block)
-        return {};
-
-    // local var cannot shadow a param - this effectively disables the param
-    // c++ and js do the same, rust warns if param was unused before being shadowed
-    if (!params.empty()) {
-        for (auto& stmt : block->statements()) {
-            if (stmt->is_var_statement()) {
-                auto varname = static_cast<VarStmt&>(*stmt).identifier().name();
-                for (auto& param : params) {
-                    if (varname == param->name()) {
-                        error(std::format("variable '{}' shadows function parameter of the same name",
-                            varname), stmt->text());
-                        return {};
-                    }
-                }
-            }
-        }
-    }
-
-    return std::make_shared<FunctionDeclaration>(name, std::move(params), block,
-        merge_texts(fn_tok.text(), block->text()));
+    return std::make_shared<FunctionDeclaration>(name, func, func->text());
 }
 
 std::shared_ptr<Stmt> Parser::parse_return_statement()
@@ -592,7 +611,8 @@ std::shared_ptr<Stmt> Parser::parse_statement()
         return parse_break_statement();
     else if (token.type() == TokenType::Continue)
         return parse_continue_statement();
-    else if (token.type() == TokenType::Fn)
+    else if (token.type() == TokenType::Fn &&
+             peek2().type() == TokenType::Identifier)
         return parse_function_declaration();
     else if (token.type() == TokenType::Return)
         return parse_return_statement();

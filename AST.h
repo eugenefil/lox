@@ -226,6 +226,36 @@ private:
     std::vector<std::shared_ptr<Expr>> m_args;
 };
 
+class BlockStmt;
+
+class FunctionExpr: public Expr
+    , public std::enable_shared_from_this<FunctionExpr> {
+public:
+    explicit FunctionExpr(std::vector<std::shared_ptr<Identifier>>&& params,
+        std::shared_ptr<BlockStmt> block, std::string_view text)
+        : Expr(text)
+        , m_params(std::move(params))
+        , m_block(block)
+    {
+        for (auto& param : params)
+            assert(param);
+        assert(block);
+    }
+
+    std::string dump(std::size_t indent) const override;
+    std::shared_ptr<Object> eval(Interpreter&) const override;
+
+    const std::vector<std::shared_ptr<Identifier>>& params() const
+    {
+        return m_params;
+    }
+    const BlockStmt& block() const { return *m_block; }
+
+private:
+    std::vector<std::shared_ptr<Identifier>> m_params;
+    std::shared_ptr<BlockStmt> m_block;
+};
+
 class Stmt : public ASTNode {
 public:
     explicit Stmt(std::string_view text) : ASTNode(text)
@@ -412,36 +442,24 @@ public:
     bool execute(Interpreter&) const override;
 };
 
-class FunctionDeclaration: public Stmt
-    , public std::enable_shared_from_this<FunctionDeclaration> {
+class FunctionDeclaration: public Stmt {
 public:
     explicit FunctionDeclaration(std::shared_ptr<Identifier> name,
-        std::vector<std::shared_ptr<Identifier>>&& params,
-        std::shared_ptr<BlockStmt> block, std::string_view text)
+        std::shared_ptr<FunctionExpr> func, std::string_view text)
         : Stmt(text)
         , m_name(name)
-        , m_params(std::move(params))
-        , m_block(block)
+        , m_func(func)
     {
         assert(name);
-        for (auto& param : params)
-            assert(param);
-        assert(block);
+        assert(func);
     }
 
     std::string dump(std::size_t indent) const override;
     bool execute(Interpreter&) const override;
 
-    const BlockStmt& block() const { return *m_block; }
-    const std::vector<std::shared_ptr<Identifier>>& params() const
-    {
-        return m_params;
-    }
-
 private:
     std::shared_ptr<Identifier> m_name;
-    std::vector<std::shared_ptr<Identifier>> m_params;
-    std::shared_ptr<BlockStmt> m_block;
+    std::shared_ptr<FunctionExpr> m_func;
 };
 
 class ReturnStmt: public Stmt {

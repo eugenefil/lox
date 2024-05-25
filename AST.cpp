@@ -149,6 +149,22 @@ std::string CallExpr::dump(std::size_t indent) const
     return s;
 }
 
+std::string FunctionExpr::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += "(fn\n";
+    s += make_indent(indent + 1);
+    s += "(params";
+    for (auto& param : m_params) {
+        s += '\n';
+        s += param->dump(indent + 2);
+    }
+    s += ")\n";
+    s += m_block->dump(indent + 1);
+    s += ')';
+    return s;
+}
+
 std::string ExpressionStmt::dump(std::size_t indent) const
 {
     return m_expr->dump(indent);
@@ -258,17 +274,17 @@ std::string ContinueStmt::dump(std::size_t indent) const
 std::string FunctionDeclaration::dump(std::size_t indent) const
 {
     std::string s = make_indent(indent);
-    s += "(fn\n";
+    s += "(fndecl\n";
     s += m_name->dump(indent + 1);
     s += '\n';
     s += make_indent(indent + 1);
     s += "(params";
-    for (auto& param : m_params) {
+    for (auto& param : m_func->params()) {
         s += '\n';
         s += param->dump(indent + 2);
     }
     s += ")\n";
-    s += m_block->dump(indent + 1);
+    s += m_func->block().dump(indent + 1);
     s += ')';
     return s;
 }

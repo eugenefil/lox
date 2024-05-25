@@ -117,6 +117,7 @@ primary ->
     | 'nil'
     | IDENTIFIER
     | '(' expression ')'
+    | 'fn' '(' parameters? ')' block
 
 arguments ->
       expression (',' expression)*

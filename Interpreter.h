@@ -172,27 +172,26 @@ private:
 
 class Function : public Object {
 public:
-    explicit Function(std::shared_ptr<const FunctionDeclaration> decl,
+    explicit Function(std::shared_ptr<const FunctionExpr> func,
                       std::shared_ptr<Scope> parent_scope,
                       std::string_view program_source)
-        : m_decl(decl)
+        : m_func(func)
         , m_parent_scope(parent_scope)
         , m_program_source(program_source)
     {
-        assert(decl);
+        assert(func);
         assert(parent_scope);
         assert(!program_source.empty());
     }
 
     std::string_view type_name() const override { return "Function"; }
-    std::shared_ptr<const FunctionDeclaration> decl() const { return m_decl; }
-
     std::shared_ptr<Object> __call__(
         const std::vector<std::shared_ptr<Object>>&, Interpreter&) override;
-    std::size_t arity() const override { return m_decl->params().size(); }
+    std::size_t arity() const override { return m_func->params().size(); }
+    const FunctionExpr& ast() const { return *m_func; }
 
 private:
-    std::shared_ptr<const FunctionDeclaration> m_decl;
+    std::shared_ptr<const FunctionExpr> m_func;
     std::shared_ptr<Scope> m_parent_scope;
     // source of the program where function was defined, for error reporting
     std::string_view m_program_source;

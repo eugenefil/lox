@@ -452,20 +452,20 @@ TEST(Parser, ContinueStatement)
 TEST(Parser, FunctionDeclaration)
 {
     assert_stmt("fn f() {}", R"(
-(fn
+(fndecl
   f
   (params)
   (block))
     )");
     assert_stmt("fn f(x) {}", R"(
-(fn
+(fndecl
   f
   (params
     x)
   (block))
     )");
     assert_stmt("fn f(x, y, z) { x = 1; }", R"(
-(fn
+(fndecl
   f
   (params
     x
@@ -477,10 +477,9 @@ TEST(Parser, FunctionDeclaration)
       1)))
     )");
 
-    assert_error("fn 5()", "5"); // identifier expected
     assert_error("fn f _()", "_"); // expected '('
-    assert_error("fn f(5)", "5"); // identifier expected
-    assert_error("fn f(x, 5)", "5"); // identifier expected
+    assert_error("fn f(5)", "5"); // expected identifier
+    assert_error("fn f(x, 5)", "5"); // expected identifier
     assert_error("fn f(x {}", "{"); // expected ')'
     assert_error("fn f(x) _", "_"); // expected '{'
 
@@ -488,7 +487,7 @@ TEST(Parser, FunctionDeclaration)
     assert_error("fn f(x) { var x; }", "var x;");
     // but in a block it's fine
     assert_stmt("fn f(x) { { var x; } }", R"(
-(fn
+(fndecl
   f
   (params
     x)
@@ -558,7 +557,7 @@ TEST(Parser, CallExpression)
 TEST(Parser, ReturnStatement)
 {
     assert_stmt("fn f() { return; }", R"(
-(fn
+(fndecl
   f
   (params)
   (block
@@ -566,7 +565,7 @@ TEST(Parser, ReturnStatement)
     )");
 
     assert_stmt("fn f() { return x + y; }", R"(
-(fn
+(fndecl
   f
   (params)
   (block
@@ -580,4 +579,21 @@ TEST(Parser, ReturnStatement)
     assert_error("fn f() {} return;", "return"); // same
     assert_error("fn f() { return /; }", "/"); // expected expression
     assert_error("fn f() { return 5 _ }", "_"); // expected ';'
+}
+
+TEST(Parser, FunctionExpression)
+{
+    // test common case, others are tested by function declaration tests
+    assert_expr("fn(x, y) { x = 1; }", R"(
+(fn
+  (params
+    x
+    y)
+  (block
+    (=
+      x
+      1)))
+    )");
+
+    assert_error("fn 5()", "5"); // expected '('
 }
