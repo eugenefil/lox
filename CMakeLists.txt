@@ -19,7 +19,7 @@ add_library(lib Utils.cpp Lexer.cpp AST.cpp Parser.cpp Interpreter.cpp)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(READLINE REQUIRED IMPORTED_TARGET readline)
 
-add_executable(lox main.cpp)
+add_executable(lox main.cpp Prelude.cpp)
 target_link_libraries(lox lib PkgConfig::READLINE)
 
 find_package(GTest REQUIRED)

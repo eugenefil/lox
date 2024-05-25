@@ -1,5 +1,6 @@
 #include "Parser.h"
 #include "Interpreter.h"
+#include "Prelude.h"
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -226,6 +227,7 @@ static int repl()
     setup_signals();
     repl_interp = std::make_unique<Lox::Interpreter>();
     repl_interp->repl_mode(true);
+    Lox::prelude(*repl_interp);
 
     rl_outstream = stderr;
     // this call disables terminal line-buffering,
@@ -283,6 +285,7 @@ static int run(std::string path)
     }
 
     Lox::Interpreter interp;
+    Lox::prelude(interp);
     if (eval(buf.view(), path, interp, false))
         return 0;
     return 1;
