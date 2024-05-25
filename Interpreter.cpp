@@ -55,7 +55,7 @@ static bool execute_statements(const std::vector<std::shared_ptr<Stmt>>& stmts,
     return true;
 }
 
-std::shared_ptr<Object> UserFunction::__call__(
+std::shared_ptr<Object> Function::__call__(
     const std::vector<std::shared_ptr<Object>>& args,
     Interpreter& interp)
 {
@@ -320,8 +320,8 @@ std::shared_ptr<Object> CallExpr::eval(Interpreter& interp) const
 
 std::shared_ptr<Object> FunctionExpr::eval(Interpreter& interp) const
 {
-    return std::make_shared<UserFunction>(shared_from_this(), interp.scope_ptr(),
-                                          interp.source());
+    return std::make_shared<Function>(shared_from_this(), interp.scope_ptr(),
+        interp.source());
 }
 
 bool ExpressionStmt::execute(Interpreter& interp) const

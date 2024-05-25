@@ -68,10 +68,10 @@ static void assert_scope_multi_program(std::vector<std::string_view> sources,
         ASSERT_TRUE(obj);
         ASSERT_TRUE(value);
         if (value->type_name() == "DummyFunction") {
-            ASSERT_EQ(obj->type_name(), "UserFunction");
+            ASSERT_EQ(obj->type_name(), "Function");
             auto& dummy = static_cast<DummyFunction&>(*value);
             if (!dummy.dump().empty()) {
-                auto& func = static_cast<Lox::UserFunction&>(*obj);
+                auto& func = static_cast<Lox::Function&>(*obj);
                 EXPECT_EQ(func.ast().dump(0), dummy.dump());
             }
         } else

@@ -175,11 +175,11 @@ public:
     virtual std::size_t arity() const = 0;
 };
 
-class UserFunction : public Callable {
+class Function : public Callable {
 public:
-    explicit UserFunction(std::shared_ptr<const FunctionExpr> func,
-                          std::shared_ptr<Scope> parent_scope,
-                          std::string_view program_source)
+    explicit Function(std::shared_ptr<const FunctionExpr> func,
+                      std::shared_ptr<Scope> parent_scope,
+                      std::string_view program_source)
         : m_func(func)
         , m_parent_scope(parent_scope)
         , m_program_source(program_source)
@@ -189,7 +189,7 @@ public:
         assert(!program_source.empty());
     }
 
-    std::string_view type_name() const override { return "UserFunction"; }
+    std::string_view type_name() const override { return "Function"; }
     std::shared_ptr<Object> __call__(
         const std::vector<std::shared_ptr<Object>>&, Interpreter&) override;
     std::size_t arity() const override { return m_func->params().size(); }

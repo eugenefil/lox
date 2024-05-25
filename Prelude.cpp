@@ -31,7 +31,7 @@ private:
     std::size_t m_arity { 0 };
 };
 
-static std::shared_ptr<Object> print(const ArgsVector& args, Interpreter& interp)
+static std::shared_ptr<Object> print(const ArgsVector& args, Interpreter&)
 {
     for (auto& arg : args)
         std::cout << arg->__str__();
