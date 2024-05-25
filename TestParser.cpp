@@ -273,20 +273,6 @@ TEST(Parser, VarStatement)
     assert_error("var x = 5_", "_");
 }
 
-TEST(Parser, PrintStatement)
-{
-    assert_stmt("print;", "(print)");
-    assert_stmt("print 5 + 7;", R"(
-(print
-  (+
-    5
-    7))
-    )");
-
-    assert_error("print /", "/");
-    assert_error("print 5_", "_");
-}
-
 TEST(Parser, AssignStatement)
 {
     assert_stmt("x = 5 + 7;", R"(
@@ -320,44 +306,39 @@ TEST(Parser, BlockStatement)
 
 TEST(Parser, IfStatement)
 {
-    assert_stmt("if x > 0 { print x; }", R"(
+    assert_stmt("if x > 0 { x; }", R"(
 (if
   (>
     x
     0)
   (block
-    (print
-      x)))
+    x))
     )");
 
-    assert_stmt("if x > 0 { print x; } else { print y; }", R"(
+    assert_stmt("if x > 0 { x; } else { y; }", R"(
 (if
   (>
     x
     0)
   (block
-    (print
-      x))
+    x)
   (block
-    (print
-      y)))
+    y))
     )");
 
-    assert_stmt("if x > 0 { print x; } else if y > 0 { print y; }", R"(
+    assert_stmt("if x > 0 { x; } else if y > 0 { y; }", R"(
 (if
   (>
     x
     0)
   (block
-    (print
-      x))
+    x)
   (if
     (>
       y
       0)
     (block
-      (print
-        y))))
+      y)))
     )");
 
     assert_error("if / ", "/");
@@ -386,13 +367,12 @@ TEST(Parser, WhileStatement)
 
 TEST(Parser, ForStatement)
 {
-    assert_stmt("for c in \"foo\" { print c; }", R"(
+    assert_stmt("for c in \"foo\" { c; }", R"(
 (for
   c
   "foo"
   (block
-    (print
-      c)))
+    c))
     )");
 
     assert_error("for 5 in", "5"); // expected identifier

@@ -136,7 +136,6 @@ TEST(Lexer, Keywords)
     assert_token("in", TokenType::In);
     assert_token("nil", TokenType::Nil);
     assert_token("or", TokenType::Or);
-    assert_token("print", TokenType::Print);
     assert_token("return", TokenType::Return);
     assert_token("super", TokenType::Super);
     assert_token("this", TokenType::This);
@@ -160,7 +159,7 @@ TEST(Lexer, MultipleTokens)
 {
     assert_tokens(R"(
         var foo = bar * 3.14;
-        print(foo, "\tbaz");)", {
+        f(foo, "\tbaz");)", {
         { TokenType::Var, "var" },
         { TokenType::Identifier, "foo" },
         { TokenType::Equal, "=" },
@@ -168,7 +167,7 @@ TEST(Lexer, MultipleTokens)
         { TokenType::Star, "*" },
         { TokenType::Number, "3.14", 3.14 },
         { TokenType::Semicolon, ";" },
-        { TokenType::Print, "print" },
+        { TokenType::Identifier, "f" },
         { TokenType::LeftParen, "(" },
         { TokenType::Identifier, "foo" },
         { TokenType::Comma, "," },

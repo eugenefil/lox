@@ -100,7 +100,6 @@ static const std::unordered_map<std::string_view, TokenType> keywords = {
     { "in", TokenType::In },
     { "nil", TokenType::Nil },
     { "or", TokenType::Or },
-    { "print", TokenType::Print },
     { "return", TokenType::Return },
     { "super", TokenType::Super },
     { "this", TokenType::This },

@@ -42,7 +42,6 @@ private:
     std::shared_ptr<Expr> parse_expression();
 
     std::shared_ptr<Stmt> parse_var_statement();
-    std::shared_ptr<Stmt> parse_print_statement();
     std::shared_ptr<Stmt> parse_assign_statement(std::shared_ptr<Expr>);
     std::shared_ptr<BlockStmt> parse_block_statement();
     std::shared_ptr<Stmt> parse_if_statement();

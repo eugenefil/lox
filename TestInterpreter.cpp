@@ -278,11 +278,6 @@ TEST(Interpreter, VarStatement)
     });
 }
 
-TEST(Interpreter, PrintStatement)
-{
-    assert_error("print -nil;", "-nil");
-}
-
 TEST(Interpreter, ProgramsShareGlobalScope)
 {
     assert_scope_multi_program({ "var x = 5;", "var y = x * 2;" }, {

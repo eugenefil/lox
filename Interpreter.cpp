@@ -351,18 +351,6 @@ bool VarStmt::execute(Interpreter& interp) const
     return true;
 }
 
-bool PrintStmt::execute(Interpreter& interp) const
-{
-    if (m_expr) {
-        auto val = m_expr->eval(interp);
-        if (!val)
-            return false;
-        std::cout << val->__str__();
-    }
-    std::cout << '\n';
-    return true;
-}
-
 bool AssignStmt::execute(Interpreter& interp) const
 {
     auto val = m_value->eval(interp);

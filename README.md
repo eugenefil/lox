@@ -89,8 +89,7 @@ parameters ->
       IDENTIFIER (',' IDENTIFIER)*
 
 statement ->
-      'print' expression? ';'
-    | 'var' IDENTIFIER ('=' expression)? ';'
+      'var' IDENTIFIER ('=' expression)? ';'
     | block
     | if-statement
     | 'while' expression block

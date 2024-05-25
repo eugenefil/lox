@@ -379,28 +379,6 @@ std::shared_ptr<Stmt> Parser::parse_var_statement()
     return {};
 }
 
-std::shared_ptr<Stmt> Parser::parse_print_statement()
-{
-    auto& print = peek();
-    assert(print.type() == TokenType::Print);
-    advance();
-
-    if (auto& token = peek(); token.type() == TokenType::Semicolon) {
-        advance();
-        return std::make_shared<PrintStmt>(std::shared_ptr<Expr>(),
-            merge_texts(print.text(), token.text()));
-    }
-
-    auto expr = parse_expression();
-    if (!expr)
-        return {};
-
-    if (auto [res, end] = finish_statement(); res)
-        return std::make_shared<PrintStmt>(expr,
-            merge_texts(print.text(), end.size() ? end : expr->text()));
-    return {};
-}
-
 std::shared_ptr<Stmt> Parser::parse_assign_statement(std::shared_ptr<Expr> place)
 {
     assert(place);
@@ -597,8 +575,6 @@ std::shared_ptr<Stmt> Parser::parse_statement()
 {
     if (auto& token = peek(); token.type() == TokenType::Var)
         return parse_var_statement();
-    else if (token.type() == TokenType::Print)
-        return parse_print_statement();
     else if (token.type() == TokenType::LeftBrace)
         return parse_block_statement();
     else if (token.type() == TokenType::If)
