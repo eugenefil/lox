@@ -22,7 +22,8 @@ public:
     bool is_number() const { return type_name() == "Number"; }
     bool is_bool() const { return type_name() == "Bool"; }
     bool is_niltype() const { return type_name() == "NilType"; }
-    bool is_function() const { return type_name() == "Function"; }
+
+    virtual bool is_callable() const { return false; }
 
     virtual std::string_view get_string() const { assert(0); }
     virtual double get_number() const { assert(0); }
@@ -33,10 +34,6 @@ public:
     {
         return std::string("<").append(type_name()).append(">");
     }
-
-    virtual std::shared_ptr<Object> __call__(
-        const std::vector<std::shared_ptr<Object>>&, Interpreter&) { assert(0); }
-    virtual std::size_t arity() const { assert(0); }
 
     virtual bool is_iterable() const { return false; }
     virtual std::shared_ptr<Iterator> __iter__() const { assert(0); }
@@ -170,11 +167,19 @@ private:
     MapType m_vars;
 };
 
-class Function : public Object {
+class Callable : public Object {
 public:
-    explicit Function(std::shared_ptr<const FunctionExpr> func,
-                      std::shared_ptr<Scope> parent_scope,
-                      std::string_view program_source)
+    bool is_callable() const override { return true; }
+    virtual std::shared_ptr<Object> __call__(
+        const std::vector<std::shared_ptr<Object>>&, Interpreter&) = 0;
+    virtual std::size_t arity() const = 0;
+};
+
+class UserFunction : public Callable {
+public:
+    explicit UserFunction(std::shared_ptr<const FunctionExpr> func,
+                          std::shared_ptr<Scope> parent_scope,
+                          std::string_view program_source)
         : m_func(func)
         , m_parent_scope(parent_scope)
         , m_program_source(program_source)
@@ -184,7 +189,7 @@ public:
         assert(!program_source.empty());
     }
 
-    std::string_view type_name() const override { return "Function"; }
+    std::string_view type_name() const override { return "UserFunction"; }
     std::shared_ptr<Object> __call__(
         const std::vector<std::shared_ptr<Object>>&, Interpreter&) override;
     std::size_t arity() const override { return m_func->params().size(); }

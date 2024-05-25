@@ -4,7 +4,7 @@
 #include <gtest/gtest.h>
 #include <optional>
 
-// dummy function that can be compared with the real function object
+// dummy function that can be compared with the real user function object
 // by comparing ast dumps, assuming non-empty dump is used for construction
 // if empty dump is used for construction, dummy is considered equal
 class DummyFunction : public Lox::Object {
@@ -68,10 +68,10 @@ static void assert_scope_multi_program(std::vector<std::string_view> sources,
         ASSERT_TRUE(obj);
         ASSERT_TRUE(value);
         if (value->type_name() == "DummyFunction") {
-            ASSERT_TRUE(obj->is_function());
+            ASSERT_EQ(obj->type_name(), "UserFunction");
             auto& dummy = static_cast<DummyFunction&>(*value);
             if (!dummy.dump().empty()) {
-                auto& func = static_cast<Lox::Function&>(*obj);
+                auto& func = static_cast<Lox::UserFunction&>(*obj);
                 EXPECT_EQ(func.ast().dump(0), dummy.dump());
             }
         } else

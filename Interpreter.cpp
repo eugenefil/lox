@@ -55,7 +55,7 @@ static bool execute_statements(const std::vector<std::shared_ptr<Stmt>>& stmts,
     return true;
 }
 
-std::shared_ptr<Object> Function::__call__(
+std::shared_ptr<Object> UserFunction::__call__(
     const std::vector<std::shared_ptr<Object>>& args,
     Interpreter& interp)
 {
@@ -283,11 +283,12 @@ std::shared_ptr<Object> CallExpr::eval(Interpreter& interp) const
     auto callee = m_callee->eval(interp);
     if (!callee)
         return {};
-    if (!callee->is_function()) {
+    if (!callee->is_callable()) {
         interp.error(std::format("'{}' object is not callable",
             callee->type_name()), m_callee->text());
         return {};
     }
+    auto& callable = static_cast<Callable&>(*callee);
 
     // if arity were to be checked before eval'ing the args, then an arity
     // error message with the invalid arguments supplied would look like the
@@ -309,18 +310,18 @@ std::shared_ptr<Object> CallExpr::eval(Interpreter& interp) const
         arg_vals.push_back(arg_val);
     }
 
-    if (callee->arity() != m_args.size()) {
+    if (callable.arity() != m_args.size()) {
         interp.error(std::format("expected {} arguments, got {}",
-            callee->arity(), m_args.size()), m_text);
+            callable.arity(), m_args.size()), m_text);
         return {};
     }
-    return callee->__call__(arg_vals, interp);
+    return callable.__call__(arg_vals, interp);
 }
 
 std::shared_ptr<Object> FunctionExpr::eval(Interpreter& interp) const
 {
-    return std::make_shared<Function>(shared_from_this(), interp.scope_ptr(),
-                                      interp.source());
+    return std::make_shared<UserFunction>(shared_from_this(), interp.scope_ptr(),
+                                          interp.source());
 }
 
 bool ExpressionStmt::execute(Interpreter& interp) const
