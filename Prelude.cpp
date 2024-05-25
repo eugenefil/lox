@@ -33,15 +33,25 @@ private:
 
 static std::shared_ptr<Object> print(const ArgsVector& args, Interpreter&)
 {
-    for (auto& arg : args)
-        std::cout << arg->__str__();
+    std::cout << args[0]->__str__();
     std::cout << '\n';
     return make_nil();
 }
 
+static std::shared_ptr<Object> input(const ArgsVector& args, Interpreter&)
+{
+    std::cout << args[0]->__str__();
+    std::string line;
+    if (std::getline(std::cin, line))
+        return make_string(std::move(line));
+    return {};
+}
+
 void prelude(Interpreter& interp)
 {
-    interp.scope().define_var("print", std::make_shared<BuiltinFunction>(print, 1));
+    auto& scope = interp.scope();
+    scope.define_var("print", std::make_shared<BuiltinFunction>(print, 1));
+    scope.define_var("input", std::make_shared<BuiltinFunction>(input, 1));
 }
 
 }
