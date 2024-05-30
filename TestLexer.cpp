@@ -1,10 +1,11 @@
 #include "Lexer.h"
 #include <gtest/gtest.h>
-#include <cstdio>
 #include <sstream>
 #include <fstream>
 #include <filesystem>
 #include <cctype>
+#include <cstdio>
+#include <sys/wait.h>
 namespace fs = std::filesystem;
 
 using Lox::TokenType;
@@ -50,11 +51,6 @@ static void assert_error(std::string_view source, std::string_view error_span = 
 TEST(Lexer, EmptySourceReturnsNoTokens)
 {
     assert_tokens("", {});
-}
-
-TEST(Lexer, InvalidToken)
-{
-    assert_error("@");
 }
 
 TEST(Lexer, SkipWhitespace)
@@ -222,19 +218,22 @@ TEST(SourceMap, Ranges)
 
 class Test : public testing::Test {
 public:
-    Test(const fs::path& source_path, const fs::path& stdout_path)
+    Test(const fs::path& source_path, const fs::path& output_path)
         : m_source_path(source_path)
-        , m_stdout_path(stdout_path)
+        , m_output_path(output_path)
     {
         assert(!source_path.empty());
-        assert(!stdout_path.empty());
+        assert(!output_path.empty());
     }
 
     void TestBody() override
     {
         errno = 0; // popen does not always set errno on error
         FILE* pipe = popen(std::string("</dev/null ./lox lex ")
-            .append(m_source_path).c_str(), "r");
+            .append(m_source_path)
+            .append(" ")
+            .append(redirects())
+            .c_str(), "r");
         ASSERT_NE(pipe, NULL);
 
         std::ostringstream real_out;
@@ -245,7 +244,9 @@ public:
                 int err = std::ferror(pipe);
                 int ret = pclose(pipe);
                 ASSERT_EQ(err, 0);
-                ASSERT_EQ(ret, 0);
+                ASSERT_TRUE(ret >= 0);
+                ASSERT_TRUE(WIFEXITED(ret));
+                ASSERT_EQ(WEXITSTATUS(ret), retcode());
                 break; // eof
             }
             cbuf[len] = '\0';
@@ -253,7 +254,7 @@ public:
         }
 
         std::ostringstream mustbe_out;
-        std::ifstream fin(m_stdout_path);
+        std::ifstream fin(m_output_path);
         ASSERT_TRUE(fin.is_open());
         while (mustbe_out << fin.rdbuf())
             ;
@@ -264,11 +265,36 @@ public:
     }
 
 private:
+    virtual std::string redirects() const { return ""; }
+    virtual int retcode() const { return 0; }
+
     fs::path m_source_path;
-    fs::path m_stdout_path;
+    fs::path m_output_path;
 };
 
-[[noreturn]] static void filename_error(const std::string& filename,
+class PassingTest : public Test {
+public:
+    PassingTest(const fs::path& source_path, const fs::path& output_path)
+        : Test(source_path, output_path)
+    {}
+};
+
+class FailingTest : public Test {
+public:
+    FailingTest(const fs::path& source_path, const fs::path& output_path)
+        : Test(source_path, output_path)
+    {}
+
+private:
+    std::string redirects() const override
+    {
+        return "2>&1 >/dev/null";
+    }
+
+    int retcode() const override { return 1; }
+};
+
+[[noreturn]] static void error(const std::string& filename,
     const std::string& msg)
 {
     std::cerr << "error: " << msg << ": " << filename << '\n';
@@ -292,9 +318,9 @@ static std::string test_path_to_name(const fs::path& path)
 {
     std::string base = path.stem();
     if (base.empty())
-        filename_error(path, "test file name cannot be empty");
+        error(path, "test file name cannot be empty");
     if (!std::isalpha(base[0]))
-        filename_error(path, "test file name must start with a letter");
+        error(path, "test file name must start with a letter");
 
     // make camel-case
     base[0] = std::toupper(base[0]);
@@ -303,7 +329,7 @@ static std::string test_path_to_name(const fs::path& path)
             if (i + 1 < base.size())
                 base[i + 1] = std::toupper(base[i + 1]);
         } else if (!is_alpha(base[i]) && !is_digit(base[i]))
-            filename_error(path, "test file name may contain only letters, digits, hyphens and underscores");
+            error(path, "test file name may contain only letters, digits, hyphens and underscores");
     }
 
     // remove hyphens and underscores
@@ -321,12 +347,19 @@ static void register_tests()
             if (auto stdout_path = fs::path(source_path)
                     .replace_extension(".stdout");
                 fs::is_regular_file(stdout_path)) {
-                testing::RegisterTest("LexerSuite",
+                testing::RegisterTest("LexerPass",
                     test_path_to_name(source_path).c_str(),
                     nullptr, nullptr, __FILE__, __LINE__,
-                    [=]() { return new Test(source_path, stdout_path); });
+                    [=]() { return new PassingTest(source_path, stdout_path); });
+            } else if (auto stderr_path = fs::path(source_path)
+                    .replace_extension(".stderr");
+                fs::is_regular_file(stderr_path)) {
+                testing::RegisterTest("LexerFail",
+                    test_path_to_name(source_path).c_str(),
+                    nullptr, nullptr, __FILE__, __LINE__,
+                    [=]() { return new FailingTest(source_path, stderr_path); });
             } else
-                assert(0);
+                error(source_path, "missing corresponding .stdout/.stderr file");
         }
     }
 }

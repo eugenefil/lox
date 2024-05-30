@@ -1,0 +1,5 @@
+error: unknown token
+ --> ../tests/lexer/invalid-token.lox:1:1
+  |
+1 | @
+  | ^
