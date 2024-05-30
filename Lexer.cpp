@@ -5,6 +5,25 @@
 
 namespace Lox {
 
+std::string Token::value_string() const
+{
+    if (std::holds_alternative<DefaultValueType>(m_value))
+        return "<none>";
+    else if (std::holds_alternative<bool>(m_value))
+        return std::get<bool>(m_value) ? "true" : "false";
+    else if (std::holds_alternative<double>(m_value))
+        return number_to_string(std::get<double>(m_value));
+    else if (std::holds_alternative<std::string>(m_value))
+        return escape(std::get<std::string>(m_value));
+    else
+        assert(0);
+}
+
+std::string Token::dump() const
+{
+    return type_string() + ' ' + value_string() + ' ' + escape(std::string(m_text));
+}
+
 bool Lexer::match(char next)
 {
     if (peek() == next) {

@@ -8,26 +8,55 @@
 
 namespace Lox {
 
+#define FOR_EACH_TOKEN_TYPE \
+    __TOKEN(LeftParen)      \
+    __TOKEN(RightParen)     \
+    __TOKEN(LeftBrace)      \
+    __TOKEN(RightBrace)     \
+    __TOKEN(Comma)          \
+    __TOKEN(Dot)            \
+    __TOKEN(Minus)          \
+    __TOKEN(Plus)           \
+    __TOKEN(Semicolon)      \
+    __TOKEN(Star)           \
+    __TOKEN(Bang)           \
+    __TOKEN(BangEqual)      \
+    __TOKEN(Equal)          \
+    __TOKEN(EqualEqual)     \
+    __TOKEN(Greater)        \
+    __TOKEN(GreaterEqual)   \
+    __TOKEN(Less)           \
+    __TOKEN(LessEqual)      \
+    __TOKEN(Slash)          \
+    __TOKEN(Comment)        \
+    __TOKEN(Identifier)     \
+    __TOKEN(String)         \
+    __TOKEN(Number)         \
+    __TOKEN(And)            \
+    __TOKEN(Break)          \
+    __TOKEN(Class)          \
+    __TOKEN(Continue)       \
+    __TOKEN(Else)           \
+    __TOKEN(False)          \
+    __TOKEN(Fn)             \
+    __TOKEN(For)            \
+    __TOKEN(If)             \
+    __TOKEN(In)             \
+    __TOKEN(Nil)            \
+    __TOKEN(Or)             \
+    __TOKEN(Percent)        \
+    __TOKEN(Return)         \
+    __TOKEN(Super)          \
+    __TOKEN(This)           \
+    __TOKEN(True)           \
+    __TOKEN(Var)            \
+    __TOKEN(While)          \
+    __TOKEN(Eof)
+
 enum class TokenType {
-    // one-char tokens
-    LeftParen, RightParen, LeftBrace, RightBrace,
-    Comma, Dot, Minus, Plus, Semicolon, Star,
-
-    // one- or two-char tokens
-    Bang, BangEqual,
-    Equal, EqualEqual,
-    Greater, GreaterEqual,
-    Less, LessEqual,
-    Slash, Comment,
-
-    // literals
-    Identifier, String, Number,
-
-    // keywords
-    And, Break, Class, Continue, Else, False, Fn, For, If, In, Nil, Or,
-    Percent, Return, Super, This, True, Var, While,
-
-    Eof,
+#define __TOKEN(x) x,
+    FOR_EACH_TOKEN_TYPE
+#undef __TOKEN
 };
 
 class Token {
@@ -47,11 +76,27 @@ public:
     std::string_view text() const { return m_text; }
     const ValueType& value() const { return m_value; }
 
+    std::string type_string() const
+    {
+        switch (m_type) {
+#define __TOKEN(x)          \
+        case TokenType::x:  \
+            return #x;
+        FOR_EACH_TOKEN_TYPE
+#undef __TOKEN
+        }
+        assert(0);
+    }
+    std::string value_string() const;
+    std::string dump() const;
+
 private:
     const TokenType m_type;
     std::string_view m_text;
     ValueType m_value;
 };
+
+#undef FOR_EACH_TOKEN_TYPE
 
 class Lexer {
 public:

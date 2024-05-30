@@ -691,3 +691,9 @@ TEST(Interpreter, FunctionExpression)
         { "x", Lox::make_number(22) },
     });
 }
+
+int main(int argc, char **argv)
+{
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

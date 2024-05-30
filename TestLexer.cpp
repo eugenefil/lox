@@ -1,5 +1,11 @@
 #include "Lexer.h"
 #include <gtest/gtest.h>
+#include <cstdio>
+#include <sstream>
+#include <fstream>
+#include <filesystem>
+#include <cctype>
+namespace fs = std::filesystem;
 
 using Lox::TokenType;
 
@@ -46,21 +52,8 @@ TEST(Lexer, EmptySourceReturnsNoTokens)
     assert_tokens("", {});
 }
 
-TEST(Lexer, OneCharTokens)
+TEST(Lexer, InvalidToken)
 {
-    assert_token("(", TokenType::LeftParen);
-    assert_token(")", TokenType::RightParen);
-    assert_token("{", TokenType::LeftBrace);
-    assert_token("}", TokenType::RightBrace);
-    assert_token(",", TokenType::Comma);
-    assert_token(".", TokenType::Dot);
-    assert_token("-", TokenType::Minus);
-    assert_token("+", TokenType::Plus);
-    assert_token(";", TokenType::Semicolon);
-    assert_token("*", TokenType::Star);
-    assert_token("/", TokenType::Slash);
-    assert_token("%", TokenType::Percent);
-
     assert_error("@");
 }
 
@@ -225,4 +218,122 @@ TEST(SourceMap, Ranges)
     EXPECT_EQ(smap.span_to_range(SPAN(19, 35)), RANGE({ 3, 17 }, { 5, 16 })); // literal
     #undef RANGE
     #undef SPAN
+}
+
+class Test : public testing::Test {
+public:
+    Test(const fs::path& source_path, const fs::path& stdout_path)
+        : m_source_path(source_path)
+        , m_stdout_path(stdout_path)
+    {
+        assert(!source_path.empty());
+        assert(!stdout_path.empty());
+    }
+
+    void TestBody() override
+    {
+        errno = 0; // popen does not always set errno on error
+        FILE* pipe = popen(std::string("</dev/null ./lox lex ")
+            .append(m_source_path).c_str(), "r");
+        ASSERT_NE(pipe, NULL);
+
+        std::ostringstream real_out;
+        for (;;) {
+            char cbuf[4096];
+            auto len = std::fread(cbuf, 1, sizeof(cbuf) - 1, pipe);
+            if (len == 0) {
+                int err = std::ferror(pipe);
+                int ret = pclose(pipe);
+                ASSERT_EQ(err, 0);
+                ASSERT_EQ(ret, 0);
+                break; // eof
+            }
+            cbuf[len] = '\0';
+            real_out << cbuf;
+        }
+
+        std::ostringstream mustbe_out;
+        std::ifstream fin(m_stdout_path);
+        ASSERT_TRUE(fin.is_open());
+        while (mustbe_out << fin.rdbuf())
+            ;
+        ASSERT_FALSE(fin.bad());
+        fin.close();
+
+        EXPECT_EQ(mustbe_out.view(), real_out.view());
+    }
+
+private:
+    fs::path m_source_path;
+    fs::path m_stdout_path;
+};
+
+[[noreturn]] static void filename_error(const std::string& filename,
+    const std::string& msg)
+{
+    std::cerr << "error: " << msg << ": " << filename << '\n';
+    std::exit(1);
+}
+
+static bool is_alpha(char ch)
+{
+    return ('A' <= ch && ch <= 'Z') || ('a' <= ch && ch <= 'z');
+}
+
+static bool is_digit(char ch)
+{
+    return '0' <= ch && ch <= '9';
+}
+
+// GoogleTest requires that a test name must be a valid C++ identifier
+// with no underscores. Otherwise such a test _silently passes_. Convert a
+// hyphen- or undescore-delimited test file name into a camel-case test name.
+static std::string test_path_to_name(const fs::path& path)
+{
+    std::string base = path.stem();
+    if (base.empty())
+        filename_error(path, "test file name cannot be empty");
+    if (!std::isalpha(base[0]))
+        filename_error(path, "test file name must start with a letter");
+
+    // make camel-case
+    base[0] = std::toupper(base[0]);
+    for (std::size_t i = 0; i < base.size(); ++i) {
+        if (base[i] == '-' || base[i] == '_') {
+            if (i + 1 < base.size())
+                base[i + 1] = std::toupper(base[i + 1]);
+        } else if (!is_alpha(base[i]) && !is_digit(base[i]))
+            filename_error(path, "test file name may contain only letters, digits, hyphens and underscores");
+    }
+
+    // remove hyphens and underscores
+    base.erase(std::remove(base.begin(), base.end(), '-'), base.end());
+    base.erase(std::remove(base.begin(), base.end(), '_'), base.end());
+    return base;
+}
+
+static void register_tests()
+{
+    fs::path tests_path("../tests");
+    for (const auto& entry : fs::directory_iterator(tests_path / "lexer")) {
+        if (entry.is_regular_file() && entry.path().extension() == ".lox") {
+            auto source_path = entry.path();
+            if (auto stdout_path = fs::path(source_path)
+                    .replace_extension(".stdout");
+                fs::is_regular_file(stdout_path)) {
+                testing::RegisterTest("LexerSuite",
+                    test_path_to_name(source_path).c_str(),
+                    nullptr, nullptr, __FILE__, __LINE__,
+                    [=]() { return new Test(source_path, stdout_path); });
+            } else
+                assert(0);
+        }
+    }
+}
+
+int main(int argc, char **argv)
+{
+  testing::InitGoogleTest(&argc, argv);
+  register_tests();
+  return RUN_ALL_TESTS();
 }

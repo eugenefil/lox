@@ -1,5 +1,6 @@
 #include "Utils.h"
 #include <cassert>
+#include <charconv>
 
 namespace Lox {
 
@@ -69,6 +70,14 @@ std::string_view SourceMap::line(std::size_t line_num)
     if (line.ends_with('\n'))
         line.remove_suffix(1);
     return line;
+}
+
+std::string number_to_string(double num)
+{
+    char buf[32];
+    auto [ptr, ec] = std::to_chars(buf, buf + sizeof(buf), num);
+    assert(ec == std::errc()); // longest double is 24 chars long
+    return std::string(buf, ptr - buf);
 }
 
 std::string escape(std::string s)

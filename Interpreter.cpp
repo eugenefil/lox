@@ -1,6 +1,5 @@
 #include "Interpreter.h"
 #include <format>
-#include <charconv>
 #include <iostream>
 #include <cmath>
 
@@ -39,10 +38,7 @@ std::shared_ptr<Iterator> String::__iter__() const
 
 std::string Number::__str__() const
 {
-    char buf[32];
-    auto [ptr, ec] = std::to_chars(buf, buf + sizeof(buf), m_value);
-    assert(ec == std::errc()); // longest double is 24 chars long
-    return std::string(buf, ptr - buf);
+    return number_to_string(m_value);
 }
 
 static bool execute_statements(const std::vector<std::shared_ptr<Stmt>>& stmts,

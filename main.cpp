@@ -16,6 +16,7 @@
 #include <readline/history.h>
 
 namespace fs = std::filesystem;
+using namespace std::string_view_literals;
 
 static std::string argv0;
 
@@ -29,11 +30,31 @@ static std::list<std::string> repl_sources;
 [[noreturn]] static void usage(bool error = false)
 {
     (error ? std::cerr : std::cout) <<
-    "Usage: " << argv0 << " [OPTIONS] [FILE]\n"
-    "If given, eval FILE. Otherwise, eval stdin. If stdin is a tty, start REPL instead.\n"
+    "Usage: " << argv0 << " [OPTIONS]\n"
+    "       " << argv0 << " [OPTIONS] FILE\n"
+    "       " << argv0 << " [OPTIONS] COMMAND\n"
+    "Without FILE or COMMAND, start REPL if on a tty (if not, eval stdin instead).\n"
+    "Otherwise, run FILE or COMMAND.\n"
     "\n"
     "Options:\n"
-    "  -h, --help    Display this message\n";
+    "  -h, --help    Print help\n"
+    "\n"
+    "Commands:\n"
+    "    lex      Print tokens found by lexer, one per line\n"
+    "    parse    Print abstract syntax tree in sexp form\n"
+    "\n"
+    "See '" << argv0 << " <command> -h' for information on a specific command.\n";
+    std::exit(error);
+}
+
+[[noreturn]] static void lex_usage(bool error = false)
+{
+    (error ? std::cerr : std::cout) <<
+    "Usage: " << argv0 << " lex [OPTIONS] [FILE]\n"
+    "Print tokens found in FILE, one per line. Without FILE, use stdin.\n"
+    "\n"
+    "Options:\n"
+    "  -h, --help    Print help\n";
     std::exit(error);
 }
 
@@ -82,8 +103,6 @@ static void die(std::string_view msg)
     std::cerr << fmt.error(msg);
     exit(1);
 }
-
-[[noreturn]] static void errusage() { usage(true); }
 
 static void print_errors(const std::vector<Lox::Error>& errors,
                          std::string_view filename)
@@ -264,15 +283,19 @@ static int repl()
     return 0;
 }
 
-static int run(std::string path)
+static std::string path_repr(const std::string& path)
+{
+    return path == "-" ? "<stdin>" : path;
+}
+
+static std::ostringstream read_file(const std::string& path)
 {
     std::ostringstream buf;
     if (path == "-") {
-        path = "<stdin>";
         while (buf << std::cin.rdbuf())
             ;
         if (buf.bad())
-            die_with_perror("cannot read from '" + path + "'");
+            die_with_perror("cannot read from '" + path_repr(path) + "'");
     } else {
         std::ifstream fin(path);
         if (!fin.is_open())
@@ -283,25 +306,81 @@ static int run(std::string path)
             die_with_perror("cannot read from '" + path + "'");
         fin.close();
     }
+    return buf;
+}
 
+static int run(const std::string& path)
+{
+    std::ostringstream buf = read_file(path);
     Lox::Interpreter interp;
     Lox::prelude(interp);
-    if (eval(buf.view(), path, interp, false))
+    if (eval(buf.view(), path_repr(path), interp, false))
         return 0;
     return 1;
 }
 
+static int lex_command(int argc, char* argv[])
+{
+    // process options
+    int arg = 1;
+    for (char* argp; arg < argc && (argp = argv[arg]) && argp[0] == '-'; ++arg) {
+        if (argp == "-h"sv || argp == "--help"sv)
+            lex_usage(); // no return
+        else
+            break;
+    }
+
+    std::string path = "-";
+    if (arg < argc) {
+        path = argv[arg++];
+        if (arg < argc)
+            lex_usage(true);
+    }
+
+    std::ostringstream buf = read_file(path);
+    Lox::Lexer lexer(buf.view());
+    auto tokens = lexer.lex();
+    if (lexer.has_errors()) {
+        print_errors(lexer.errors(), path_repr(path));
+        return 1;
+    }
+    for (auto& token : tokens)
+        std::cout << token.dump() << '\n';
+    return 0;
+}
+
+static int parse_command(int argc, char* argv[])
+{
+    die("not implemented");
+}
+
 int main(int argc, char* argv[])
 {
-    using namespace std::string_view_literals;
     argv0 = fs::path(argv[0]).filename();
     fmt.set_color(isatty(STDERR_FILENO));
 
-    if (argc == 1)
+    // process options
+    int arg = 1;
+    for (char* argp; arg < argc && (argp = argv[arg]) && argp[0] == '-'; ++arg) {
+        if (argp == "-h"sv || argp == "--help"sv)
+            usage(); // no return
+        else
+            break;
+    }
+
+    if (arg == argc)
         return isatty(STDIN_FILENO) ? repl() : run("-");
-    else if (argc != 2)
-        errusage();
-    else if (argv[1] == "-h"sv || argv[1] == "--help"sv)
-        usage();
-    return run(argv[1]);
+
+    // run command or file
+    std::string name = argv[arg];
+    char** restv = &argv[arg];
+    int restc = argc - arg; // argc > arg here
+    if (name == "lex")
+        return lex_command(restc, restv);
+    if (name == "parse")
+        return parse_command(restc, restv);
+    else if (restc != 1)
+        usage(true);
+    else
+        return run(name);
 }

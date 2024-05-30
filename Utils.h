@@ -50,6 +50,7 @@ struct Error {
 };
 
 std::string escape(std::string s);
+std::string number_to_string(double num);
 
 template <typename T>
 class TemporaryChange {

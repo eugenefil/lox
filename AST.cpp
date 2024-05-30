@@ -1,6 +1,5 @@
 #include "AST.h"
 #include "Utils.h"
-#include <charconv>
 
 namespace Lox {
 
@@ -16,10 +15,7 @@ std::string StringLiteral::dump(std::size_t indent) const
 
 std::string NumberLiteral::dump(std::size_t indent) const
 {
-    char buf[32];
-    auto [ptr, ec] = std::to_chars(buf, buf + sizeof(buf), m_value);
-    assert(ec == std::errc()); // longest double is 24 chars long
-    return make_indent(indent).append(buf, ptr - buf);
+    return make_indent(indent).append(number_to_string(m_value));
 }
 
 std::string Identifier::dump(std::size_t indent) const

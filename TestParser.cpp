@@ -577,3 +577,9 @@ TEST(Parser, FunctionExpression)
 
     assert_error("fn 5()", "5"); // expected '('
 }
+
+int main(int argc, char **argv)
+{
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}

@@ -29,7 +29,7 @@ include(GoogleTest)
 function(lox_test source)
     get_filename_component(test_name ${source} NAME_WE)
     add_executable(${test_name} ${source})
-    target_link_libraries(${test_name} lib GTest::gtest_main)
+    target_link_libraries(${test_name} lib GTest::gtest)
     gtest_discover_tests(${test_name})
 endfunction()
 
