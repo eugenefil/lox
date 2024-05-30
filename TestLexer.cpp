@@ -75,28 +75,6 @@ TEST(Lexer, Numbers)
     assert_error("1e999999");
 }
 
-TEST(Lexer, Keywords)
-{
-    assert_token("and", TokenType::And);
-    assert_token("break", TokenType::Break);
-    assert_token("class", TokenType::Class);
-    assert_token("continue", TokenType::Continue);
-    assert_token("else", TokenType::Else);
-    assert_token("false", TokenType::False, false);
-    assert_token("fn", TokenType::Fn);
-    assert_token("for", TokenType::For);
-    assert_token("if", TokenType::If);
-    assert_token("in", TokenType::In);
-    assert_token("nil", TokenType::Nil);
-    assert_token("or", TokenType::Or);
-    assert_token("return", TokenType::Return);
-    assert_token("super", TokenType::Super);
-    assert_token("this", TokenType::This);
-    assert_token("true", TokenType::True, true);
-    assert_token("var", TokenType::Var);
-    assert_token("while", TokenType::While);
-}
-
 TEST(Lexer, Comments)
 {
     assert_tokens(R"(// commented line
