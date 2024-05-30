@@ -48,42 +48,6 @@ static void assert_error(std::string_view source, std::string_view error_span = 
     assert_tokens(source, {}, error_span);
 }
 
-TEST(Lexer, EmptySourceReturnsNoTokens)
-{
-    assert_tokens("", {});
-}
-
-TEST(Lexer, SkipWhitespace)
-{
-    assert_tokens("\t(\n)\r\n{  }\t\t", {
-        { TokenType::LeftParen, "(" },
-        { TokenType::RightParen, ")" },
-        { TokenType::LeftBrace, "{" },
-        { TokenType::RightBrace, "}" },
-    });
-}
-
-TEST(Lexer, OneTwoCharTokens)
-{
-    assert_token("!", TokenType::Bang);
-    assert_token("!=", TokenType::BangEqual);
-    assert_token("=", TokenType::Equal);
-    assert_token("==", TokenType::EqualEqual);
-    assert_token(">", TokenType::Greater);
-    assert_token(">=", TokenType::GreaterEqual);
-    assert_token("<", TokenType::Less);
-    assert_token("<=", TokenType::LessEqual);
-}
-
-TEST(Lexer, Identifiers)
-{
-    assert_token("_", TokenType::Identifier);
-    assert_token("x0", TokenType::Identifier);
-    assert_token("foo_bar", TokenType::Identifier);
-    assert_token("FOOBAR", TokenType::Identifier);
-    assert_token("__foo3__BAR4__", TokenType::Identifier);
-}
-
 TEST(Lexer, Strings)
 {
     assert_token(R"("")", TokenType::String, "");

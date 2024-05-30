@@ -1,0 +1,8 @@
+Bang <none> "!"
+BangEqual <none> "!="
+Equal <none> "="
+EqualEqual <none> "=="
+Greater <none> ">"
+GreaterEqual <none> ">="
+Less <none> "<"
+LessEqual <none> "<="
