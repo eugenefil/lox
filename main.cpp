@@ -19,6 +19,7 @@ namespace fs = std::filesystem;
 using namespace std::string_view_literals;
 
 static std::string argv0;
+static bool ui_testing;
 
 static std::unique_ptr<Lox::Interpreter> repl_interp;
 static bool repl_done;
@@ -37,7 +38,8 @@ static std::list<std::string> repl_sources;
     "Otherwise, run FILE or COMMAND.\n"
     "\n"
     "Options:\n"
-    "  -h, --help    Print help\n"
+    "  -h, --help      Print help\n"
+    "  --ui-testing    Normalize error messages (use when testing error output)\n"
     "\n"
     "Commands:\n"
     "    lex      Print tokens found by lexer, one per line\n"
@@ -283,12 +285,17 @@ static int repl()
     return 0;
 }
 
-static std::string path_repr(const std::string& path)
+static std::string path_repr(const fs::path& path)
 {
     return path == "-" ? "<stdin>" : path;
 }
 
-static std::ostringstream read_file(const std::string& path)
+static fs::path normalize_path(const fs::path& path)
+{
+    return ui_testing ? fs::path("$DIR") / path.filename() : path;
+}
+
+static std::ostringstream read_file(const fs::path& path)
 {
     std::ostringstream buf;
     if (path == "-") {
@@ -299,22 +306,22 @@ static std::ostringstream read_file(const std::string& path)
     } else {
         std::ifstream fin(path);
         if (!fin.is_open())
-            die_with_perror("cannot open '" + path + "'");
+            die_with_perror("cannot open '" + path_repr(path) + "'");
         while (buf << fin.rdbuf())
             ;
         if (buf.bad())
-            die_with_perror("cannot read from '" + path + "'");
+            die_with_perror("cannot read from '" + path_repr(path) + "'");
         fin.close();
     }
     return buf;
 }
 
-static int run(const std::string& path)
+static int run(const fs::path& path)
 {
     std::ostringstream buf = read_file(path);
     Lox::Interpreter interp;
     Lox::prelude(interp);
-    if (eval(buf.view(), path_repr(path), interp, false))
+    if (eval(buf.view(), path_repr(normalize_path(path)), interp, false))
         return 0;
     return 1;
 }
@@ -330,7 +337,7 @@ static int lex_command(int argc, char* argv[])
             break;
     }
 
-    std::string path = "-";
+    fs::path path = "-";
     if (arg < argc) {
         path = argv[arg++];
         if (arg < argc)
@@ -341,7 +348,7 @@ static int lex_command(int argc, char* argv[])
     Lox::Lexer lexer(buf.view());
     auto tokens = lexer.lex();
     if (lexer.has_errors()) {
-        print_errors(lexer.errors(), path_repr(path));
+        print_errors(lexer.errors(), path_repr(normalize_path(path)));
         return 1;
     }
     for (auto& token : tokens)
@@ -364,6 +371,8 @@ int main(int argc, char* argv[])
     for (char* argp; arg < argc && (argp = argv[arg]) && argp[0] == '-'; ++arg) {
         if (argp == "-h"sv || argp == "--help"sv)
             usage(); // no return
+        else if (argp == "--ui-testing"sv)
+            ui_testing = true;
         else
             break;
     }
@@ -382,5 +391,5 @@ int main(int argc, char* argv[])
     else if (restc != 1)
         usage(true);
     else
-        return run(name);
+        return run(fs::path(name));
 }

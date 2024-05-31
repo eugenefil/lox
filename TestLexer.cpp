@@ -171,7 +171,7 @@ public:
     void TestBody() override
     {
         errno = 0; // popen does not always set errno on error
-        FILE* pipe = popen(std::string("</dev/null ./lox lex ")
+        FILE* pipe = popen(std::string("</dev/null ./lox --ui-testing lex ")
             .append(m_source_path)
             .append(" ")
             .append(redirects())
