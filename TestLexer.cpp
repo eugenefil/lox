@@ -3,16 +3,20 @@
 #include <fstream>
 #include <filesystem>
 #include <cstdio>
+#include <cctype>
 #include <sys/wait.h>
 
 namespace fs = std::filesystem;
 
 class Test : public testing::Test {
 public:
-    Test(const fs::path& source_path, const fs::path& output_path)
-        : m_source_path(source_path)
+    Test(std::string_view command, const fs::path& source_path,
+        const fs::path& output_path)
+        : m_command(command)
+        , m_source_path(source_path)
         , m_output_path(output_path)
     {
+        assert(!command.empty());
         assert(!source_path.empty());
         assert(!output_path.empty());
     }
@@ -20,7 +24,9 @@ public:
     void TestBody() override
     {
         errno = 0; // popen does not always set errno on error
-        FILE* pipe = popen(std::string("</dev/null ./lox --ui-testing lex ")
+        FILE* pipe = popen(std::string("</dev/null ./lox --ui-testing ")
+            .append(m_command)
+            .append(" ")
             .append(m_source_path)
             .append(" ")
             .append(redirects())
@@ -59,21 +65,24 @@ private:
     virtual std::string redirects() const { return ""; }
     virtual int retcode() const { return 0; }
 
+    std::string_view m_command;
     fs::path m_source_path;
     fs::path m_output_path;
 };
 
 class PassingTest : public Test {
 public:
-    PassingTest(const fs::path& source_path, const fs::path& output_path)
-        : Test(source_path, output_path)
+    PassingTest(std::string_view command, const fs::path& source_path,
+        const fs::path& output_path)
+        : Test(command, source_path, output_path)
     {}
 };
 
 class FailingTest : public Test {
 public:
-    FailingTest(const fs::path& source_path, const fs::path& output_path)
-        : Test(source_path, output_path)
+    FailingTest(std::string_view command, const fs::path& source_path,
+        const fs::path& output_path)
+        : Test(command, source_path, output_path)
     {}
 
 private:
@@ -129,26 +138,34 @@ static std::string test_path_to_name(const fs::path& path)
     return base;
 }
 
-static void register_tests()
+static void register_tests(std::string_view suite, std::string_view command)
 {
+    assert(!suite.empty());
+    for (char c : suite)
+        assert(is_alpha(c));
+    std::string prefix { suite };
+    prefix[0] = std::toupper(prefix[0]);
+
     fs::path tests_path("../tests");
-    for (const auto& entry : fs::directory_iterator(tests_path / "lexer")) {
+    for (const auto& entry : fs::directory_iterator(tests_path / suite)) {
         if (entry.is_regular_file() && entry.path().extension() == ".lox") {
             auto source_path = entry.path();
             if (auto stdout_path = fs::path(source_path)
                     .replace_extension(".stdout");
                 fs::is_regular_file(stdout_path)) {
-                testing::RegisterTest("LexerPass",
+                testing::RegisterTest((prefix + "Pass").c_str(),
                     test_path_to_name(source_path).c_str(),
                     nullptr, nullptr, __FILE__, __LINE__,
-                    [=]() { return new PassingTest(source_path, stdout_path); });
+                    [=]() { return new PassingTest(command, source_path,
+                                stdout_path); });
             } else if (auto stderr_path = fs::path(source_path)
                     .replace_extension(".stderr");
                 fs::is_regular_file(stderr_path)) {
-                testing::RegisterTest("LexerFail",
+                testing::RegisterTest((prefix + "Error").c_str(),
                     test_path_to_name(source_path).c_str(),
                     nullptr, nullptr, __FILE__, __LINE__,
-                    [=]() { return new FailingTest(source_path, stderr_path); });
+                    [=]() { return new FailingTest(command, source_path,
+                                stderr_path); });
             } else
                 error(source_path, "missing corresponding .stdout/.stderr file");
         }
@@ -158,6 +175,8 @@ static void register_tests()
 int main(int argc, char **argv)
 {
   testing::InitGoogleTest(&argc, argv);
-  register_tests();
+  register_tests("lexer", "lex");
+  register_tests("parser", "parse");
+  register_tests("interpreter", "");
   return RUN_ALL_TESTS();
 }
