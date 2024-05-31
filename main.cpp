@@ -60,6 +60,17 @@ static std::list<std::string> repl_sources;
     std::exit(error);
 }
 
+[[noreturn]] static void parse_usage(bool error = false)
+{
+    (error ? std::cerr : std::cout) <<
+    "Usage: " << argv0 << " parse [OPTIONS] [FILE]\n"
+    "Print abstract syntax tree for FILE in sexp form. Without FILE, use stdin.\n"
+    "\n"
+    "Options:\n"
+    "  -h, --help    Print help\n";
+    std::exit(error);
+}
+
 class Formatter {
 public:
     void set_color(bool on) { m_has_color = on; }
@@ -344,8 +355,8 @@ static int lex_command(int argc, char* argv[])
             lex_usage(true);
     }
 
-    std::ostringstream buf = read_file(path);
-    Lox::Lexer lexer(buf.view());
+    std::ostringstream source = read_file(path);
+    Lox::Lexer lexer(source.view());
     auto tokens = lexer.lex();
     if (lexer.has_errors()) {
         print_errors(lexer.errors(), path_repr(normalize_path(path)));
@@ -358,7 +369,39 @@ static int lex_command(int argc, char* argv[])
 
 static int parse_command(int argc, char* argv[])
 {
-    die("not implemented");
+    // process options
+    int arg = 1;
+    for (char* argp; arg < argc && (argp = argv[arg]) && argp[0] == '-'; ++arg) {
+        if (argp == "-h"sv || argp == "--help"sv)
+            parse_usage(); // no return
+        else
+            break;
+    }
+
+    fs::path path = "-";
+    if (arg < argc) {
+        path = argv[arg++];
+        if (arg < argc)
+            parse_usage(true);
+    }
+
+    std::ostringstream source = read_file(path);
+    auto path_out = path_repr(normalize_path(path));
+    Lox::Lexer lexer(source.view());
+    auto tokens = lexer.lex();
+    if (lexer.has_errors()) {
+        print_errors(lexer.errors(), path_out);
+        return 1;
+    }
+
+    Lox::Parser parser(std::move(tokens), source.view());
+    auto program = parser.parse();
+    if (parser.has_errors()) {
+        print_errors(parser.errors(), path_out);
+        return 1;
+    }
+    std::cout << program->dump(0) << '\n';
+    return 0;
 }
 
 int main(int argc, char* argv[])

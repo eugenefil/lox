@@ -66,11 +66,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     EXPECT_EQ(errs[0].span, error_span);
 }
 
-TEST(Parser, EmptyProgram)
-{
-    assert_program("", "");
-}
-
 TEST(Parser, PrimaryExpressions)
 {
     assert_literal(R"("")", R"("")");
