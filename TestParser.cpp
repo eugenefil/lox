@@ -42,11 +42,6 @@ static void assert_expr(std::string_view source, std::string_view sexp)
     assert_program(std::string(source) + ';', strip_sexp(sexp));
 }
 
-static void assert_literal(std::string_view source, std::string_view sexp)
-{
-    assert_program(std::string(source) + ';', sexp);
-}
-
 static void assert_stmt(std::string_view source, std::string_view sexp)
 {
     assert_program(source, strip_sexp(sexp));
@@ -64,25 +59,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     ASSERT_EQ(errs.size(), 1);
     EXPECT_EQ(errs[0].source, source);
     EXPECT_EQ(errs[0].span, error_span);
-}
-
-TEST(Parser, PrimaryExpressions)
-{
-    assert_literal(R"("")", R"("")");
-    assert_literal(R"("Hello world!")", R"("Hello world!")");
-    assert_literal(R"("\t\r\n\"\\")", R"("\t\r\n\"\\")");
-
-    assert_literal("123", "123");
-    assert_literal("3.14159265", "3.14159265");
-
-    assert_literal("foo", "foo");
-
-    assert_literal("true", "true");
-    assert_literal("false", "false");
-
-    assert_literal("nil", "nil");
-
-    assert_error("/", "/");
 }
 
 TEST(Parser, UnaryExpressions)

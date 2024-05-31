@@ -1,0 +1,10 @@
+(program
+  ""
+  "Hello world!"
+  "\t\r\n\"\\"
+  123
+  3.14159265
+  true
+  false
+  nil
+  foo_bar)
