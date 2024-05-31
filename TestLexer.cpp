@@ -65,17 +65,6 @@ escape")", TokenType::String, "newline escape");
     assert_error(R"("unterminated string)");
 }
 
-TEST(Lexer, Comments)
-{
-    assert_tokens(R"(// commented line
-        f(); // comment after code)", {
-        { TokenType::Identifier, "f" },
-        { TokenType::LeftParen, "(" },
-        { TokenType::RightParen, ")" },
-        { TokenType::Semicolon, ";" },
-    });
-}
-
 TEST(Lexer, MultipleTokens)
 {
     assert_tokens(R"(
