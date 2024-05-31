@@ -33,6 +33,7 @@ function(lox_test source)
     gtest_discover_tests(${test_name})
 endfunction()
 
+lox_test(TestUtils.cpp)
 lox_test(TestLexer.cpp)
 lox_test(TestParser.cpp)
 lox_test(TestInterpreter.cpp)
