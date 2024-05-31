@@ -1,0 +1,5 @@
+error: expected expression
+ --> $DIR/add-expression-error.lox:1:5
+  |
+1 | 5 + /;
+  |     ^

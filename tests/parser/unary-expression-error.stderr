@@ -1,0 +1,5 @@
+error: expected expression
+ --> $DIR/unary-expression-error.lox:1:2
+  |
+1 | -/
+  |  ^

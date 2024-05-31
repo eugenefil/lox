@@ -61,97 +61,9 @@ static void assert_error(std::string_view source, std::string_view error_span)
     EXPECT_EQ(errs[0].span, error_span);
 }
 
-TEST(Parser, UnaryExpressions)
-{
-    assert_expr("-123", R"(
-(-
-  123)
-    )");
-    assert_expr("!true", R"(
-(!
-  true)
-    )");
-
-    assert_error("-/", "/");
-}
-
 TEST(Parser, ErrorAtEofPointsAtLastToken)
 {
     assert_error("-", "-");
-}
-
-TEST(Parser, MultiplyExpressions)
-{
-    assert_expr("5 / 7 * 9 % 2", R"(
-(%
-  (*
-    (/
-      5
-      7)
-    9)
-  2)
-    )");
-
-    assert_error("5 * /", "/");
-}
-
-TEST(Parser, AddExpressions)
-{
-    assert_expr("5 + 7", R"(
-(+
-  5
-  7)
-    )");
-    assert_expr("500 - 700", R"(
-(-
-  500
-  700)
-    )");
-    assert_expr("5 + 7 - 9", R"(
-(-
-  (+
-    5
-    7)
-  9)
-    )");
-
-    assert_error("5 + /", "/");
-}
-
-TEST(Parser, CompareExpressions)
-{
-    assert_expr("5 == 7", R"(
-(==
-  5
-  7)
-    )");
-    assert_expr("5 != 7", R"(
-(!=
-  5
-  7)
-    )");
-    assert_expr("5 < 7", R"(
-(<
-  5
-  7)
-    )");
-    assert_expr("5 <= 7", R"(
-(<=
-  5
-  7)
-    )");
-    assert_expr("5 > 7", R"(
-(>
-  5
-  7)
-    )");
-    assert_expr("5 >= 7", R"(
-(>=
-  5
-  7)
-    )");
-
-    assert_error("5 == /", "/");
 }
 
 TEST(Parser, LogicExpressions)
