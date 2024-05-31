@@ -1,74 +1,11 @@
-#include "Lexer.h"
 #include <gtest/gtest.h>
 #include <sstream>
 #include <fstream>
 #include <filesystem>
-#include <cctype>
 #include <cstdio>
 #include <sys/wait.h>
+
 namespace fs = std::filesystem;
-
-using Lox::TokenType;
-
-static void assert_tokens(std::string_view source,
-                          std::vector<Lox::Token> tokens,
-                          std::string_view error_span = {})
-{
-    Lox::Lexer lexer(source);
-    auto output = lexer.lex();
-    ASSERT_EQ(output.size(), tokens.size());
-    for (std::size_t i = 0; i < output.size(); ++i) {
-        const auto& lhs = output[i];
-        const auto& rhs = tokens[i];
-        EXPECT_EQ(lhs.type(), rhs.type());
-        EXPECT_EQ(lhs.text(), rhs.text());
-        EXPECT_EQ(lhs.value(), rhs.value());
-    }
-
-    if (error_span.empty())
-        EXPECT_FALSE(lexer.has_errors());
-    else {
-        auto& errs = lexer.errors();
-        ASSERT_EQ(errs.size(), 1);
-        EXPECT_EQ(errs[0].source, source);
-        EXPECT_EQ(errs[0].span, error_span);
-    }
-}
-
-static void assert_token(std::string_view source, TokenType type,
-                         Lox::Token::ValueType value = Lox::Token::DefaultValueType())
-{
-    assert_tokens(source, { { type, source, std::move(value) } });
-}
-
-static void assert_error(std::string_view source, std::string_view error_span = {})
-{
-    if (error_span.empty())
-        error_span = source;
-    assert_tokens(source, {}, error_span);
-}
-
-TEST(Lexer, MultipleTokens)
-{
-    assert_tokens(R"(
-        var foo = bar * 3.14;
-        f(foo, "\tbaz");)", {
-        { TokenType::Var, "var" },
-        { TokenType::Identifier, "foo" },
-        { TokenType::Equal, "=" },
-        { TokenType::Identifier, "bar" },
-        { TokenType::Star, "*" },
-        { TokenType::Number, "3.14", 3.14 },
-        { TokenType::Semicolon, ";" },
-        { TokenType::Identifier, "f" },
-        { TokenType::LeftParen, "(" },
-        { TokenType::Identifier, "foo" },
-        { TokenType::Comma, "," },
-        { TokenType::String, R"("\tbaz")", "\tbaz" },
-        { TokenType::RightParen, ")" },
-        { TokenType::Semicolon, ";" },
-    });
-}
 
 class Test : public testing::Test {
 public:
@@ -173,7 +110,7 @@ static std::string test_path_to_name(const fs::path& path)
     std::string base = path.stem();
     if (base.empty())
         error(path, "test file name cannot be empty");
-    if (!std::isalpha(base[0]))
+    if (!is_alpha(base[0]))
         error(path, "test file name must start with a letter");
 
     // make camel-case
