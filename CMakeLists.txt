@@ -34,6 +34,6 @@ function(lox_test source)
 endfunction()
 
 lox_test(TestUtils.cpp)
-lox_test(TestLexer.cpp)
 lox_test(TestParser.cpp)
 lox_test(TestInterpreter.cpp)
+lox_test(TestRunner.cpp) # runs functional tests for lexer, parser and interpreter
