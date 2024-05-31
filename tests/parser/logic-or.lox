@@ -1,0 +1,2 @@
+cond1 or cond2 or cond3; // left-associative
+cond1 and cond2 or cond3 and cond4; // 'and' has higher precedence

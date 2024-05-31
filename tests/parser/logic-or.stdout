@@ -1,0 +1,13 @@
+(program
+  (or
+    (or
+      cond1
+      cond2)
+    cond3)
+  (or
+    (and
+      cond1
+      cond2)
+    (and
+      cond3
+      cond4)))

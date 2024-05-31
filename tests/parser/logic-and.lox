@@ -1,0 +1,2 @@
+cond1 and cond2 and cond3; // left-associative
+5 == 5 and 3 != 3; // comparisons have higher precedence

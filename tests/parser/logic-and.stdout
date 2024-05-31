@@ -1,0 +1,13 @@
+(program
+  (and
+    (and
+      cond1
+      cond2)
+    cond3)
+  (and
+    (==
+      5
+      5)
+    (!=
+      3
+      3)))

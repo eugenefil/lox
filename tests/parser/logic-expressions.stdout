@@ -1,0 +1,25 @@
+(program
+  (and
+    (and
+      cond1
+      cond2)
+    cond3)
+  (and
+    (==
+      5
+      5)
+    (!=
+      3
+      3))
+  (or
+    (or
+      cond1
+      cond2)
+    cond3)
+  (or
+    (and
+      cond1
+      cond2)
+    (and
+      cond3
+      cond4)))

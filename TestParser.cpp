@@ -66,49 +66,6 @@ TEST(Parser, ErrorAtEofPointsAtLastToken)
     assert_error("-", "-");
 }
 
-TEST(Parser, LogicExpressions)
-{
-    // comparison has higher precedence
-    assert_expr("5 == 5 and 3 != 3", R"(
-(and
-  (==
-    5
-    5)
-  (!=
-    3
-    3))
-    )");
-    // left associativity
-    assert_expr("0 and 1 and 2", R"(
-(and
-  (and
-    0
-    1)
-  2)
-    )");
-    assert_error("true and /", "/");
-
-    // logic 'and' has higher precedence
-    assert_expr("1 and 3 or 5 and 7", R"(
-(or
-  (and
-    1
-    3)
-  (and
-    5
-    7))
-    )");
-    // left associativity
-    assert_expr("0 or 1 or 2", R"(
-(or
-  (or
-    0
-    1)
-  2)
-    )");
-    assert_error("0 or /", "/");
-}
-
 TEST(Parser, GroupExpression)
 {
     assert_expr("(5 + 7) * 9", R"(
