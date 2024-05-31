@@ -48,23 +48,6 @@ static void assert_error(std::string_view source, std::string_view error_span = 
     assert_tokens(source, {}, error_span);
 }
 
-TEST(Lexer, Strings)
-{
-    assert_token(R"("")", TokenType::String, "");
-    assert_token(R"("hello world!")", TokenType::String, "hello world!");
-    assert_token(R"("\t\r\n\"\\")", TokenType::String, "\t\r\n\"\\");
-    assert_token(R"("multi
-        line
-        string")", TokenType::String, "multi\n\
-        line\n\
-        string");
-    assert_token(R"("newline \
-escape")", TokenType::String, "newline escape");
-
-    assert_error(R"("foo\z")", "\\z");
-    assert_error(R"("unterminated string)");
-}
-
 TEST(Lexer, MultipleTokens)
 {
     assert_tokens(R"(

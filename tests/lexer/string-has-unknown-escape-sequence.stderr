@@ -1,0 +1,5 @@
+error: unknown escape sequence
+ --> $DIR/string-has-unknown-escape-sequence.lox:1:5
+  |
+1 | "foo\z"
+  |     ^^

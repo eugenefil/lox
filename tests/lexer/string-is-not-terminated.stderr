@@ -1,0 +1,5 @@
+error: unterminated string
+ --> $DIR/string-is-not-terminated.lox:1:1
+  |
+1 | "unterminated string
+  | ^^^^^^^^^^^^^^^^^^^^^

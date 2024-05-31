@@ -1,0 +1,5 @@
+String "" "\"\""
+String "hello world!" "\"hello world!\""
+String "\t\r\n\"\\" "\"\\t\\r\\n\\\"\\\\\""
+String "multi\nline\nstring" "\"multi\nline\nstring\""
+String "newline escape" "\"newline \\\nescape\""
