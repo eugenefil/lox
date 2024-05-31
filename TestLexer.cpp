@@ -65,16 +65,6 @@ escape")", TokenType::String, "newline escape");
     assert_error(R"("unterminated string)");
 }
 
-TEST(Lexer, Numbers)
-{
-    assert_token("9007199254740991", TokenType::Number, 9007199254740991.0);
-    assert_token("3.14159265", TokenType::Number, 3.14159265);
-    assert_token("4e9", TokenType::Number, 4e9);
-    assert_token("7.843e-9", TokenType::Number, 7.843e-9);
-
-    assert_error("1e999999");
-}
-
 TEST(Lexer, Comments)
 {
     assert_tokens(R"(// commented line

@@ -1,0 +1,5 @@
+error: literal exceeds range of double-precision floating point
+ --> $DIR/number-exceeds-range.lox:1:1
+  |
+1 | 1e999999
+  | ^^^^^^^^
