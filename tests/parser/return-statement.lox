@@ -1,0 +1,2 @@
+fn f() { return; }
+fn f() { return x + y; }

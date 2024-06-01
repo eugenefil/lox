@@ -1,0 +1,14 @@
+(program
+  (fndecl
+    f
+    (params)
+    (block
+      (return)))
+  (fndecl
+    f
+    (params)
+    (block
+      (return
+        (+
+          x
+          y)))))

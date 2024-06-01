@@ -61,33 +61,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     EXPECT_EQ(errs[0].span, error_span);
 }
 
-TEST(Parser, ReturnStatement)
-{
-    assert_stmt("fn f() { return; }", R"(
-(fndecl
-  f
-  (params)
-  (block
-    (return)))
-    )");
-
-    assert_stmt("fn f() { return x + y; }", R"(
-(fndecl
-  f
-  (params)
-  (block
-    (return
-      (+
-        x
-        y))))
-    )");
-
-    assert_error("return;", "return"); // return outside function
-    assert_error("fn f() {} return;", "return"); // same
-    assert_error("fn f() { return /; }", "/"); // expected expression
-    assert_error("fn f() { return 5 _ }", "_"); // expected ';'
-}
-
 TEST(Parser, FunctionExpression)
 {
     // test common case, others are tested by function declaration tests

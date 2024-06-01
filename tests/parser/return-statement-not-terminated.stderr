@@ -1,0 +1,5 @@
+error: expected ';'
+ --> $DIR/return-statement-not-terminated.lox:1:19
+  |
+1 | fn f() { return 5 _ }
+  |                   ^
