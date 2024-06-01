@@ -1,0 +1,5 @@
+error: 'break' outside loop
+ --> $DIR/break-statement-outside-loop.lox:1:15
+  |
+1 | while true {} break;
+  |               ^^^^^

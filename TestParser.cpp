@@ -61,30 +61,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     EXPECT_EQ(errs[0].span, error_span);
 }
 
-TEST(Parser, BreakStatement)
-{
-    // check that parser sees break as inside the loop
-    assert_stmt("while true { break; }", R"(
-(while
-  true
-  (block
-    (break)))
-    )");
-
-    // same for 'for' loop
-    assert_stmt("for c in \"foo\" { break; }", R"(
-(for
-  c
-  "foo"
-  (block
-    (break)))
-    )");
-
-    assert_error("break;", "break"); // break outside loop
-    assert_error("while true {} break;", "break");
-    assert_error("while true { break }", "}"); // expected ';'
-}
-
 TEST(Parser, ContinueStatement)
 {
     // check that parser sees continue as inside the loop
