@@ -1,0 +1,10 @@
+(program
+  (block)
+  (block
+    (var
+      x
+      5)
+    (block
+      (var
+        x
+        7))))

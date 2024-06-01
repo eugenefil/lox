@@ -61,23 +61,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     EXPECT_EQ(errs[0].span, error_span);
 }
 
-TEST(Parser, BlockStatement)
-{
-    assert_stmt("{}", "(block)");
-    assert_stmt("{ var x = 5; { var x = 7; } }", R"(
-(block
-  (var
-    x
-    5)
-  (block
-    (var
-      x
-      7)))
-    )");
-
-    assert_error("{ foo;", "{");
-}
-
 TEST(Parser, IfStatement)
 {
     assert_stmt("if x > 0 { x; }", R"(

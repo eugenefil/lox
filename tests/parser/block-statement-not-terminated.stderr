@@ -1,0 +1,5 @@
+error: '{' was never closed
+ --> $DIR/block-statement-not-terminated.lox:1:1
+  |
+1 | { foo;
+  | ^
