@@ -1,0 +1,5 @@
+error: expected expression
+ --> $DIR/for-statement-loop-expression-error.lox:1:10
+  |
+1 | for c in / {}
+  |          ^

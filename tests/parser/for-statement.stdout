@@ -1,0 +1,6 @@
+(program
+  (for
+    ch
+    "foo"
+    (block
+      ch)))

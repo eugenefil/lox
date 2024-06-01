@@ -61,22 +61,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     EXPECT_EQ(errs[0].span, error_span);
 }
 
-TEST(Parser, ForStatement)
-{
-    assert_stmt("for c in \"foo\" { c; }", R"(
-(for
-  c
-  "foo"
-  (block
-    c))
-    )");
-
-    assert_error("for 5 in", "5"); // expected identifier
-    assert_error("for c _", "_"); // expected 'in'
-    assert_error("for c in /", "/"); // expected expression
-    assert_error("for c in \"foo\" _", "_"); // expected '{'
-}
-
 TEST(Parser, BreakStatement)
 {
     // check that parser sees break as inside the loop

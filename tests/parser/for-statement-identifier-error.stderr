@@ -1,0 +1,5 @@
+error: expected identifier
+ --> $DIR/for-statement-identifier-error.lox:1:5
+  |
+1 | for 5 in
+  |     ^

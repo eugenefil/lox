@@ -1,0 +1,5 @@
+error: expected '{'
+ --> $DIR/for-statement-block-error.lox:1:16
+  |
+1 | for c in "foo" _
+  |                ^
