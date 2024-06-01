@@ -1,0 +1,9 @@
+(program
+  (fn
+    (params
+      x
+      y)
+    (block
+      (=
+        x
+        1))))

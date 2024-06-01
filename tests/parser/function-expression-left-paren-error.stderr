@@ -1,0 +1,5 @@
+error: expected '('
+ --> $DIR/function-expression-left-paren-error.lox:1:4
+  |
+1 | fn 5() {}
+  |    ^

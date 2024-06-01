@@ -61,23 +61,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     EXPECT_EQ(errs[0].span, error_span);
 }
 
-TEST(Parser, FunctionExpression)
-{
-    // test common case, others are tested by function declaration tests
-    assert_expr("fn(x, y) { x = 1; }", R"(
-(fn
-  (params
-    x
-    y)
-  (block
-    (=
-      x
-      1)))
-    )");
-
-    assert_error("fn 5()", "5"); // expected '('
-}
-
 int main(int argc, char **argv)
 {
   testing::InitGoogleTest(&argc, argv);
