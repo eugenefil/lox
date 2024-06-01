@@ -29,10 +29,14 @@ include(GoogleTest)
 function(lox_test source)
     get_filename_component(test_name ${source} NAME_WE)
     add_executable(${test_name} ${source})
-    target_link_libraries(${test_name} lib GTest::gtest)
+    target_link_libraries(${test_name} lib GTest::gtest_main)
     gtest_discover_tests(${test_name})
 endfunction()
 
 lox_test(TestUtils.cpp)
 lox_test(TestInterpreter.cpp)
-lox_test(TestRunner.cpp) # runs functional tests for lexer, parser and interpreter
+
+# runs functional tests for lexer, parser and interpreter
+add_executable(TestRunner TestRunner.cpp)
+target_link_libraries(TestRunner GTest::gtest) # don't use gtest main
+gtest_discover_tests(TestRunner)

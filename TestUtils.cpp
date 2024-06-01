@@ -50,9 +50,3 @@ TEST(SourceMap, Ranges)
     #undef RANGE
     #undef SPAN
 }
-
-int main(int argc, char **argv)
-{
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}
