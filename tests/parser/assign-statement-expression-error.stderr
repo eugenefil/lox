@@ -1,0 +1,5 @@
+error: expected expression
+ --> $DIR/assign-statement-expression-error.lox:1:5
+  |
+1 | x = /;
+  |     ^

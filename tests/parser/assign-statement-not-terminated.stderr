@@ -1,0 +1,5 @@
+error: expected ';'
+ --> $DIR/assign-statement-not-terminated.lox:1:7
+  |
+1 | x = 5 _
+  |       ^
