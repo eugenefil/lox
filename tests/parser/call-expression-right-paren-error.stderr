@@ -1,0 +1,5 @@
+error: expected ')'
+ --> $DIR/call-expression-right-paren-error.lox:1:5
+  |
+1 | f(5 _;
+  |     ^

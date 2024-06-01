@@ -61,62 +61,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     EXPECT_EQ(errs[0].span, error_span);
 }
 
-TEST(Parser, CallExpression)
-{
-    assert_expr("f()", R"(
-(call
-  f
-  (args))
-    )");
-    assert_expr("f(5)", R"(
-(call
-  f
-  (args
-    5))
-    )");
-    assert_expr("f(5, 7, 9)", R"(
-(call
-  f
-  (args
-    5
-    7
-    9))
-    )");
-    assert_expr("f(5, 7, 9)(\"foo\")(true)", R"(
-(call
-  (call
-    (call
-      f
-      (args
-        5
-        7
-        9))
-    (args
-      "foo"))
-  (args
-    true))
-    )");
-
-    assert_expr("(f)()", R"(
-(call
-  (group
-    f)
-  (args))
-    )");
-
-    // unary binds lower than call
-    assert_expr("-f()", R"(
-(-
-  (call
-    f
-    (args)))
-    )");
-
-    assert_error("f(/)", "/"); // expected expression
-    assert_error("f(5,)", ")"); // expected expression
-    assert_error("f(5 _", "_"); // expected ')'
-}
-
 TEST(Parser, ReturnStatement)
 {
     assert_stmt("fn f() { return; }", R"(

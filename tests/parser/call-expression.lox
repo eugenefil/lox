@@ -1,0 +1,6 @@
+f();
+f(5);
+f(5, 7, 9);
+f(5, 7, 9)("foo")(true);
+(f)(); // group expression as callable
+-f(); // unary binds lower than call

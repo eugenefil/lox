@@ -1,0 +1,5 @@
+error: expected expression
+ --> $DIR/call-expression-argument-error2.lox:1:5
+  |
+1 | f(5,);
+  |     ^
