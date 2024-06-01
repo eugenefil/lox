@@ -1,0 +1,9 @@
+(program
+  (fndecl
+    f
+    (params
+      x)
+    (block
+      (block
+        (var
+          x)))))

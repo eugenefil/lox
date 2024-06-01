@@ -61,55 +61,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     EXPECT_EQ(errs[0].span, error_span);
 }
 
-TEST(Parser, FunctionDeclaration)
-{
-    assert_stmt("fn f() {}", R"(
-(fndecl
-  f
-  (params)
-  (block))
-    )");
-    assert_stmt("fn f(x) {}", R"(
-(fndecl
-  f
-  (params
-    x)
-  (block))
-    )");
-    assert_stmt("fn f(x, y, z) { x = 1; }", R"(
-(fndecl
-  f
-  (params
-    x
-    y
-    z)
-  (block
-    (=
-      x
-      1)))
-    )");
-
-    assert_error("fn f _()", "_"); // expected '('
-    assert_error("fn f(5)", "5"); // expected identifier
-    assert_error("fn f(x, 5)", "5"); // expected identifier
-    assert_error("fn f(x {}", "{"); // expected ')'
-    assert_error("fn f(x) _", "_"); // expected '{'
-
-    // local vars cannot shadow params
-    assert_error("fn f(x) { var x; }", "var x;");
-    // but in a block it's fine
-    assert_stmt("fn f(x) { { var x; } }", R"(
-(fndecl
-  f
-  (params
-    x)
-  (block
-    (block
-      (var
-        x))))
-    )");
-}
-
 TEST(Parser, CallExpression)
 {
     assert_expr("f()", R"(

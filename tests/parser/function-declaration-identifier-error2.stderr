@@ -1,0 +1,5 @@
+error: expected identifier
+ --> $DIR/function-declaration-identifier-error2.lox:1:9
+  |
+1 | fn f(x, 5) {}
+  |         ^

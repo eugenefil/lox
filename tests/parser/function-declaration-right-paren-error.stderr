@@ -1,0 +1,5 @@
+error: expected ')'
+ --> $DIR/function-declaration-right-paren-error.lox:1:8
+  |
+1 | fn f(x {}
+  |        ^
