@@ -1,0 +1,5 @@
+error: expected expression
+ --> $DIR/group-expression-error.lox:1:2
+  |
+1 | (/);
+  |  ^

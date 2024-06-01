@@ -66,21 +66,6 @@ TEST(Parser, ErrorAtEofPointsAtLastToken)
     assert_error("-", "-");
 }
 
-TEST(Parser, GroupExpression)
-{
-    assert_expr("(5 + 7) * 9", R"(
-(*
-  (group
-    (+
-      5
-      7))
-  9)
-    )");
-
-    assert_error("(/", "/");
-    assert_error("(5 + 7", "(");
-}
-
 TEST(Parser, ExpressionStatement)
 {
     assert_error("5 + 7_", "_");
