@@ -1,0 +1,5 @@
+error: expected ';'
+ --> $DIR/var-statement-not-terminated.lox:1:11
+  |
+1 | var x = 5 _
+  |           ^

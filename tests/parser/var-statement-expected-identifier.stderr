@@ -1,0 +1,5 @@
+error: expected identifier
+ --> $DIR/var-statement-expected-identifier.lox:1:5
+  |
+1 | var 5;
+  |     ^

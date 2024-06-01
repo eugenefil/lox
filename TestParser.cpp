@@ -61,25 +61,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     EXPECT_EQ(errs[0].span, error_span);
 }
 
-TEST(Parser, VarStatement)
-{
-    assert_stmt("var x;", R"(
-(var
-  x)
-    )");
-    assert_stmt("var x = 5 + 7;", R"(
-(var
-  x
-  (+
-    5
-    7))
-    )");
-
-    assert_error("var 5;", "5");
-    assert_error("var x = ;", ";");
-    assert_error("var x = 5_", "_");
-}
-
 TEST(Parser, AssignStatement)
 {
     assert_stmt("x = 5 + 7;", R"(

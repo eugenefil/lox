@@ -1,0 +1,5 @@
+error: expected expression
+ --> $DIR/var-statement-expression-error.lox:1:9
+  |
+1 | var x = ;
+  |         ^
