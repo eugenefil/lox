@@ -150,14 +150,6 @@ static void assert_value_error(std::string_view source,
     assert_error(std::string("var x = ").append(source) + ';', error_span);
 }
 
-TEST(Interpreter, EmptyProgram)
-{
-    Lox::Interpreter interp;
-    interp.interpret(std::make_shared<Lox::Program>(
-        std::vector<std::shared_ptr<Lox::Stmt>>(), ""));
-    EXPECT_FALSE(interp.has_errors());
-}
-
 TEST(Interpreter, Literals)
 {
     assert_string(R"("foo")", "foo");

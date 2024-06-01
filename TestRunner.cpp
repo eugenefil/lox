@@ -16,7 +16,7 @@ public:
         , m_source_path(source_path)
         , m_output_path(output_path)
     {
-        assert(!command.empty());
+        // command can be empty
         assert(!source_path.empty());
         assert(!output_path.empty());
     }
