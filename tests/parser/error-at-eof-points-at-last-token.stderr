@@ -1,0 +1,5 @@
+error: expected ';'
+ --> $DIR/error-at-eof-points-at-last-token.lox:2:6
+  |
+2 | 10 + 20
+  |      ^^

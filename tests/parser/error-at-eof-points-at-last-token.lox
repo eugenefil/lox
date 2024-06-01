@@ -1,0 +1,2 @@
+// expected ';' after 20, got eof
+10 + 20

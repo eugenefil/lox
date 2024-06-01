@@ -61,24 +61,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     EXPECT_EQ(errs[0].span, error_span);
 }
 
-TEST(Parser, ErrorAtEofPointsAtLastToken)
-{
-    assert_error("-", "-");
-}
-
-TEST(Parser, ExpressionStatement)
-{
-    assert_error("5 + 7_", "_");
-    assert_stmt("5 + 7; 5 * 8;", R"(
-(+
-  5
-  7)
-(*
-  5
-  8)
-    )");
-}
-
 TEST(Parser, VarStatement)
 {
     assert_stmt("var x;", R"(
