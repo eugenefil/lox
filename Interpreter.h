@@ -231,8 +231,8 @@ public:
     bool has_errors() const { return m_errors.size() > 0; }
     const std::vector<Error>& errors() const { return m_errors; }
 
-    bool is_repl_mode() const { return m_repl_mode; }
-    void repl_mode(bool on) { m_repl_mode = on; }
+    bool is_print_expr_statements_mode() const { return m_print_expr_statements_mode; }
+    void print_expr_statements_mode(bool on) { m_print_expr_statements_mode = on; }
 
     bool is_break() const { return m_break; }
     void set_break(bool on)
@@ -266,7 +266,7 @@ public:
 private:
     std::vector<Error> m_errors;
     std::shared_ptr<Scope> m_scope;
-    bool m_repl_mode { false };
+    bool m_print_expr_statements_mode { false };
     bool m_break { false };
     bool m_continue { false };
     std::shared_ptr<Object> m_return_value;

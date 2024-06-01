@@ -258,7 +258,7 @@ static int repl()
 {
     setup_signals();
     repl_interp = std::make_unique<Lox::Interpreter>();
-    repl_interp->repl_mode(true);
+    repl_interp->print_expr_statements_mode(true);
     Lox::prelude(*repl_interp);
 
     rl_outstream = stderr;
@@ -331,6 +331,7 @@ static int run(const fs::path& path)
 {
     std::ostringstream buf = read_file(path);
     Lox::Interpreter interp;
+    interp.print_expr_statements_mode(ui_testing);
     Lox::prelude(interp);
     if (eval(buf.view(), path_repr(normalize_path(path)), interp, false))
         return 0;

@@ -323,7 +323,7 @@ std::shared_ptr<Object> FunctionExpr::eval(Interpreter& interp) const
 bool ExpressionStmt::execute(Interpreter& interp) const
 {
     if (auto val = m_expr->eval(interp)) {
-        if (interp.is_repl_mode()) {
+        if (interp.is_print_expr_statements_mode()) {
             auto str = val->__str__();
             if (val->is_string())
                 str = escape(str);

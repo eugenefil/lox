@@ -118,11 +118,6 @@ static void assert_bool(std::string_view source, bool value)
     assert_value(source, Lox::make_bool(value));
 }
 
-static void assert_nil(std::string_view source)
-{
-    assert_value(source, Lox::make_nil());
-}
-
 static void assert_error(std::string_view source, std::string_view error_span)
 {
     Lox::Lexer lexer(source);
@@ -148,15 +143,6 @@ static void assert_value_error(std::string_view source,
     if (error_span.empty())
         error_span = source;
     assert_error(std::string("var x = ").append(source) + ';', error_span);
-}
-
-TEST(Interpreter, Literals)
-{
-    assert_string(R"("foo")", "foo");
-    assert_number("5", 5.0);
-    assert_bool("true", true);
-    assert_bool("false", false);
-    assert_nil("nil");
 }
 
 TEST(Interpreter, UnaryExpression)
