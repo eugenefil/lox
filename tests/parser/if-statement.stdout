@@ -1,0 +1,27 @@
+(program
+  (if
+    (>
+      x
+      0)
+    (block
+      x))
+  (if
+    (>
+      x
+      0)
+    (block
+      x)
+    (block
+      y))
+  (if
+    (>
+      x
+      0)
+    (block
+      x)
+    (if
+      (>
+        y
+        0)
+      (block
+        y))))

@@ -61,48 +61,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     EXPECT_EQ(errs[0].span, error_span);
 }
 
-TEST(Parser, IfStatement)
-{
-    assert_stmt("if x > 0 { x; }", R"(
-(if
-  (>
-    x
-    0)
-  (block
-    x))
-    )");
-
-    assert_stmt("if x > 0 { x; } else { y; }", R"(
-(if
-  (>
-    x
-    0)
-  (block
-    x)
-  (block
-    y))
-    )");
-
-    assert_stmt("if x > 0 { x; } else if y > 0 { y; }", R"(
-(if
-  (>
-    x
-    0)
-  (block
-    x)
-  (if
-    (>
-      y
-      0)
-    (block
-      y)))
-    )");
-
-    assert_error("if / ", "/");
-    assert_error("if x _", "_");
-    assert_error("if x {} else _", "_");
-}
-
 TEST(Parser, WhileStatement)
 {
     assert_stmt("while x > 0 { x = x - 1; }", R"(

@@ -1,0 +1,5 @@
+error: expected '{'
+ --> $DIR/if-statement-else-block-error.lox:1:18
+  |
+1 | if x > 0 {} else _
+  |                  ^
