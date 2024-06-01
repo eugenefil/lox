@@ -1,0 +1,5 @@
+error: expected expression
+ --> $DIR/while-statement-test-expression-error.lox:1:7
+  |
+1 | while / {}
+  |       ^

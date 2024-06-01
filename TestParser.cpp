@@ -61,25 +61,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     EXPECT_EQ(errs[0].span, error_span);
 }
 
-TEST(Parser, WhileStatement)
-{
-    assert_stmt("while x > 0 { x = x - 1; }", R"(
-(while
-  (>
-    x
-    0)
-  (block
-    (=
-      x
-      (-
-        x
-        1))))
-    )");
-
-    assert_error("while / {}", "/");
-    assert_error("while 1 {_", "_");
-}
-
 TEST(Parser, ForStatement)
 {
     assert_stmt("for c in \"foo\" { c; }", R"(
