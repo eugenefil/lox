@@ -1,0 +1,5 @@
+error: expected ';'
+ --> $DIR/continue-statement-not-terminated.lox:1:23
+  |
+1 | while true { continue }
+  |                       ^

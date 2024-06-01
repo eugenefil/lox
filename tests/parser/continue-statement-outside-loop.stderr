@@ -1,0 +1,5 @@
+error: 'continue' outside loop
+ --> $DIR/continue-statement-outside-loop.lox:1:15
+  |
+1 | while true {} continue;
+  |               ^^^^^^^^

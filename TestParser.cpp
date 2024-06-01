@@ -61,30 +61,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     EXPECT_EQ(errs[0].span, error_span);
 }
 
-TEST(Parser, ContinueStatement)
-{
-    // check that parser sees continue as inside the loop
-    assert_stmt("while true { continue; }", R"(
-(while
-  true
-  (block
-    (continue)))
-    )");
-
-    // same for 'for' loop
-    assert_stmt("for c in \"foo\" { continue; }", R"(
-(for
-  c
-  "foo"
-  (block
-    (continue)))
-    )");
-
-    assert_error("continue;", "continue"); // continue outside loop
-    assert_error("while true {} continue;", "continue");
-    assert_error("while true { continue }", "}"); // expected ';'
-}
-
 TEST(Parser, FunctionDeclaration)
 {
     assert_stmt("fn f() {}", R"(

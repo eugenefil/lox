@@ -1,0 +1,10 @@
+(program
+  (while
+    true
+    (block
+      (continue)))
+  (for
+    ch
+    "foo"
+    (block
+      (continue))))
