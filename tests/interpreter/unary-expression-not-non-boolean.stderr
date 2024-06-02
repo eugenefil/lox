@@ -1,0 +1,5 @@
+error: cannot apply unary operator '!' to type 'Number'
+ --> $DIR/unary-expression-not-non-boolean.lox:1:1
+  |
+1 | !0;
+  | ^^

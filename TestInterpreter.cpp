@@ -145,20 +145,6 @@ static void assert_value_error(std::string_view source,
     assert_error(std::string("var x = ").append(source) + ';', error_span);
 }
 
-TEST(Interpreter, UnaryExpression)
-{
-    assert_number("-5", -5.0);
-    assert_number("--5", 5.0);
-    assert_value_error(R"(-"foo")");
-
-    assert_bool("!true", false);
-    assert_bool("!false", true);
-    assert_bool("!!false", false);
-    assert_value_error("!nil");
-    assert_value_error("!0");
-    assert_value_error(R"(!"")");
-}
-
 TEST(Interpreter, BinaryExpression)
 {
     assert_number("10 / 2", 5.0);
