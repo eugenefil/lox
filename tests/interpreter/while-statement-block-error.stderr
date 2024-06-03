@@ -1,0 +1,5 @@
+error: identifier 'y' is not defined
+ --> $DIR/while-statement-block-error.lox:2:5
+  |
+2 |     y;
+  |     ^

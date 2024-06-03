@@ -1,0 +1,5 @@
+error: identifier 'x' is not defined
+ --> $DIR/while-statement-test-expr-error.lox:1:7
+  |
+1 | while x {
+  |       ^

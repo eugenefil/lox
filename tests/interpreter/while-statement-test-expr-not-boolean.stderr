@@ -1,0 +1,5 @@
+error: expected 'Bool', got 'Number'
+ --> $DIR/while-statement-test-expr-not-boolean.lox:1:7
+  |
+1 | while 1 {
+  |       ^

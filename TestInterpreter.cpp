@@ -136,30 +136,6 @@ TEST(Interpreter, GlobalScopeIsCurrentAfterError)
     );
 }
 
-TEST(Interpreter, WhileStatement)
-{
-    assert_scope("var x = 5; while false { x = 7; }", {
-        { "x", Lox::make_number(5) },
-    });
-    assert_scope("var x = 3; var y = 0; while x > 0 { x = x - 1; y = y + 1; }", {
-        { "x", Lox::make_number(0) },
-        { "y", Lox::make_number(3) },
-    });
-
-    assert_error("while x { y; }", "x"); // test eval error
-    assert_error("while 1 { y; }", "1"); // expected boolean
-    assert_error("while true { y; }", "y"); // block fails
-    // loop is executed before error happens
-    assert_scope_and_error("var x = 0; while true { x = x + 1; if x == 3 { y; } }",
-        { { "x", Lox::make_number(3) } },
-        "y"
-    );
-    // loop finishes normally if error is not triggered
-    assert_scope("var x = 3; while x > 0 { x = x - 1; if x == 5 { y; } }", {
-        { "x", Lox::make_number(0) },
-    });
-}
-
 TEST(Interpreter, ForStatement)
 {
     // no execution when collection is empty
