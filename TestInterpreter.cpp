@@ -115,31 +115,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     ASSERT_EQ(errs[0].span, error_span);
 }
 
-TEST(Interpreter, Identifier)
-{
-    assert_scope("var x = 5; var y = x * 2;", {
-        { "x", Lox::make_number(5) },
-        { "y", Lox::make_number(10) },
-    });
-
-    assert_error("var x = y;", "y");
-}
-
-TEST(Interpreter, VarStatement)
-{
-    assert_scope("var x;", { { "x", Lox::make_nil() } });
-
-    assert_scope("var x = 5; var s = \"foo\"; var b = true;", {
-        { "x", Lox::make_number(5) },
-        { "s", Lox::make_string("foo") },
-        { "b", Lox::make_bool(true) },
-    });
-
-    assert_scope("var x = 5; var x = \"foo\";", {
-        { "x", Lox::make_string("foo") },
-    });
-}
-
 TEST(Interpreter, ProgramsShareGlobalScope)
 {
     assert_scope_multi_program({ "var x = 5;", "var y = x * 2;" }, {

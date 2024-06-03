@@ -1,0 +1,26 @@
+var a;
+assert a == nil;
+
+var b = 5;
+assert b == 5;
+
+var c = "foo";
+assert c == "foo";
+
+var d = true;
+assert d;
+
+var e = false;
+assert !e;
+
+var f = nil;
+assert f == nil;
+
+var g = !e;
+assert g;
+
+// shadowing
+var x = 5;
+assert x == 5;
+var x = "baz";
+assert x == "baz";

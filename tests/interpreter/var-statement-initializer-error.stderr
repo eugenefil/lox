@@ -1,0 +1,5 @@
+error: cannot apply unary operator '-' to type 'String'
+ --> $DIR/var-statement-initializer-error.lox:1:9
+  |
+1 | var x = -"foo";
+  |         ^^^^^^

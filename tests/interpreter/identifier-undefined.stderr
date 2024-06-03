@@ -1,0 +1,5 @@
+error: identifier 'foo' is not defined
+ --> $DIR/identifier-undefined.lox:1:1
+  |
+1 | foo;
+  | ^^^
