@@ -123,14 +123,6 @@ TEST(Interpreter, ProgramsShareGlobalScope)
     });
 }
 
-TEST(Interpreter, AssignStatement)
-{
-    assert_scope("var x = 5; x = x + 7;", { { "x", Lox::make_number(12) } });
-
-    assert_error("x = foo;", "foo");
-    assert_error("x = 5;", "x");
-}
-
 TEST(Interpreter, BlockStatement)
 {
     assert_scope("var x = 5; { var y = 7; x = x + y; }", {

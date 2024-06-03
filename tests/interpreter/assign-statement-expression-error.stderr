@@ -1,0 +1,5 @@
+error: identifier 'foo' is not defined
+ --> $DIR/assign-statement-expression-error.lox:2:5
+  |
+2 | x = foo;
+  |     ^^^
