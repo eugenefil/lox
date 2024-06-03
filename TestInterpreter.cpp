@@ -103,16 +103,6 @@ static void assert_value(std::string_view source,
                { { "x", value } });
 }
 
-static void assert_string(std::string_view source, std::string_view value)
-{
-    assert_value(source, Lox::make_string(value));
-}
-
-static void assert_number(std::string_view source, double value)
-{
-    assert_value(source, Lox::make_number(value));
-}
-
 static void assert_bool(std::string_view source, bool value)
 {
     assert_value(source, Lox::make_bool(value));
@@ -145,61 +135,8 @@ static void assert_value_error(std::string_view source,
     assert_error(std::string("var x = ").append(source) + ';', error_span);
 }
 
-TEST(Interpreter, BinaryExpression)
+TEST(Interpreter, LogicalExpression)
 {
-    assert_number("10 / 2", 5.0);
-    assert_value_error("10 / nil");
-
-    assert_number("10 * 2", 20.0);
-    assert_value_error("10 * nil");
-
-    assert_number("10 % 3", 1.0);
-    assert_value_error("10 % nil");
-
-    assert_number("10 + 2", 12.0);
-    assert_string(R"("foo" + "bar")", "foobar");
-    assert_value_error("10 + nil");
-
-    assert_number("2 - 10", -8.0);
-    assert_value_error("2 - nil");
-
-    assert_bool("5 == 5", true);
-    assert_bool("5 == 7", false);
-    assert_value_error("5 == nil");
-    assert_bool(R"("foo" == "foo")", true);
-    assert_bool(R"("foo" == "bar")", false);
-    assert_bool("true == true", true);
-    assert_bool("true == false", false);
-    assert_bool("nil == nil", true);
-
-    assert_bool("5 < 7", true);
-    assert_bool("5 < 5", false);
-    assert_value_error("5 < nil");
-    assert_bool(R"("aaa" < "bbb")", true);
-    assert_bool(R"("aaa" < "aaa")", false);
-
-    assert_bool("5 <= 7", true);
-    assert_bool("5 <= 5", true);
-    assert_bool("5 <= 4", false);
-    assert_value_error("5 <= nil");
-    assert_bool(R"("aaa" <= "bbb")", true);
-    assert_bool(R"("aaa" <= "aaa")", true);
-    assert_bool(R"("aaa" <= "000")", false);
-
-    assert_bool("5 > 4", true);
-    assert_bool("5 > 5", false);
-    assert_value_error("5 > nil");
-    assert_bool(R"("bbb" > "aaa")", true);
-    assert_bool(R"("bbb" > "bbb")", false);
-
-    assert_bool("5 >= 4", true);
-    assert_bool("5 >= 5", true);
-    assert_bool("5 >= 7", false);
-    assert_value_error("5 >= nil");
-    assert_bool(R"("bbb" >= "aaa")", true);
-    assert_bool(R"("bbb" >= "bbb")", true);
-    assert_bool(R"("bbb" >= "ccc")", false);
-
     assert_bool("false and false", false);
     assert_bool("false and true", false);
     assert_bool("true and false", false);

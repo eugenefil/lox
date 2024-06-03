@@ -1,0 +1,5 @@
+error: cannot compare 'Number' with 'String'
+ --> $DIR/binary-expression-less-equal-bad-types.lox:1:1
+  |
+1 | 10 <= "foo";
+  | ^^^^^^^^^^^

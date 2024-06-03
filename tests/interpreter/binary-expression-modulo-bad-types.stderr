@@ -1,0 +1,5 @@
+error: cannot divide 'Number' by 'String'
+ --> $DIR/binary-expression-modulo-bad-types.lox:1:1
+  |
+1 | 10 % "foo";
+  | ^^^^^^^^^^

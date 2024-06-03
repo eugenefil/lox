@@ -1,0 +1,5 @@
+error: cannot add 'Number' to 'String'
+ --> $DIR/binary-expression-add-bad-types.lox:1:1
+  |
+1 | 10 + "foo";
+  | ^^^^^^^^^^

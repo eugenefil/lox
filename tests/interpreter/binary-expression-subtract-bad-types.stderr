@@ -1,0 +1,5 @@
+error: cannot subtract 'String' from 'Number'
+ --> $DIR/binary-expression-subtract-bad-types.lox:1:1
+  |
+1 | 10 - "foo";
+  | ^^^^^^^^^^

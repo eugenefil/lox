@@ -1,0 +1,5 @@
+error: cannot multiply 'Number' by 'String'
+ --> $DIR/binary-expression-multiply-bad-types.lox:1:1
+  |
+1 | 10 * "foo";
+  | ^^^^^^^^^^

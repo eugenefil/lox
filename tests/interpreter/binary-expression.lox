@@ -1,0 +1,65 @@
+assert 5 == 5;
+assert !(5 == 7);
+assert "foo" == "foo";
+assert !("foo" == "bar");
+assert true == true;
+assert !(true == false);
+assert nil == nil;
+
+assert !(5 != 5);
+assert 5 != 7;
+assert !("foo" != "foo");
+assert "foo" != "bar";
+assert !(true != true);
+assert true != false;
+assert !(nil != nil);
+
+assert 10 / 2 == 5;
+assert 10 / -2 == -5;
+assert -10 / 2 == -5;
+assert -10 / -2 == 5;
+assert 9 / 2 == 4.5;
+
+assert 10 * 2 == 20;
+assert 10 * -2 == -20;
+assert -10 * 2 == -20;
+assert -10 * -2 == 20;
+
+assert 10 % 3 == 1;
+
+assert 10 + 2 == 12;
+assert 10 + -2 == 8;
+assert -10 + 2 == -8;
+assert -10 + -2 == -12;
+
+assert "foo" + "bar" == "foobar";
+
+assert 10 - 2 == 8;
+assert 10 - -2 == 12;
+assert -10 - 2 == -12;
+assert -10 - -2 == -8;
+assert 2 - 10 == -8;
+
+assert 5 < 7;
+assert !(5 < 5);
+assert "aaa" < "bbb";
+assert !("aaa" < "aaa");
+
+assert 5 <= 7;
+assert 5 <= 5;
+assert !(5 <= 4);
+assert "aaa" <= "bbb";
+assert "aaa" <= "aaa";
+assert !("aaa" <= "000");
+
+assert 5 > 4;
+assert !(5 > 5);
+assert "bbb" > "aaa";
+assert !("bbb" > "bbb");
+
+assert 5 >= 4;
+assert 5 >= 5;
+assert !(5 >= 7);
+assert "bbb" >= "aaa";
+assert "bbb" >= "bbb";
+assert !("bbb" >= "ccc");
