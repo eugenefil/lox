@@ -9,9 +9,9 @@ namespace Lox {
 
 class Parser {
 public:
-    explicit Parser(std::vector<Token>&& tokens, std::string_view source)
-    : m_tokens(std::move(tokens))
-    , m_source(source)
+    Parser(std::vector<Token>&& tokens, std::string_view source)
+        : m_tokens(std::move(tokens))
+        , m_source(source)
     {
         assert(source.data());
     }

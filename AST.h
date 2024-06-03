@@ -37,7 +37,7 @@ public:
 
 class StringLiteral : public Expr {
 public:
-    explicit StringLiteral(const std::string& value, std::string_view text)
+    StringLiteral(const std::string& value, std::string_view text)
         : Expr(text)
         , m_value(value)
     {}
@@ -51,7 +51,7 @@ private:
 
 class NumberLiteral : public Expr {
 public:
-    explicit NumberLiteral(double value, std::string_view text)
+    NumberLiteral(double value, std::string_view text)
         : Expr(text)
         , m_value(value)
     {}
@@ -65,7 +65,7 @@ private:
 
 class Identifier : public Expr {
 public:
-    explicit Identifier(std::string_view name, std::string_view text)
+    Identifier(std::string_view name, std::string_view text)
         : Expr(text)
         , m_name(name)
     {}
@@ -82,7 +82,7 @@ private:
 
 class BoolLiteral : public Expr {
 public:
-    explicit BoolLiteral(bool value, std::string_view text)
+    BoolLiteral(bool value, std::string_view text)
         : Expr(text)
         , m_value(value)
     {}
@@ -207,7 +207,7 @@ private:
 
 class CallExpr : public Expr {
 public:
-    explicit CallExpr(std::shared_ptr<Expr> callee,
+    CallExpr(std::shared_ptr<Expr> callee,
         std::vector<std::shared_ptr<Expr>>&& args, std::string_view text)
         : Expr(text)
         , m_callee(callee)
@@ -231,7 +231,7 @@ class BlockStmt;
 class FunctionExpr: public Expr
     , public std::enable_shared_from_this<FunctionExpr> {
 public:
-    explicit FunctionExpr(std::vector<std::shared_ptr<Identifier>>&& params,
+    FunctionExpr(std::vector<std::shared_ptr<Identifier>>&& params,
         std::shared_ptr<BlockStmt> block, std::string_view text)
         : Expr(text)
         , m_params(std::move(params))
@@ -267,7 +267,7 @@ public:
 
 class ExpressionStmt : public Stmt {
 public:
-    explicit ExpressionStmt(std::shared_ptr<Expr> expr, std::string_view text)
+    ExpressionStmt(std::shared_ptr<Expr> expr, std::string_view text)
         : Stmt(text)
         , m_expr(expr)
     {
@@ -283,7 +283,7 @@ private:
 
 class AssertStmt : public Stmt {
 public:
-    explicit AssertStmt(std::shared_ptr<Expr> expr, std::string_view text)
+    AssertStmt(std::shared_ptr<Expr> expr, std::string_view text)
         : Stmt(text)
         , m_expr(expr)
     {
@@ -299,8 +299,8 @@ private:
 
 class VarStmt : public Stmt {
 public:
-    explicit VarStmt(std::shared_ptr<Identifier> ident,
-                     std::shared_ptr<Expr> init, std::string_view text)
+    VarStmt(std::shared_ptr<Identifier> ident, std::shared_ptr<Expr> init,
+        std::string_view text)
         : Stmt(text)
         , m_ident(ident)
         , m_init(init)
@@ -321,8 +321,8 @@ private:
 
 class AssignStmt : public Stmt {
 public:
-    explicit AssignStmt(std::shared_ptr<Expr> place, std::shared_ptr<Expr> value,
-                        std::string_view text)
+    AssignStmt(std::shared_ptr<Expr> place, std::shared_ptr<Expr> value,
+        std::string_view text)
         : Stmt(text)
         , m_place(place)
         , m_value(value)
@@ -342,8 +342,7 @@ private:
 
 class BlockStmt : public Stmt {
 public:
-    explicit BlockStmt(std::vector<std::shared_ptr<Stmt>>&& stmts,
-                       std::string_view text)
+    BlockStmt(std::vector<std::shared_ptr<Stmt>>&& stmts, std::string_view text)
         : Stmt(text)
         , m_stmts(std::move(stmts))
     {
@@ -362,8 +361,8 @@ private:
 
 class IfStmt : public Stmt {
 public:
-    explicit IfStmt(std::shared_ptr<Expr> test, std::shared_ptr<Stmt> then_block,
-                    std::shared_ptr<Stmt> else_block, std::string_view text)
+    IfStmt(std::shared_ptr<Expr> test, std::shared_ptr<Stmt> then_block,
+        std::shared_ptr<Stmt> else_block, std::string_view text)
         : Stmt(text)
         , m_test(test)
         , m_then_block(then_block)
@@ -385,8 +384,8 @@ private:
 
 class WhileStmt : public Stmt {
 public:
-    explicit WhileStmt(std::shared_ptr<Expr> test, std::shared_ptr<Stmt> block,
-                       std::string_view text)
+    WhileStmt(std::shared_ptr<Expr> test, std::shared_ptr<Stmt> block,
+        std::string_view text)
         : Stmt(text)
         , m_test(test)
         , m_block(block)
@@ -405,8 +404,8 @@ private:
 
 class ForStmt : public Stmt {
 public:
-    explicit ForStmt(std::shared_ptr<Identifier> ident, std::shared_ptr<Expr> expr,
-                     std::shared_ptr<BlockStmt> block, std::string_view text)
+    ForStmt(std::shared_ptr<Identifier> ident, std::shared_ptr<Expr> expr,
+        std::shared_ptr<BlockStmt> block, std::string_view text)
         : Stmt(text)
         , m_ident(ident)
         , m_expr(expr)
@@ -446,7 +445,7 @@ public:
 
 class FunctionDeclaration: public Stmt {
 public:
-    explicit FunctionDeclaration(std::shared_ptr<Identifier> name,
+    FunctionDeclaration(std::shared_ptr<Identifier> name,
         std::shared_ptr<FunctionExpr> func, std::string_view text)
         : Stmt(text)
         , m_name(name)
@@ -466,7 +465,7 @@ private:
 
 class ReturnStmt: public Stmt {
 public:
-    explicit ReturnStmt(std::shared_ptr<Expr> expr, std::string_view text)
+    ReturnStmt(std::shared_ptr<Expr> expr, std::string_view text)
         : Stmt(text)
         , m_expr(expr)
     {}
@@ -480,8 +479,7 @@ private:
 
 class Program : public Stmt {
 public:
-    explicit Program(std::vector<std::shared_ptr<Stmt>>&& stmts,
-                     std::string_view text)
+    Program(std::vector<std::shared_ptr<Stmt>>&& stmts, std::string_view text)
         : Stmt(text)
         , m_stmts(std::move(stmts))
     {

@@ -177,9 +177,8 @@ public:
 
 class Function : public Callable {
 public:
-    explicit Function(std::shared_ptr<const FunctionExpr> func,
-                      std::shared_ptr<Scope> parent_scope,
-                      std::string_view program_source)
+    Function(std::shared_ptr<const FunctionExpr> func,
+        std::shared_ptr<Scope> parent_scope, std::string_view program_source)
         : m_func(func)
         , m_parent_scope(parent_scope)
         , m_program_source(program_source)
