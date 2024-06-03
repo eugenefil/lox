@@ -320,6 +320,23 @@ std::shared_ptr<Object> FunctionExpr::eval(Interpreter& interp) const
         interp.source());
 }
 
+bool AssertStmt::execute(Interpreter& interp) const
+{
+    auto val = m_expr->eval(interp);
+    if (!val)
+        return false;
+    if (!val->is_bool()) {
+        interp.error(std::format("expected 'Bool', got '{}'", val->type_name()),
+            m_expr->text());
+        return false;
+    }
+    if (!val->get_bool()) {
+        interp.error("assertion failed", m_text);
+        return false;
+    }
+    return true;
+}
+
 bool ExpressionStmt::execute(Interpreter& interp) const
 {
     if (auto val = m_expr->eval(interp)) {

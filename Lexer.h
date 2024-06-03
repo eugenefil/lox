@@ -33,6 +33,7 @@ namespace Lox {
     __TOKEN(String)         \
     __TOKEN(Number)         \
     __TOKEN(And)            \
+    __TOKEN(Assert)         \
     __TOKEN(Break)          \
     __TOKEN(Class)          \
     __TOKEN(Continue)       \

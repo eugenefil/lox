@@ -1,0 +1,5 @@
+error: expected expression
+ --> $DIR/assert-statement-expression-error.lox:1:8
+  |
+1 | assert /;
+  |        ^

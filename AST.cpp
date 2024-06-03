@@ -166,6 +166,15 @@ std::string ExpressionStmt::dump(std::size_t indent) const
     return m_expr->dump(indent);
 }
 
+std::string AssertStmt::dump(std::size_t indent) const
+{
+    std::string s = make_indent(indent);
+    s += "(assert\n";
+    s += m_expr->dump(indent + 1);
+    s += ')';
+    return s;
+}
+
 std::string VarStmt::dump(std::size_t indent) const
 {
     std::string s = make_indent(indent);

@@ -1,0 +1,5 @@
+error: expected ';'
+ --> $DIR/assert-statement-not-terminated.lox:1:13
+  |
+1 | assert true _
+  |             ^

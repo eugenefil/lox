@@ -281,6 +281,22 @@ private:
     std::shared_ptr<Expr> m_expr;
 };
 
+class AssertStmt : public Stmt {
+public:
+    explicit AssertStmt(std::shared_ptr<Expr> expr, std::string_view text)
+        : Stmt(text)
+        , m_expr(expr)
+    {
+        assert(expr);
+    }
+
+    std::string dump(std::size_t indent) const override;
+    bool execute(Interpreter&) const override;
+
+private:
+    std::shared_ptr<Expr> m_expr;
+};
+
 class VarStmt : public Stmt {
 public:
     explicit VarStmt(std::shared_ptr<Identifier> ident,

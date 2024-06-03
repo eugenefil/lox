@@ -89,7 +89,8 @@ parameters ->
       IDENTIFIER (',' IDENTIFIER)*
 
 statement ->
-      'var' IDENTIFIER ('=' expression)? ';'
+      assert expression ';'
+    | 'var' IDENTIFIER ('=' expression)? ';'
     | block
     | if-statement
     | 'while' expression block

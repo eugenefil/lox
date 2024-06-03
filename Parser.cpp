@@ -355,6 +355,23 @@ std::pair<bool, std::string_view> Parser::finish_statement(bool fail_on_error)
     return { false, {} };
 }
 
+std::shared_ptr<Stmt> Parser::parse_assert_statement()
+{
+    auto& assert_tok = peek();
+    assert(assert_tok.type() == TokenType::Assert);
+    advance();
+
+    auto expr = parse_expression();
+    if (!expr)
+        return {};
+
+    if (auto [res, end] = finish_statement(); res) {
+        return std::make_shared<AssertStmt>(expr,
+            merge_texts(assert_tok.text(), end.size() ? end : expr->text()));
+    }
+    return {};
+}
+
 std::shared_ptr<Stmt> Parser::parse_var_statement()
 {
     auto& var = peek();
@@ -573,7 +590,9 @@ std::shared_ptr<Stmt> Parser::parse_return_statement()
 
 std::shared_ptr<Stmt> Parser::parse_statement()
 {
-    if (auto& token = peek(); token.type() == TokenType::Var)
+    if (auto& token = peek(); token.type() == TokenType::Assert)
+        return parse_assert_statement();
+    else if (token.type() == TokenType::Var)
         return parse_var_statement();
     else if (token.type() == TokenType::LeftBrace)
         return parse_block_statement();

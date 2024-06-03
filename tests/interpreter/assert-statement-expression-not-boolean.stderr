@@ -1,0 +1,5 @@
+error: expected 'Bool', got 'Number'
+ --> $DIR/assert-statement-expression-not-boolean.lox:1:8
+  |
+1 | assert 1;
+  |        ^

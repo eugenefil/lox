@@ -108,6 +108,7 @@ bool Lexer::unescape(std::string& s)
 
 static const std::unordered_map<std::string_view, TokenType> keywords = {
     { "and", TokenType::And },
+    { "assert", TokenType::Assert },
     { "break", TokenType::Break },
     { "class", TokenType::Class },
     { "continue", TokenType::Continue },

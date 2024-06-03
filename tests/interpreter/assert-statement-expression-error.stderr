@@ -1,0 +1,5 @@
+error: cannot apply unary operator '-' to type 'NilType'
+ --> $DIR/assert-statement-expression-error.lox:1:8
+  |
+1 | assert -nil;
+  |        ^^^^

@@ -16,9 +16,8 @@ public:
         , m_source_path(source_path)
         , m_output_path(output_path)
     {
-        // command can be empty
+        // command and output_path can be empty
         assert(!source_path.empty());
-        assert(!output_path.empty());
     }
 
     void TestBody() override
@@ -51,13 +50,14 @@ public:
         }
 
         std::ostringstream mustbe_out;
-        std::ifstream fin(m_output_path);
-        ASSERT_TRUE(fin.is_open());
-        while (mustbe_out << fin.rdbuf())
-            ;
-        ASSERT_FALSE(fin.bad());
-        fin.close();
-
+        if (!m_output_path.empty()) {
+            std::ifstream fin(m_output_path);
+            ASSERT_TRUE(fin.is_open());
+            while (mustbe_out << fin.rdbuf())
+                ;
+            ASSERT_FALSE(fin.bad());
+            fin.close();
+        }
         EXPECT_EQ(mustbe_out.view(), real_out.view());
     }
 
@@ -83,7 +83,9 @@ public:
     FailingTest(std::string_view command, const fs::path& source_path,
         const fs::path& output_path)
         : Test(command, source_path, output_path)
-    {}
+    {
+        assert(!output_path.empty());
+    }
 
 private:
     std::string redirects() const override
@@ -166,8 +168,13 @@ static void register_tests(std::string_view suite, std::string_view command)
                     nullptr, nullptr, __FILE__, __LINE__,
                     [=]() { return new FailingTest(command, source_path,
                                 stderr_path); });
-            } else
-                error(source_path, "missing corresponding .stdout/.stderr file");
+            } else {
+                testing::RegisterTest((prefix + "Pass").c_str(),
+                    test_path_to_name(source_path).c_str(),
+                    nullptr, nullptr, __FILE__, __LINE__,
+                    [=]() { return new PassingTest(command, source_path,
+                                {}); });
+            }
         }
     }
 }
