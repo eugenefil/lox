@@ -1,0 +1,5 @@
+error: identifier 's' is not defined
+ --> $DIR/for-loop-expr-error.lox:1:11
+  |
+1 | for ch in s {}
+  |           ^

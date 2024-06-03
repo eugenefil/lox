@@ -1,0 +1,5 @@
+error: identifier 'x' is not defined
+ --> $DIR/for-loop-block-error.lox:2:5
+  |
+2 |     x;
+  |     ^

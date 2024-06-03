@@ -1,0 +1,5 @@
+error: 'Number' is not iterable
+ --> $DIR/for-loop-expr-not-iterable.lox:1:11
+  |
+1 | for ch in 5 {}
+  |           ^

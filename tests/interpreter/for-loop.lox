@@ -1,0 +1,35 @@
+// no execution when collection is empty
+var x = 5;
+for c in "" {
+    x = 3;
+}
+assert x == 5;
+
+// loop executes as many times as elements in collection
+var s = "foo";
+var x = 0;
+for ch in "bar" {
+    x = x + 1;
+    s = s + ch;
+}
+assert s == "foobar";
+assert x == 3;
+
+// shadowing
+var c = "foo";
+for c in "bar" {
+    c = "baz";
+}
+assert c == "foo";
+
+// 2 loops iterating on the same collection at the same time
+var s = "ab";
+var r = "";
+for ch in s {
+    r = r + ch + ":";
+    for ch in s {
+        r = r + ch;
+    }
+    r = r + "\n";
+}
+assert r == "a:ab\nb:ab\n";

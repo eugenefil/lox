@@ -136,53 +136,6 @@ TEST(Interpreter, GlobalScopeIsCurrentAfterError)
     );
 }
 
-TEST(Interpreter, ForStatement)
-{
-    // no execution when collection is empty
-    assert_scope("var s = \"foo\"; for c in \"\" { s = \"bar\"; }", {
-        { "s", Lox::make_string("foo") },
-    });
-
-    // loop executes as many times as elements in collection
-    assert_scope(R"(
-        var s = "foo";
-        var x = 0;
-        for c in "bar" {
-            x = x + 1;
-            s = s + c;
-        })", {
-        { "s", Lox::make_string("foobar") },
-        { "x", Lox::make_number(3) },
-    });
-
-    // loop var is local to the loop
-    assert_error("for c in \"bar\" {} c;", "c");
-
-    // loop var shadows same var in outer scope
-    assert_scope("var c = \"foo\"; for c in \"bar\" { c = \"baz\"; }", {
-        { "c", Lox::make_string("foo") },
-    });
-
-    // 2 loops iterating on the same collection at the same time
-    assert_scope(R"(
-        var s = "ab";
-        var r = "";
-        for c in s {
-            r = r + c + ":";
-            for c in s { r = r + c; }
-            r = r + "\n";
-        })", {
-        { "s", Lox::make_string("ab") },
-        { "r", Lox::make_string("a:ab\nb:ab\n") },
-    });
-
-    assert_error("for c in x {}", "x"); // expression eval fails
-    assert_error("for c in 5 {}", "5"); // expression value is not iterable
-    // TODO expression is iterable, but iterator request fails
-    // TODO expression is iterable, but fails on some iteration
-    assert_error("for c in \"foo\" { x; }", "x"); // block execution fails
-}
-
 TEST(Interpreter, BreakStatement)
 {
     // check that break:

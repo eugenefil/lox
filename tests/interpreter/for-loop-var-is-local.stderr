@@ -1,0 +1,5 @@
+error: identifier 'ch' is not defined
+ --> $DIR/for-loop-var-is-local.lox:2:1
+  |
+2 | ch;
+  | ^^
