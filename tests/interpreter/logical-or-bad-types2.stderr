@@ -1,5 +1,5 @@
 error: expected 'Bool', got 'Number'
- --> $DIR/or-expression-bad-types2.lox:1:10
+ --> $DIR/logical-or-bad-types2.lox:1:10
   |
 1 | false or 2;
   |          ^

@@ -1,5 +1,5 @@
 error: expected expression
- --> $DIR/logic-or-error.lox:1:9
+ --> $DIR/logical-or-error.lox:1:9
   |
 1 | true or /;
   |         ^
