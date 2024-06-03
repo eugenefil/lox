@@ -1,0 +1,35 @@
+// check that continue:
+// - does not let the rest of the loop body execute
+// - continues the loop, i.e. does not function like break
+// - can be nested into other statements
+// - only affects inner loop
+
+var x = 0;
+var y = 0;
+while y < 3 {
+    while x < 2 {
+	x = x + 1;
+	if true {
+	    continue;
+	}
+	x = 100;
+    }
+    y = y + 1;
+}
+assert x == 2;
+assert y == 3;
+
+var x = 0;
+var y = 0;
+for c in "foo" {
+    for c in "bar" {
+	x = x + 1;
+	if true {
+	    continue;
+	}
+	x = 100;
+    }
+    y = y + 1;
+}
+assert x == 9;
+assert y == 3;
