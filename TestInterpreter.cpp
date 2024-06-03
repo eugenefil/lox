@@ -136,33 +136,6 @@ TEST(Interpreter, GlobalScopeIsCurrentAfterError)
     );
 }
 
-TEST(Interpreter, IfStatement)
-{
-    assert_scope("var x = 5; if x > 0 { x = 7; }", {
-        { "x", Lox::make_number(7) },
-    });
-    assert_scope("var x = -1; if x > 0 { x = 7; }", {
-        { "x", Lox::make_number(-1) },
-    });
-    assert_scope("var x = 5; if x > 0 { x = 7; } else { x = 3; }", {
-        { "x", Lox::make_number(7) },
-    });
-    assert_scope("var x = -1; if x > 0 { x = 7; } else { x = 3; }", {
-        { "x", Lox::make_number(3) },
-    });
-    assert_scope("var x = -1; if x > 0 { x = 7; } else if x < 0 { x = 3; }", {
-        { "x", Lox::make_number(3) },
-    });
-    assert_scope("var x = 0; if x > 0 { x = 7; } else if x < 0 { x = 3; }", {
-        { "x", Lox::make_number(0) },
-    });
-
-    assert_error("if x { y; }", "x"); // test eval error
-    assert_error("if 1 { y; }", "1"); // expected boolean
-    assert_error("if true { x; } else { y; }", "x"); // 'then' block fails
-    assert_error("if false { x; } else { y; }", "y"); // 'else' block fails
-}
-
 TEST(Interpreter, WhileStatement)
 {
     assert_scope("var x = 5; while false { x = 7; }", {

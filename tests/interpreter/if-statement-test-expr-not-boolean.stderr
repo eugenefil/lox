@@ -1,0 +1,5 @@
+error: expected 'Bool', got 'Number'
+ --> $DIR/if-statement-test-expr-not-boolean.lox:1:4
+  |
+1 | if 1 {
+  |    ^

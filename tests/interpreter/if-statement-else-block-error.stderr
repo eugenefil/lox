@@ -1,0 +1,5 @@
+error: identifier 'y' is not defined
+ --> $DIR/if-statement-else-block-error.lox:4:5
+  |
+4 |     y;
+  |     ^
