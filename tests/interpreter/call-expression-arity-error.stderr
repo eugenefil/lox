@@ -1,0 +1,5 @@
+error: expected 0 arguments, got 1
+ --> $DIR/call-expression-arity-error.lox:2:1
+  |
+2 | f(1);
+  | ^^^^

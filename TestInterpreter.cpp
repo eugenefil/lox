@@ -146,58 +146,6 @@ TEST(Interpreter, Interrupt)
     assert_scope("var x = 5;", {});
 }
 
-TEST(Interpreter, FunctionDeclaration)
-{
-    assert_scope("fn f(x, y) { x + y; }", {
-        { "f", std::make_shared<DummyFunction>(R"(
-(fn
-  (params
-    x
-    y)
-  (block
-    (+
-      x
-      y))))") },
-    });
-}
-
-TEST(Interpreter, CallExpression)
-{
-    // arguments work and are local to the function
-    assert_scope("fn f(x, y) { z = x + y; } var z = 1; f(2, 3);", {
-        { "z", Lox::make_number(5) },
-        { "f", make_dummy_function() },
-    });
-
-    // implicit return value is nil
-    assert_scope("var x = 1; fn f() {} x = f();", {
-        { "x", Lox::make_nil() },
-        { "f", make_dummy_function() },
-    });
-
-    assert_error("f();", "f"); // callee eval error
-    assert_error("5();", "5"); // not callable
-    assert_error("fn f() {} f(1);", "f(1)"); // args and params don't match
-    assert_error("fn f(x) {} f();", "f()"); // same
-    assert_error("fn f(x) {} f(y);", "y"); // arg eval error
-    assert_error("fn f() { x; } f();", "x"); // call error
-}
-
-TEST(Interpreter, FunctionShadowsOuterVariables)
-{
-    // args shadow outer vars
-    assert_scope("var x = 1; fn f(x) { x = x + 7; } f(5);", {
-        { "x", Lox::make_number(1) },
-        { "f", make_dummy_function() },
-    });
-
-    // local vars shadow outer vars
-    assert_scope("var x = 1; fn f() { var x = 5; x = 7; } f();", {
-        { "x", Lox::make_number(1) },
-        { "f", make_dummy_function() },
-    });
-}
-
 TEST(Interpreter, FunctionErrorHasFunctionSource)
 {
     // in a repl a function can be defined while evaluating one source line

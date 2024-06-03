@@ -1,0 +1,30 @@
+// implicit return value is nil
+var x = 1;
+fn f() {}
+x = f();
+assert x == nil;
+
+// side effects
+var x = 1;
+fn f(y) {
+    x = y;
+}
+f(8);
+assert x == 8;
+
+// args shadow outer vars
+var x = 1;
+fn f(x) {
+    assert x == 5;
+}
+f(5);
+assert x == 1;
+
+// local vars shadow outer vars
+var x = 1;
+fn f() {
+    var x = 5;
+    x = 7;
+}
+f();
+assert x == 1;

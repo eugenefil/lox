@@ -1,0 +1,5 @@
+error: 'Number' object is not callable
+ --> $DIR/call-expression-not-callable.lox:1:1
+  |
+1 | 5();
+  | ^

@@ -1,0 +1,5 @@
+error: identifier 'x' is not defined
+ --> $DIR/call-expression-call-error.lox:2:5
+  |
+2 |     x;
+  |     ^

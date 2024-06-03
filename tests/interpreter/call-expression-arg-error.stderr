@@ -1,0 +1,5 @@
+error: identifier 'y' is not defined
+ --> $DIR/call-expression-arg-error.lox:2:3
+  |
+2 | f(y);
+  |   ^

@@ -23,10 +23,18 @@ public:
     void TestBody() override
     {
         errno = 0; // popen does not always set errno on error
-        FILE* pipe = popen(std::string("</dev/null ./lox --ui-testing ")
+        FILE* pipe = popen(std::string("./lox")
+            .append(" ")
+            // if we have stdout/stderr output to compare, turn on
+            // error message normalization and expression statement
+            // printing with --ui-testing
+            .append(m_output_path.empty() ? "" : "--ui-testing")
+            .append(" ")
             .append(m_command)
             .append(" ")
             .append(m_source_path)
+            .append(" ")
+            .append("</dev/null") // no stdin
             .append(" ")
             .append(redirects())
             .c_str(), "r");

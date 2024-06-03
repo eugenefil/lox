@@ -1,0 +1,5 @@
+error: identifier 'f' is not defined
+ --> $DIR/call-expression-callee-error.lox:1:1
+  |
+1 | f();
+  | ^
