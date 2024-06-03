@@ -1,0 +1,4 @@
+{
+    x; // undefined
+    assert false; // shall not reach
+}

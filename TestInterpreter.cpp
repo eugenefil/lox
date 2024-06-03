@@ -123,22 +123,11 @@ TEST(Interpreter, ProgramsShareGlobalScope)
     });
 }
 
-TEST(Interpreter, BlockStatement)
-{
-    assert_scope("var x = 5; { var y = 7; x = x + y; }", {
-        { "x", Lox::make_number(12) },
-    });
-    assert_scope("var x = 5; var y = 7; { var x = x + 10; y = x; }", {
-        { "x", Lox::make_number(5) },
-        { "y", Lox::make_number(15) },
-    });
-}
-
 TEST(Interpreter, GlobalScopeIsCurrentAfterError)
 {
     // test that when error happens in the inner block, the scope stack
     // correctly "unwinds" and does not get stuck on the scope that was
-    // current at the point of error
+    // current at the point of error - this is important for repl
     // below, error happens where y is defined, but on exit from the
     // interpreter the global scope must be current - where only x is defined
     assert_scope_and_error("var x = 1; { var y; foo; }",

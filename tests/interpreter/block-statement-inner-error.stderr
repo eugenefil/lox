@@ -1,0 +1,5 @@
+error: identifier 'x' is not defined
+ --> $DIR/block-statement-inner-error.lox:2:5
+  |
+2 |     x; // undefined
+  |     ^

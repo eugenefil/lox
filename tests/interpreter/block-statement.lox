@@ -1,0 +1,19 @@
+var x = 5;
+{
+    var y = 3;
+    x = y; // outer vars are accessible
+}
+assert x == 3;
+
+// shadowing
+var z = 5;
+{
+    var z = z + 7;
+    assert z == 12;
+    {
+        var z = z + 9;
+        assert z == 21;
+    }
+    assert z == 12;
+}
+assert z == 5;
