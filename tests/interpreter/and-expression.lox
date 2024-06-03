@@ -1,0 +1,6 @@
+assert !(false and false);
+assert !(false and true);
+assert !(true and false);
+assert true and true;
+
+assert !(false and 2); // short-circuit, otherwise would be bad type error

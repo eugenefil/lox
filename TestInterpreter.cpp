@@ -96,18 +96,6 @@ static void assert_scope_and_error(std::string_view source,
                              { Lox::Error { "", source, error_span } });
 }
 
-static void assert_value(std::string_view source,
-                         std::shared_ptr<Lox::Object> value)
-{
-    assert_scope(std::string("var x = ").append(source) + ';',
-               { { "x", value } });
-}
-
-static void assert_bool(std::string_view source, bool value)
-{
-    assert_value(source, Lox::make_bool(value));
-}
-
 static void assert_error(std::string_view source, std::string_view error_span)
 {
     Lox::Lexer lexer(source);
@@ -125,33 +113,6 @@ static void assert_error(std::string_view source, std::string_view error_span)
     ASSERT_EQ(errs.size(), 1);
     ASSERT_EQ(errs[0].source, source);
     ASSERT_EQ(errs[0].span, error_span);
-}
-
-static void assert_value_error(std::string_view source,
-                               std::string_view error_span = {})
-{
-    if (error_span.empty())
-        error_span = source;
-    assert_error(std::string("var x = ").append(source) + ';', error_span);
-}
-
-TEST(Interpreter, LogicalExpression)
-{
-    assert_bool("false and false", false);
-    assert_bool("false and true", false);
-    assert_bool("true and false", false);
-    assert_bool("true and true", true);
-    assert_value_error("1 and 2", "1"); // not boolean
-    assert_value_error("true and 2", "2"); // not boolean
-    assert_bool("false and 2", false); // short-circuit
-
-    assert_bool("false or false", false);
-    assert_bool("false or true", true);
-    assert_bool("true or false", true);
-    assert_bool("true or true", true);
-    assert_value_error("1 or 2", "1"); // not boolean
-    assert_value_error("false or 2", "2"); // not boolean
-    assert_bool("true or 2", true); // short-circuit
 }
 
 TEST(Interpreter, Identifier)

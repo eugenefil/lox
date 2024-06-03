@@ -1,0 +1,5 @@
+error: expected 'Bool', got 'Number'
+ --> $DIR/and-expression-bad-types.lox:1:1
+  |
+1 | 1 and 2;
+  | ^

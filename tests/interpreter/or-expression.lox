@@ -1,0 +1,6 @@
+assert !(false or false);
+assert false or true;
+assert true or false;
+assert true or true;
+
+assert true or 2; // short-circuit, otherwise would be bad type error
