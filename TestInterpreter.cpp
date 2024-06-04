@@ -4,28 +4,17 @@
 #include <gtest/gtest.h>
 #include <optional>
 
-// dummy function that can be compared with the real user function object
-// by comparing ast dumps, assuming non-empty dump is used for construction
-// if empty dump is used for construction, dummy is considered equal
 class DummyFunction : public Lox::Object {
 public:
-    DummyFunction() = default;
-    explicit DummyFunction(std::string_view dump) : m_dump(dump)
-    {
-        while (!m_dump.starts_with('(')) {
-            assert(!m_dump.empty());
-            m_dump.remove_prefix(1);
-        }
-    }
-
     std::string_view type_name() const override { return "DummyFunction"; }
-    std::string_view dump() const { return m_dump; }
-
-private:
-    std::string_view m_dump;
 };
 
-static void assert_scope_multi_program(std::vector<std::string_view> sources,
+static std::shared_ptr<DummyFunction> make_dummy_function()
+{
+    return std::make_shared<DummyFunction>();
+}
+
+static void assert_scope(std::vector<std::string_view> sources,
     const Lox::Scope::MapType& scope_vars,
     std::vector<std::optional<Lox::Error>> errors = {})
 {
@@ -62,14 +51,9 @@ static void assert_scope_multi_program(std::vector<std::string_view> sources,
         auto& obj = vars.at(name);
         ASSERT_TRUE(obj);
         ASSERT_TRUE(value);
-        if (value->type_name() == "DummyFunction") {
-            ASSERT_EQ(obj->type_name(), "Function");
-            auto& dummy = static_cast<DummyFunction&>(*value);
-            if (!dummy.dump().empty()) {
-                auto& func = static_cast<Lox::Function&>(*obj);
-                EXPECT_EQ(func.ast().dump(0), dummy.dump());
-            }
-        } else
+        if (value->type_name() == "DummyFunction")
+            EXPECT_EQ(obj->type_name(), "Function");
+        else
             EXPECT_TRUE(value->__eq__(*obj)) << '\n' <<
                 "Variable: " << name << '\n' <<
                 "  Actual: " << obj->__str__() << '\n' <<
@@ -77,23 +61,9 @@ static void assert_scope_multi_program(std::vector<std::string_view> sources,
     }
 }
 
-static void assert_scope(std::string_view source,
-                         const Lox::Scope::MapType& scope_vars)
-{
-    assert_scope_multi_program({ source }, scope_vars);
-}
-
-static void assert_scope_and_error(std::string_view source,
-                                   const Lox::Scope::MapType& scope_vars,
-                                   std::string_view error_span)
-{
-    assert_scope_multi_program({ source }, scope_vars,
-                             { Lox::Error { "", source, error_span } });
-}
-
 TEST(Interpreter, ProgramsShareGlobalScope)
 {
-    assert_scope_multi_program({ "var x = 5;", "var y = x * 2;" }, {
+    assert_scope({ "var x = 5;", "var y = x * 2;" }, {
         { "x", Lox::make_number(5) },
         { "y", Lox::make_number(10) },
     });
@@ -106,20 +76,21 @@ TEST(Interpreter, GlobalScopeIsCurrentAfterError)
     // current at the point of error - this is important for repl
     // below, error happens where y is defined, but on exit from the
     // interpreter the global scope must be current - where only x is defined
-    assert_scope_and_error("var x = 1; { var y; foo; }",
+    std::string_view source = "var x = 1; { var y; foo; }";
+    assert_scope({ source },
         { { "x", Lox::make_number(1) } },
-        "foo"
+        { Lox::Error { "", source, "foo" } }
     );
 }
 
 TEST(Interpreter, Interrupt)
 {
     Lox::g_interrupt = 1;
-    assert_scope("while true {}", {});
+    assert_scope({ "while true {}" }, {});
     // TODO for loop with infinite iterator
 
     Lox::g_interrupt = 1;
-    assert_scope("var x = 5;", {});
+    assert_scope({ "var x = 5;" }, {});
 }
 
 TEST(Interpreter, FunctionErrorHasFunctionSource)
@@ -130,9 +101,8 @@ TEST(Interpreter, FunctionErrorHasFunctionSource)
     // definition source code and not the one of the function call site
     std::string_view definition = "fn f() { x; }";
     std::string_view call = "f();";
-    assert_scope_multi_program({ definition, call },
-        { { "f", std::make_shared<DummyFunction>() } }, {
-        {},
-        Lox::Error { "", definition, "x" },
-    });
+    assert_scope({ definition, call },
+        { { "f", make_dummy_function() } },
+        { {}, Lox::Error { "", definition, "x" } }
+    );
 }
