@@ -25,11 +25,6 @@ private:
     std::string_view m_dump;
 };
 
-static std::shared_ptr<DummyFunction> make_dummy_function()
-{
-    return std::make_shared<DummyFunction>();
-}
-
 static void assert_scope_multi_program(std::vector<std::string_view> sources,
     const Lox::Scope::MapType& scope_vars,
     std::vector<std::optional<Lox::Error>> errors = {})
@@ -139,34 +134,5 @@ TEST(Interpreter, FunctionErrorHasFunctionSource)
         { { "f", std::make_shared<DummyFunction>() } }, {
         {},
         Lox::Error { "", definition, "x" },
-    });
-}
-
-TEST(Interpreter, FunctionExpression)
-{
-    // assign lambda to var and call later
-    assert_scope("var f = fn(x) { return x; }; var y = f(5);", {
-        { "f", make_dummy_function() },
-        { "y", Lox::make_number(5) },
-    });
-
-    // lambda captures surrounding vars
-    assert_scope(R"(
-        var x = 1;
-        var r = fn(y) { return fn(z) { return x + y + z; }; }(10)(100);
-        )", {
-        { "x", Lox::make_number(1) },
-        { "r", Lox::make_number(111) },
-    });
-
-    // pass lambda to a function
-    assert_scope(R"(
-        var x = 1;
-        fn modify(modifier) { x = modifier(x); }
-        modify(fn(x) { return x + 10; });
-        modify(fn(x) { return x * 2; });
-    )", {
-        { "modify", make_dummy_function() },
-        { "x", Lox::make_number(22) },
     });
 }

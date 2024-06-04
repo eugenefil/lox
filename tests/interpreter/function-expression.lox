@@ -1,0 +1,26 @@
+// assign lambda to a var and call later
+var f = fn(x) { return x * 2; };
+assert f(5) == 10;
+
+// lambda captures surrounding vars
+var x = 1;
+var f = fn(y) {
+    return fn(z) {
+	x = x + z;
+	y = y + z;
+        return y;
+    };
+}(3);
+assert f(10) == 13;
+assert x == 11;
+assert f(100) == 113;
+assert x == 111;
+
+// pass lambda to a function
+var x = 1;
+fn modify(modifier) {
+    x = modifier(x);
+}
+modify(fn(x) { return x + 10; });
+modify(fn(x) { return x * 2; });
+assert x == 22;
