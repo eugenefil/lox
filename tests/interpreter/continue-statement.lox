@@ -8,11 +8,11 @@ var x = 0;
 var y = 0;
 while y < 3 {
     while x < 2 {
-	x = x + 1;
-	if true {
-	    continue;
-	}
-	x = 100;
+        x = x + 1;
+        if true {
+            continue;
+        }
+        x = 100;
     }
     y = y + 1;
 }
@@ -23,11 +23,11 @@ var x = 0;
 var y = 0;
 for c in "foo" {
     for c in "bar" {
-	x = x + 1;
-	if true {
-	    continue;
-	}
-	x = 100;
+        x = x + 1;
+        if true {
+            continue;
+        }
+        x = 100;
     }
     y = y + 1;
 }

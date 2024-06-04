@@ -6,8 +6,8 @@ assert f(5) == 10;
 var x = 1;
 var f = fn(y) {
     return fn(z) {
-	x = x + z;
-	y = y + z;
+        x = x + z;
+        y = y + z;
         return y;
     };
 }(3);
