@@ -44,7 +44,7 @@ make test
 ### Run the built interpreter
 
 ```
-./build/lox
+./build/bin/lox
 ```
 
 ### Remove build files
@@ -65,10 +65,10 @@ make clean
  cmake --build build -j2
 
  # run the tests
- ctest --test-dir build
+ ctest --test-dir build -j
 
  # run the interpreter
- ./build/lox
+ ./build/bin/lox
 
  # remove build files
  rm -r build

@@ -8,6 +8,8 @@
 
 namespace fs = std::filesystem;
 
+static fs::path lox_path;
+
 class Test : public testing::Test {
 public:
     Test(std::string_view command, const fs::path& source_path,
@@ -23,7 +25,7 @@ public:
     void TestBody() override
     {
         errno = 0; // popen does not always set errno on error
-        FILE* pipe = popen(std::string("./lox")
+        FILE* pipe = popen(std::string(lox_path)
             .append(" ")
             // if we have stdout/stderr output to compare, turn on
             // error message normalization and expression statement
@@ -156,8 +158,7 @@ static void register_tests(std::string_view suite, std::string_view command)
     std::string prefix { suite };
     prefix[0] = std::toupper(prefix[0]);
 
-    fs::path tests_path("../tests");
-    for (const auto& entry : fs::directory_iterator(tests_path / suite)) {
+    for (const auto& entry : fs::directory_iterator(suite)) {
         if (entry.is_regular_file() && entry.path().extension() == ".lox") {
             auto source_path = entry.path();
             if (auto stdout_path = fs::path(source_path)
@@ -189,9 +190,10 @@ static void register_tests(std::string_view suite, std::string_view command)
 
 int main(int argc, char **argv)
 {
-  testing::InitGoogleTest(&argc, argv);
-  register_tests("lexer", "lex");
-  register_tests("parser", "parse");
-  register_tests("interpreter", "");
-  return RUN_ALL_TESTS();
+    lox_path = fs::path(argv[0]).replace_filename("lox");
+    testing::InitGoogleTest(&argc, argv);
+    register_tests("lexer", "lex");
+    register_tests("parser", "parse");
+    register_tests("interpreter", "");
+    return RUN_ALL_TESTS();
 }

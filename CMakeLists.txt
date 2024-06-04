@@ -14,29 +14,12 @@ set(CMAKE_COLOR_DIAGNOSTICS ON)
 
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-add_library(lib Utils.cpp Lexer.cpp AST.cpp Parser.cpp Interpreter.cpp)
-
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(READLINE REQUIRED IMPORTED_TARGET readline)
-
-add_executable(lox main.cpp Prelude.cpp)
-target_link_libraries(lox lib PkgConfig::READLINE)
-
 find_package(GTest REQUIRED)
 enable_testing()
 include(GoogleTest)
 
-function(lox_test source)
-    get_filename_component(test_name ${source} NAME_WE)
-    add_executable(${test_name} ${source})
-    target_link_libraries(${test_name} lib GTest::gtest_main)
-    gtest_discover_tests(${test_name})
-endfunction()
+# put all binaries in the same dir
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-lox_test(TestUtils.cpp)
-lox_test(TestInterpreter.cpp)
-
-# runs functional tests for lexer, parser and interpreter
-add_executable(TestRunner TestRunner.cpp)
-target_link_libraries(TestRunner GTest::gtest) # don't use gtest main
-gtest_discover_tests(TestRunner)
+add_subdirectory(src)
+add_subdirectory(tests)

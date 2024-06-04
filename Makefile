@@ -5,7 +5,7 @@ build:
 	@cmake -B build -G Ninja
 
 test:
-	@ctest --test-dir build
+	@ctest --test-dir build -j
 
 clean:
 	@rm -rf build
