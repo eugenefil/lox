@@ -96,25 +96,6 @@ static void assert_scope_and_error(std::string_view source,
                              { Lox::Error { "", source, error_span } });
 }
 
-static void assert_error(std::string_view source, std::string_view error_span)
-{
-    Lox::Lexer lexer(source);
-    auto tokens = lexer.lex();
-    ASSERT_FALSE(lexer.has_errors());
-
-    Lox::Parser parser(std::move(tokens), source);
-    auto program = parser.parse();
-    ASSERT_FALSE(parser.has_errors());
-    ASSERT_TRUE(program);
-
-    Lox::Interpreter interp;
-    interp.interpret(program);
-    auto& errs = interp.errors();
-    ASSERT_EQ(errs.size(), 1);
-    ASSERT_EQ(errs[0].source, source);
-    ASSERT_EQ(errs[0].span, error_span);
-}
-
 TEST(Interpreter, ProgramsShareGlobalScope)
 {
     assert_scope_multi_program({ "var x = 5;", "var y = x * 2;" }, {
@@ -159,53 +140,6 @@ TEST(Interpreter, FunctionErrorHasFunctionSource)
         {},
         Lox::Error { "", definition, "x" },
     });
-}
-
-TEST(Interpreter, ReturnStatement)
-{
-    // default return value is nil
-    assert_scope("var x = 1; fn f() { return; } x = f();", {
-        { "x", Lox::make_nil() },
-        { "f", make_dummy_function() },
-    });
-
-    // non-default return value
-    assert_scope("fn f(x, y) { return x + y; } var z = f(2, 3);", {
-        { "z", Lox::make_number(5) },
-        { "f", make_dummy_function() },
-    });
-
-    // test that return:
-    // - does not let the rest of the function body execute
-    // - works when nested into control flow statements
-    // - only affects nearest surrounding function
-    assert_scope(R"(
-        var x = 1;
-        var y = 1;
-        fn f() {
-            fn g() {
-                while true {
-                    for c in "foobar" {
-                        if true {
-                            return 42;
-                            x = 3;
-                        }
-                        x = c;
-                    }
-                    x = 7;
-                }
-                x = 9;
-            }
-            g();
-            y = 5;
-        }
-        f();)", {
-        { "x", Lox::make_number(1) },
-        { "y", Lox::make_number(5) },
-        { "f", make_dummy_function() },
-    });
-
-    assert_error("fn f() { return x; } f();", "x"); // eval error
 }
 
 TEST(Interpreter, LexicalScope)

@@ -1,0 +1,37 @@
+// default return value is nil
+fn f() {
+    return;
+}
+assert f() == nil;
+
+fn f(x, y) {
+    return x + y;
+}
+assert f(2, 3) == 5;
+
+// test that return:
+// - does not let the rest of the function body execute
+// - works when nested into control flow statements
+// - only affects the nearest surrounding function
+
+var x = 1;
+var y = 1;
+fn f() {
+    fn g() {
+        while true {
+            for ch in "foo" {
+                if ch != "" {
+                    return;
+                }
+                x = ch;
+            }
+            x = 7;
+        }
+        x = 9;
+    }
+    g();
+    y = 5;
+}
+f();
+assert x == 1;
+assert y == 5;

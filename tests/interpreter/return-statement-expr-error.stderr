@@ -1,0 +1,5 @@
+error: identifier 'x' is not defined
+ --> $DIR/return-statement-expr-error.lox:2:12
+  |
+2 |     return x;
+  |            ^
