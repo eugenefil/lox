@@ -1,0 +1,7 @@
+// global vars can de defined after functions that use them
+
+fn f() {
+    return x;
+}
+var x = 7;
+assert f() == 7;

@@ -1,5 +1,5 @@
 error: assertion failed
- --> $DIR/assert-statement-fails.lox:1:1
+ --> $DIR/assert-statement-triggers.lox:1:1
   |
 1 | assert false;
   | ^^^^^^^^^^^^^

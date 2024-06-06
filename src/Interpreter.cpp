@@ -68,7 +68,7 @@ std::shared_ptr<Object> Function::__call__(
     auto& params = m_func->params();
     assert(params.size() == args.size());
     for (std::size_t i = 0; i < args.size(); ++i)
-        interp.scope().define_var(params[i]->name(), args[i]);
+        interp.define_var(params[i]->name(), args[i]);
     auto res = execute_statements(m_func->block().statements(), interp);
 
     if (!res) {
@@ -91,10 +91,7 @@ std::shared_ptr<Object> NumberLiteral::eval(Interpreter&) const
 
 std::shared_ptr<Object> Identifier::eval(Interpreter& interp) const
 {
-    if (auto val = interp.scope().get_var(m_name))
-        return val;
-    interp.error(std::format("identifier '{}' is not defined", m_name), m_text);
-    return {};
+    return interp.get_var(*this);
 }
 
 std::shared_ptr<Object> BoolLiteral::eval(Interpreter&) const
@@ -361,7 +358,7 @@ bool VarStmt::execute(Interpreter& interp) const
     } else
         val = make_nil();
     assert(val);
-    interp.scope().define_var(m_ident->name(), val);
+    interp.define_var(m_ident->name(), val);
     return true;
 }
 
@@ -371,20 +368,11 @@ bool AssignStmt::execute(Interpreter& interp) const
     if (!val)
         return false;
 
-    std::string_view name;
-    if (m_place->is_identifier())
-        name = std::static_pointer_cast<Identifier>(m_place)->name();
-    assert(!name.empty());
-
-    if (interp.scope().set_var(name, val))
-        return true;
-
-    if (m_place->is_identifier())
-        interp.error(std::format("variable '{}' is not defined", name),
-                     m_place->text());
-    else
-        assert(0);
-    return false;
+    if (m_place->is_identifier()) {
+        auto& ident = static_cast<Identifier&>(*m_place);
+        return interp.set_var(ident, val);
+    }
+    assert(0);
 }
 
 bool BlockStmt::execute(Interpreter& interp) const
@@ -470,7 +458,7 @@ bool ForStmt::execute(Interpreter& interp) const
         assert(!interp.is_continue());
 
         auto scope_change = interp.push_scope();
-        interp.scope().define_var(m_ident->name(), next);
+        interp.define_var(m_ident->name(), next);
         auto res = execute_statements(m_block->statements(), interp);
 
         if (!res) {
@@ -505,7 +493,7 @@ bool FunctionDeclaration::execute(Interpreter& interp) const
     auto func = m_func->eval(interp);
     if (!func)
         return false;
-    interp.scope().define_var(m_name->name(), func);
+    interp.define_var(m_name->name(), func);
     return true;
 }
 
@@ -535,33 +523,87 @@ bool Program::execute(Interpreter& interp) const
     return true;
 }
 
-void Scope::define_var(std::string_view name, std::shared_ptr<Object> value)
+void Scope::define(std::string_view name, const std::shared_ptr<Object>& value)
 {
     assert(!name.empty());
     assert(value);
     m_vars[name] = value;
 }
 
-std::shared_ptr<Object> Scope::get_var(std::string_view name) const
+const std::shared_ptr<Object>& Scope::find_resolved(std::string_view name,
+    std::size_t hops) const
 {
     assert(!name.empty());
-    for (auto scope = this; scope != nullptr; scope = scope->m_parent.get()) {
-        if (auto pair = scope->m_vars.find(name); pair != scope->m_vars.end())
-            return pair->second;
-    }
+    auto scope = this;
+    for (; hops > 0 && scope != nullptr; --hops)
+        scope = scope->m_parent.get();
+    assert(scope != nullptr);
+
+    auto pair = scope->m_vars.find(name);
+    assert(pair != scope->m_vars.end());
+    return pair->second;
+}
+
+// here var was resolved by checker and must exist
+std::shared_ptr<Object> Scope::get_resolved(std::string_view name,
+    std::size_t hops) const
+{
+    return find_resolved(name, hops);
+}
+
+// here var is a global, that couldn't be resolved by checker, either b/c
+// it's defined after the function that uses it or it's just error
+std::shared_ptr<Object> Scope::get_unresolved(std::string_view name) const
+{
+    assert(!name.empty());
+    assert(is_global());
+    if (auto pair = m_vars.find(name); pair != m_vars.end())
+        return pair->second;
     return {};
 }
 
-bool Scope::set_var(std::string_view name, std::shared_ptr<Object> value)
+void Scope::set_resolved(std::string_view name, std::size_t hops,
+    const std::shared_ptr<Object>& value)
+{
+    assert(value);
+    // since this method is non-const, casting away constness is fine
+    const_cast<std::shared_ptr<Object>&>(find_resolved(name, hops)) = value;
+}
+
+bool Scope::set_unresolved(std::string_view name, const std::shared_ptr<Object>& value)
 {
     assert(!name.empty());
     assert(value);
-    for (auto scope = this; scope != nullptr; scope = scope->m_parent.get()) {
-        if (auto pair = scope->m_vars.find(name); pair != scope->m_vars.end()) {
-            pair->second = value;
-            return true;
-        }
+    assert(is_global());
+    if (auto pair = m_vars.find(name); pair != m_vars.end()) {
+        pair->second = value;
+        return true;
     }
+    return false;
+}
+
+std::shared_ptr<Object> Interpreter::get_var(const Identifier& ident)
+{
+    if (auto hops = ident.hops())
+        return m_scope->get_resolved(ident.name(), hops.value());
+    if (auto val = m_globals->get_unresolved(ident.name()))
+        return val;
+    error(std::format("identifier '{}' is not defined", ident.name()),
+        ident.text());
+    return {};
+}
+
+bool Interpreter::set_var(const Identifier& ident, const std::shared_ptr<Object>& value)
+{
+    assert(value);
+    if (auto hops = ident.hops()) {
+        m_scope->set_resolved(ident.name(), hops.value(), value);
+        return true;
+    }
+    if (m_globals->set_unresolved(ident.name(), value))
+        return true;
+    error(std::format("identifier '{}' is not defined", ident.name()),
+        ident.text());
     return false;
 }
 
@@ -576,9 +618,9 @@ void Interpreter::interpret(std::shared_ptr<Program> program)
 
     m_errors.clear();
     m_source = program->text();
-    assert(m_scope->is_top());
+    assert(m_scope->is_global());
     program->execute(*this);
-    assert(m_scope->is_top());
+    assert(m_scope->is_global());
 }
 
 volatile std::sig_atomic_t g_interrupt;

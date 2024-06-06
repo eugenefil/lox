@@ -49,9 +49,8 @@ static std::shared_ptr<Object> input(const ArgsVector& args, Interpreter&)
 
 void prelude(Interpreter& interp)
 {
-    auto& scope = interp.scope();
-    scope.define_var("print", std::make_shared<BuiltinFunction>(print, 1));
-    scope.define_var("input", std::make_shared<BuiltinFunction>(input, 1));
+    interp.define_var("print", std::make_shared<BuiltinFunction>(print, 1));
+    interp.define_var("input", std::make_shared<BuiltinFunction>(input, 1));
 }
 
 }

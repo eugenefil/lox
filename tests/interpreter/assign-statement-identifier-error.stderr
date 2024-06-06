@@ -1,4 +1,4 @@
-error: variable 'x' is not defined
+error: identifier 'x' is not defined
  --> $DIR/assign-statement-identifier-error.lox:1:1
   |
 1 | x = 5;

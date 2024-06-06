@@ -1,4 +1,5 @@
 #include "Parser.h"
+#include "Checker.h"
 #include "Interpreter.h"
 #include "Prelude.h"
 #include <iostream>
@@ -192,6 +193,13 @@ static bool eval(std::string_view source, std::string_view path,
     auto program = parser.parse();
     if (parser.has_errors()) {
         print_errors(parser.errors(), path);
+        return false;
+    }
+
+    Lox::Checker checker;
+    checker.check(program);
+    if (checker.has_errors()) {
+        print_errors(checker.errors(), path);
         return false;
     }
 
@@ -401,6 +409,14 @@ static int parse_command(int argc, char* argv[])
         print_errors(parser.errors(), path_out);
         return 1;
     }
+
+    Lox::Checker checker;
+    checker.check(program);
+    if (checker.has_errors()) {
+        print_errors(checker.errors(), path_out);
+        return 1;
+    }
+
     std::cout << program->dump(0) << '\n';
     return 0;
 }

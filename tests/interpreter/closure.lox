@@ -1,6 +1,7 @@
 // closure records all surrounding scopes during definition, can
 // access and modify their variables
 
+var x = 3;
 fn f(y) {
     fn g(z) {
         x = x + z;
@@ -9,10 +10,8 @@ fn f(y) {
     }
     return g;
 }
-var x = 3;
 var h = f(5);
 assert h(10) == 15;
 assert x == 13;
-
 assert h(100) == 115;
 assert x == 113;

@@ -1,4 +1,11 @@
-add_library(LibLox Utils.cpp Lexer.cpp AST.cpp Parser.cpp Interpreter.cpp)
+add_library(LibLox
+    Utils.cpp
+    Lexer.cpp
+    AST.cpp
+    Parser.cpp
+    Checker.cpp
+    Interpreter.cpp
+)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(READLINE REQUIRED IMPORTED_TARGET readline)

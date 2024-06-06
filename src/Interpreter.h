@@ -155,14 +155,20 @@ public:
         assert(parent);
     }
 
-    bool is_top() const { return m_parent == nullptr; }
-    void define_var(std::string_view name, std::shared_ptr<Object> value);
-    std::shared_ptr<Object> get_var(std::string_view name) const;
-    bool set_var(std::string_view name, std::shared_ptr<Object> value);
+    bool is_global() const { return m_parent == nullptr; }
+    void define(std::string_view name, const std::shared_ptr<Object>& value);
+    std::shared_ptr<Object> get_resolved(std::string_view name, std::size_t hops) const;
+    std::shared_ptr<Object> get_unresolved(std::string_view name) const;
+    void set_resolved(std::string_view name, std::size_t hops,
+        const std::shared_ptr<Object>& value);
+    bool set_unresolved(std::string_view name, const std::shared_ptr<Object>& value);
 
     const MapType& vars() const { return m_vars; }
 
 private:
+    const std::shared_ptr<Object>& find_resolved(std::string_view name,
+        std::size_t hops) const;
+
     std::shared_ptr<Scope> m_parent;
     MapType m_vars;
 };
@@ -203,7 +209,9 @@ private:
 
 class Interpreter {
 public:
-    Interpreter() : m_scope(std::make_shared<Scope>())
+    Interpreter()
+        : m_scope(std::make_shared<Scope>())
+        , m_globals(m_scope)
     {}
 
     void interpret(std::shared_ptr<Program> program);
@@ -219,6 +227,12 @@ public:
     {
         return { m_scope, std::make_shared<Scope>(m_scope) };
     }
+    void define_var(std::string_view name, const std::shared_ptr<Object>& value)
+    {
+        m_scope->define(name, value);
+    }
+    std::shared_ptr<Object> get_var(const Identifier& ident);
+    bool set_var(const Identifier& ident, const std::shared_ptr<Object>& value);
 
     std::string_view source() const { return m_source; }
     TemporaryChange<std::string_view> push_source(std::string_view source)
@@ -265,6 +279,8 @@ public:
 private:
     std::vector<Error> m_errors;
     std::shared_ptr<Scope> m_scope;
+    // inited from m_scope, so must be declared after it due to member init order
+    std::shared_ptr<Scope> m_globals;
     bool m_print_expr_statements_mode { false };
     bool m_break { false };
     bool m_continue { false };

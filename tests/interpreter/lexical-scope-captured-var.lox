@@ -1,0 +1,12 @@
+// captured var does not change, i.e. static
+
+var x = 5;
+fn f() {
+    fn g() {
+        return x;
+    }
+    assert g() == 5;
+    var x = 7;
+    assert g() == 5;
+}
+f();

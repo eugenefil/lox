@@ -1,0 +1,27 @@
+// unlike globals, which are special, local vars can't be defined after
+// functions that use them
+
+fn f() {
+    fn g() {
+        return x;
+    }
+    var x = 1;
+    return g();
+}
+f();
+
+// the above succeeds in e.g. python and does not look so criminal, but
+// it means the scope is kinda dynamic, consider the following:
+//
+// var x = 7;
+// fn f() {
+//     fn g() {
+//         return x;
+//     }
+//     g(); // here x is 7, b/c only global x is accessible
+//     var x = 1;
+//     g(); // but here x is already 1 due to previous line
+// }
+// f();
+//
+// btw, python catches this corner case and spits out some strange error

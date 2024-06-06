@@ -4,8 +4,11 @@
 #include <memory>
 #include <cassert>
 #include <vector>
+#include <optional>
 
 namespace Lox {
+
+class Checker;
 
 class ASTNode {
 public:
@@ -14,6 +17,7 @@ public:
     explicit ASTNode(std::string_view text) : m_text(text)
     {}
 
+    virtual bool check(Checker&) { return true; }
     std::string_view text() const { return m_text; }
     virtual std::string dump(std::size_t indent) const = 0;
 
@@ -70,14 +74,17 @@ public:
         , m_name(name)
     {}
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     std::shared_ptr<Object> eval(Interpreter&) const override;
     bool is_identifier() const override { return true; }
 
     std::string_view name() const { return m_name; }
+    std::optional<std::size_t> hops() const { return m_hops; }
 
 private:
     std::string_view m_name;
+    std::optional<std::size_t> m_hops;
 };
 
 class BoolLiteral : public Expr {
@@ -118,6 +125,7 @@ public:
         assert(expr);
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     std::shared_ptr<Object> eval(Interpreter&) const override;
 
@@ -135,6 +143,7 @@ public:
         assert(expr);
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     std::shared_ptr<Object> eval(Interpreter&) const override;
 
@@ -169,6 +178,7 @@ public:
         assert(right);
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     std::shared_ptr<Object> eval(Interpreter&) const override;
 
@@ -196,6 +206,7 @@ public:
         assert(right);
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     std::shared_ptr<Object> eval(Interpreter&) const override;
 
@@ -218,6 +229,7 @@ public:
             assert(arg);
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     std::shared_ptr<Object> eval(Interpreter&) const override;
 
@@ -242,6 +254,7 @@ public:
         assert(block);
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     std::shared_ptr<Object> eval(Interpreter&) const override;
 
@@ -274,6 +287,7 @@ public:
         assert(expr);
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     bool execute(Interpreter&) const override;
 
@@ -290,6 +304,7 @@ public:
         assert(expr);
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     bool execute(Interpreter&) const override;
 
@@ -309,6 +324,7 @@ public:
         // initializer can be null
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     bool execute(Interpreter&) const override;
     bool is_var_statement() const override { return true; }
@@ -332,6 +348,7 @@ public:
         assert(value);
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     bool execute(Interpreter&) const override;
 
@@ -350,6 +367,7 @@ public:
             assert(stmt);
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     bool execute(Interpreter&) const override;
 
@@ -373,6 +391,7 @@ public:
         // 'else' block can be null
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     bool execute(Interpreter&) const override;
 
@@ -394,6 +413,7 @@ public:
         assert(block);
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     bool execute(Interpreter&) const override;
 
@@ -416,6 +436,7 @@ public:
         assert(block);
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     bool execute(Interpreter&) const override;
 
@@ -455,6 +476,7 @@ public:
         assert(func);
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     bool execute(Interpreter&) const override;
 
@@ -470,6 +492,7 @@ public:
         , m_expr(expr)
     {}
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     bool execute(Interpreter&) const override;
 
@@ -487,6 +510,7 @@ public:
             assert(stmt);
     }
 
+    bool check(Checker&) override;
     std::string dump(std::size_t indent) const override;
     bool execute(Interpreter&) const override;
 

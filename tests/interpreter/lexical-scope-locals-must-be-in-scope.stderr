@@ -1,0 +1,5 @@
+error: identifier 'x' is not defined
+ --> $DIR/lexical-scope-locals-must-be-in-scope.lox:6:16
+  |
+6 |         return x;
+  |                ^
