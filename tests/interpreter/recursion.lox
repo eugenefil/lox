@@ -1,0 +1,18 @@
+fn fib(n) {
+    if n <= 1 { return n; }
+    return fib(n - 2) + fib(n - 1);
+}
+assert fib(12) == 144;
+
+fn even(n) {
+    if n == 0 { return true; }
+    return odd(n - 1);
+}
+fn odd(n) {
+    if n == 0 { return false; }
+    return even(n - 1);
+}
+assert even(0);
+assert !odd(0);
+assert even(4);
+assert odd(7);
